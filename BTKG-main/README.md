@@ -1,4 +1,4 @@
-<!-- [TOC]
+[TOC]
 
 # Bidirectional transformer with knowledge graph (BTKG) for Video Captioning
 
@@ -69,6 +69,3 @@ utils.py：一些公共方法
 ## 数据集和其他大型文件
 
 下载链接：https://pan.quark.cn/s/44049885ed0b
-
-
- -->

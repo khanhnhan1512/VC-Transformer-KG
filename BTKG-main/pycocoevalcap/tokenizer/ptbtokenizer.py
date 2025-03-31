@@ -14,11 +14,6 @@ import subprocess
 import tempfile
 import itertools
 
-
-# Last modified : Wed 22 May 2019 08:10:00 PM EDT
-# By Sabarish Sivanath
-# To support Python 3
-
 # path to the stanford corenlp jar
 STANFORD_CORENLP_3_4_1_JAR = 'stanford-corenlp-3.4.1.jar'
 
@@ -28,6 +23,8 @@ PUNCTUATIONS = ["''", "'", "``", "`", "-LRB-", "-RRB-", "-LCB-", "-RCB-", \
 
 class PTBTokenizer:
     """Python wrapper of Stanford PTBTokenizer"""
+    def __init__(self, verbose=True):
+        self.verbose = verbose
 
     def tokenize(self, captions_for_image):
         cmd = ['java', '-cp', STANFORD_CORENLP_3_4_1_JAR, \
@@ -46,19 +43,21 @@ class PTBTokenizer:
         # ======================================================
         path_to_jar_dirname=os.path.dirname(os.path.abspath(__file__))
         tmp_file = tempfile.NamedTemporaryFile(delete=False, dir=path_to_jar_dirname)
-        tmp_file.write(sentences.encode('utf-8'))
+        tmp_file.write(sentences.encode())
         tmp_file.close()
 
         # ======================================================
         # tokenize sentence
         # ======================================================
         cmd.append(os.path.basename(tmp_file.name))
-        p_tokenizer = subprocess.Popen(cmd, 
-                                       cwd=path_to_jar_dirname, 
-                                       stdout=subprocess.PIPE,
-                                       universal_newlines = True,
-                                       bufsize = 1)
+        if self.verbose:
+            p_tokenizer = subprocess.Popen(cmd, cwd=path_to_jar_dirname, \
+                stdout=subprocess.PIPE)
+        else:
+            p_tokenizer = subprocess.Popen(cmd, cwd=path_to_jar_dirname, \
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         token_lines = p_tokenizer.communicate(input=sentences.rstrip())[0]
+        token_lines = token_lines.decode()
         lines = token_lines.split('\n')
         # remove temp file
         os.remove(tmp_file.name)

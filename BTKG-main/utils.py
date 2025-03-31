@@ -141,7 +141,8 @@ def test(model, val_iter, vocab, reg_lambda, feature_mode):
     with torch.no_grad():
         for batch in t:
 
-            _, feats, r2l_captions, l2r_captions = parse_batch(batch, feature_mode)
+            _, feats, r2l_captions, l2r_captions = parse_batch(
+                batch, feature_mode)
             r2l_trg = r2l_captions[:, :-1]
             r2l_trg_y = r2l_captions[:, 1:]
             r2l_norm = (r2l_trg_y != pad_idx).data.sum()
@@ -187,12 +188,14 @@ def get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode):
             elif feature_mode == 'three':
                 for vid, image_feat, motion_feat, object_feat in zip(vids, feats[0], feats[1], feats[2]):
                     if vid not in onlyonce_dataset:
-                        onlyonce_dataset[vid] = (image_feat, motion_feat, object_feat)
+                        onlyonce_dataset[vid] = (
+                            image_feat, motion_feat, object_feat)
             elif feature_mode == 'four':
                 for vid, image_feat, motion_feat, object_feat, rel_feat in zip(vids, feats[0], feats[1], feats[2],
                                                                                feats[3]):
                     if vid not in onlyonce_dataset:
-                        onlyonce_dataset[vid] = (image_feat, motion_feat, object_feat, rel_feat)
+                        onlyonce_dataset[vid] = (
+                            image_feat, motion_feat, object_feat, rel_feat)
         onlyonce_iter = []
         vids = list(onlyonce_dataset.keys())
         feats = list(onlyonce_dataset.values())
@@ -202,7 +205,8 @@ def get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode):
         batch_size = 1
         while len(vids) > 0:
             if feature_mode == 'one':
-                onlyonce_iter.append((vids[:batch_size], torch.stack(feats[:batch_size])))
+                onlyonce_iter.append(
+                    (vids[:batch_size], torch.stack(feats[:batch_size])))
             elif feature_mode == 'two':
                 image_feats = []
                 motion_feats = []
@@ -248,10 +252,13 @@ def get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode):
     # BOS_idx = vocab.word2idx['<BOS>']
     with torch.no_grad():
         for vids, feats in tqdm(onlyonce_iter):
-            r2l_captions, l2r_captions = model.beam_search_decode(feats, beam_size, max_len)
+            r2l_captions, l2r_captions = model.beam_search_decode(
+                feats, beam_size, max_len)
             # r2l_captions = [idxs_to_sentence(caption, vocab.idx2word, BOS_idx) for caption in r2l_captions]
-            l2r_captions = [" ".join(caption[0].value) for caption in l2r_captions]
-            r2l_captions = [" ".join(caption[0].value) for caption in r2l_captions]
+            l2r_captions = [" ".join(caption[0].value)
+                            for caption in l2r_captions]
+            r2l_captions = [" ".join(caption[0].value)
+                            for caption in r2l_captions]
             r2l_vid2pred.update({v: p for v, p in zip(vids, r2l_captions)})
             l2r_vid2pred.update({v: p for v, p in zip(vids, l2r_captions)})
     return r2l_vid2pred, l2r_vid2pred
@@ -313,8 +320,10 @@ def calc_scores(ref, hypo):
 
 
 def evaluate(data_iter, model, vocab, beam_size, max_len, feature_mode):
-    r2l_vid2pred, l2r_vid2pred = get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode)
-    r2l_vid2GTs, l2r_vid2GTs = get_groundtruth_captions(data_iter, vocab, feature_mode)
+    r2l_vid2pred, l2r_vid2pred = get_predicted_captions(
+        data_iter, model, beam_size, max_len, feature_mode)
+    r2l_vid2GTs, l2r_vid2GTs = get_groundtruth_captions(
+        data_iter, vocab, feature_mode)
     r2l_scores = score(r2l_vid2pred, r2l_vid2GTs)
     l2r_scores = score(l2r_vid2pred, l2r_vid2GTs)
     return r2l_scores, l2r_scores

@@ -32,6 +32,17 @@ utils. py: Some public methods
 2. After configuring the environment: directly run the train.py file (if the GPU graphics memory is insufficient, you can reduce the configuration through config)
 3. Generally no problem, ask me if you have any questions
 
+## Datasets
+Each dataset will have 2 sub-folders: `feature` and `metadata`.
+- MSR-VTT: 
+    + feature: https://drive.google.com/drive/folders/1lhAk9xha37Q2hQVLK70zNfQKjkBRw0IV.
+    + metadata: https://drive.google.com/drive/u/1/folders/1iMLlCwFoNmyvsuHk-FdS7jX-1F4BA5pk.
+- MSVD:
+    + feature: https://drive.google.com/drive/folders/1LcAdwQYj6AwSSFJAdixJ9kWHVxwC26Cs.
+    + metadata: https://drive.google.com/drive/u/1/folders/1wdT3RS8Cs1H1KtyHT8flEdG58DEXsQ_I.
+    
+After downloading, create a folder `data/{dataset_name}` and put the `feature` and `metadata` folders in it.
+
 ## Datasets and other large files
 
 Download link: https://pan.quark.cn/s/44049885ed0b

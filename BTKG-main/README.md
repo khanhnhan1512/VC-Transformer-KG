@@ -27,7 +27,10 @@ utils. py: Some public methods
 
 1. First, create a conda virtual environment through cyd.yaml (which stores the project's environment configuration)
 
-`Conda env create - f cyd.yaml`
+```
+conda env create - f environment.yml
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+```
 
 2. After configuring the environment: directly run the train.py file (if the GPU graphics memory is insufficient, you can reduce the configuration through config)
 3. Generally no problem, ask me if you have any questions

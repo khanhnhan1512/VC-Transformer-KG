@@ -17,12 +17,13 @@ def build_loader(ckpt_fpath):
         corpus = MSVD(config)
     elif config.corpus == "MSR-VTT":
         corpus = MSRVTT(config)
-    else:
-        raise "无该数据集"
+    else:  # No such dataset
+        raise ValueError("No such dataset: {}".format(config.corpus))
 
     train_iter, val_iter, test_iter, vocab = \
         corpus.train_data_loader, corpus.val_data_loader, corpus.test_data_loader, corpus.vocab
-    r2l_test_vid2GTs, l2r_test_vid2GTs = get_groundtruth_captions(test_iter, vocab, config.feat.feature_mode)
+    r2l_test_vid2GTs, l2r_test_vid2GTs = get_groundtruth_captions(
+        test_iter, vocab, config.feat.feature_mode)
     print('#vocabs: {} ({}), #words: {} ({}). Trim words which appear less than {} times.'.format(
         vocab.n_vocabs, vocab.n_vocabs_untrimmed, vocab.n_words, vocab.n_words_untrimmed, config.loader.min_count))
     del train_iter, val_iter, r2l_test_vid2GTs
@@ -51,7 +52,9 @@ def run(ckpt_fpath, test_iter, vocab, ckpt, l2r_test_vid2GTs, f, captioning_fpat
                                config.transformer.n_heads, config.transformer.n_layers, config.transformer.dropout,
                                config.feat.feature_mode, n_heads_big=config.transformer.n_heads_big)
     model.load_state_dict(checkpoint['abd_transformer'])
-    model = model.cuda()
+
+    if torch.cuda.is_available():
+        model = model.cuda()
 
     """ Test Set """
     print('Finish the model load in CUDA. Try to enter Test Set.')
@@ -80,7 +83,8 @@ if __name__ == "__main__":
     print(ckpt_list, '\n')
     print('依据文件加载数据： ' + ckpt_list[0], '\n')
     # 按照第一个ckpt加载数据
-    test_iter, vocab, l2r_test_vid2GTs = build_loader(os.path.join(file, ckpt_list[0]))
+    test_iter, vocab, l2r_test_vid2GTs = build_loader(
+        os.path.join(file, ckpt_list[0]))
     print('结束数据加载。', '\n')
 
     # 循环测试所有文件
@@ -94,5 +98,6 @@ if __name__ == "__main__":
         print("现在正在测试的文件：" + file + '/' + ckpt_list[i], '\n')
         ckpt_fpath = os.path.join(file, ckpt_list[i])
         captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
-        run(ckpt_fpath, test_iter, vocab, str(i + 1) + '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
+        run(ckpt_fpath, test_iter, vocab, str(i + 1) +
+            '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
     f.close()

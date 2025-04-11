@@ -39,46 +39,96 @@ class LossChecker:
 def parse_batch(batch, feature_mode):
     if feature_mode == 'one':
         vids, feats, r2l_captions, l2r_captions = batch
-        feats = [feat.cuda() for feat in feats]
+
+        if torch.cuda.is_available():
+            feats = [feat.cuda() for feat in feats]
+        else:
+            feats = [feat.cpu() for feat in feats]
+
         feats = torch.cat(feats, dim=2)
-        r2l_captions = r2l_captions.long().cuda()
-        l2r_captions = l2r_captions.long().cuda()
+
+        if torch.cuda.is_available():
+            r2l_captions = r2l_captions.long().cuda()
+            l2r_captions = l2r_captions.long().cuda()
+        else:
+            r2l_captions = r2l_captions.long().cpu()
+            l2r_captions = l2r_captions.long().cpu()
+
         return vids, feats, r2l_captions, l2r_captions
     elif feature_mode == 'two':
         vids, image_feats, motion_feats, r2l_captions, l2r_captions = batch
-        image_feats = [feat.cuda() for feat in image_feats]
-        motion_feats = [feat.cuda() for feat in motion_feats]
+
+        if torch.cuda.is_available():
+            image_feats = [feat.cuda() for feat in image_feats]
+            motion_feats = [feat.cuda() for feat in motion_feats]
+        else:
+            image_feats = [feat.cpu() for feat in image_feats]
+            motion_feats = [feat.cpu() for feat in motion_feats]
+
         image_feats = torch.cat(image_feats, dim=2)
         motion_feats = torch.cat(motion_feats, dim=2)
         feats = (image_feats, motion_feats)
-        r2l_captions = r2l_captions.long().cuda()
-        l2r_captions = l2r_captions.long().cuda()
+
+        if torch.cuda.is_available():
+            r2l_captions = r2l_captions.long().cuda()
+            l2r_captions = l2r_captions.long().cuda()
+        else:
+            r2l_captions = r2l_captions.long().cpu()
+            l2r_captions = l2r_captions.long().cpu()
+
         return vids, feats, r2l_captions, l2r_captions
     elif feature_mode == 'three':
         vids, image_feats, motion_feats, object_feats, r2l_captions, l2r_captions = batch
-        image_feats = [feat.cuda() for feat in image_feats]
-        motion_feats = [feat.cuda() for feat in motion_feats]
-        object_feats = [feat.cuda() for feat in object_feats]
+
+        if torch.cuda.is_available():
+            image_feats = [feat.cuda() for feat in image_feats]
+            motion_feats = [feat.cuda() for feat in motion_feats]
+            object_feats = [feat.cuda() for feat in object_feats]
+        else:
+            image_feats = [feat.cpu() for feat in image_feats]
+            motion_feats = [feat.cpu() for feat in motion_feats]
+            object_feats = [feat.cpu() for feat in object_feats]
+
         image_feats = torch.cat(image_feats, dim=2)
         motion_feats = torch.cat(motion_feats, dim=2)
         object_feats = torch.cat(object_feats, dim=2)
         feats = (image_feats, motion_feats, object_feats)
-        r2l_captions = r2l_captions.long().cuda()
-        l2r_captions = l2r_captions.long().cuda()
+
+        if torch.cuda.is_available():
+            r2l_captions = r2l_captions.long().cuda()
+            l2r_captions = l2r_captions.long().cuda()
+        else:
+            r2l_captions = r2l_captions.long().cpu()
+            l2r_captions = l2r_captions.long().cpu()
+
         return vids, feats, r2l_captions, l2r_captions
     elif feature_mode == 'four':
         vids, image_feats, motion_feats, object_feats, rel_feats, r2l_captions, l2r_captions = batch
-        image_feats = [feat.cuda() for feat in image_feats]
-        motion_feats = [feat.cuda() for feat in motion_feats]
-        object_feats = [feat.cuda() for feat in object_feats]
-        rel_feats = [feat.cuda() for feat in rel_feats]
+
+        if torch.cuda.is_available():
+            image_feats = [feat.cuda() for feat in image_feats]
+            motion_feats = [feat.cuda() for feat in motion_feats]
+            object_feats = [feat.cuda() for feat in object_feats]
+            rel_feats = [feat.cuda() for feat in rel_feats]
+        else:
+            image_feats = [feat.cpu() for feat in image_feats]
+            motion_feats = [feat.cpu() for feat in motion_feats]
+            object_feats = [feat.cpu() for feat in object_feats]
+            rel_feats = [feat.cpu() for feat in rel_feats]
+
         image_feats = torch.cat(image_feats, dim=2)
         motion_feats = torch.cat(motion_feats, dim=2)
         object_feats = torch.cat(object_feats, dim=2)
         rel_feats = torch.cat(rel_feats, dim=2)
         feats = (image_feats, motion_feats, object_feats, rel_feats)
-        r2l_captions = r2l_captions.long().cuda()
-        l2r_captions = l2r_captions.long().cuda()
+
+        if torch.cuda.is_available():
+            r2l_captions = r2l_captions.long().cuda()
+            l2r_captions = l2r_captions.long().cuda()
+        else:
+            r2l_captions = r2l_captions.long().cpu()
+            l2r_captions = l2r_captions.long().cpu()
+
         return vids, feats, r2l_captions, l2r_captions
 
 
@@ -86,7 +136,7 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip, fea
     model.train()
     loss_checker = LossChecker(3)
     pad_idx = vocab.word2idx['<PAD>']
-    # 定义label smoothing 损失
+    # Define label smoothing loss
     criterion = LabelSmoothing(vocab.n_vocabs, pad_idx, C.label_smoothing)
     t = tqdm(train_iter)
     # t.set_description('Train:')
@@ -200,7 +250,10 @@ def get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode):
         vids = list(onlyonce_dataset.keys())
         feats = list(onlyonce_dataset.values())
         del onlyonce_dataset
-        torch.cuda.empty_cache()
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
         time.sleep(5)
         batch_size = 1
         while len(vids) > 0:

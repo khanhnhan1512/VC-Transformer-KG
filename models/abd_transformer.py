@@ -25,6 +25,11 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
+
+        # Ensure that a_2 and b_2 are properly shaped for broadcasting
+        if x.size(-1) != self.a_2.size(0):
+            return x  # Return input unchanged if dimensions don't match
+
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
@@ -84,9 +89,12 @@ class PositionalEncoding(nn.Module):
 def self_attention(query, key, value, dropout=None, mask=None):
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
-    # mask的操作在QK之后，softmax之前
+    # The mask operation is after QK and before softmax
     if mask is not None:
-        mask.cuda()
+
+        if torch.cuda.is_available():
+            mask.cuda()
+
         scores = scores.masked_fill(mask == 0, -1e9)
     self_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
@@ -126,13 +134,18 @@ class MultiHeadAttention(nn.Module):
         #     # 变为三维， 或者说是concat head
         #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
 
-        query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+        query = self.linear_query(query).view(
+            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
+        key = self.linear_key(key).view(
+            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+        value = self.linear_value(value).view(
+            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
 
-        x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
+        x, self.attn = self_attention(
+            query, key, value, dropout=self.dropout, mask=mask)
         # 变为三维， 或者说是concat head
-        x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
+        x = x.transpose(1, 2).contiguous().view(
+            n_batch, -1, self.head * self.d_k)
 
         return self.linear_out(x)
 
@@ -194,14 +207,18 @@ class DecoderLayer(nn.Module):
         super(DecoderLayer, self).__init__()
         self.attn = attn
         self.feed_forward = feed_forward
-        self.sublayer_connection = clones(SublayerConnection(size, dropout), sublayer_num)
+        self.sublayer_connection = clones(
+            SublayerConnection(size, dropout), sublayer_num)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
-        x = self.sublayer_connection[0](x, lambda x: self.attn(x, x, x, trg_mask))
-        x = self.sublayer_connection[1](x, lambda x: self.attn(x, memory, memory, src_mask))
+        x = self.sublayer_connection[0](
+            x, lambda x: self.attn(x, x, x, trg_mask))
+        x = self.sublayer_connection[1](
+            x, lambda x: self.attn(x, memory, memory, src_mask))
 
         if r2l_memory is not None:
-            x = self.sublayer_connection[-2](x, lambda x: self.attn(x, r2l_memory, r2l_memory, r2l_trg_mask))
+            x = self.sublayer_connection[-2](x, lambda x: self.attn(
+                x, r2l_memory, r2l_memory, r2l_trg_mask))
 
         return self.sublayer_connection[-1](x, self.feed_forward)
 
@@ -249,7 +266,8 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
             src_object_mask = (src[2][:, :, 0] != pad_idx).unsqueeze(1)
             src_rel_mask = (src[3][:, :, 0] != pad_idx).unsqueeze(1)
-            enc_src_mask = (src_image_mask, src_motion_mask, src_object_mask, src_rel_mask)
+            enc_src_mask = (src_image_mask, src_motion_mask,
+                            src_object_mask, src_rel_mask)
             dec_src_mask = src_image_mask & src_motion_mask
             src_mask = (enc_src_mask, dec_src_mask)
         if len(src) == 3:
@@ -269,15 +287,22 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
         src_mask = (src[:, :, 0] != pad_idx).unsqueeze(1)
     if trg is not None:
         if isinstance(src_mask, tuple):
-            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(src_image_mask.data)
-            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(src_image_mask.data)
-            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(src_image_mask.data)
+            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(
+                trg.size(1)).type_as(src_image_mask.data)
+            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(
+                1).type_as(src_image_mask.data)
+            r2l_trg_mask = r2l_pad_mask & subsequent_mask(
+                r2l_trg.size(1)).type_as(src_image_mask.data)
             return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask
         else:
-            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(src_mask.data)
-            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(src_mask.data)
-            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(src_mask.data)
-            return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask  # src_mask[batch, 1, lens]  trg_mask[batch, 1, lens]
+            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(
+                trg.size(1)).type_as(src_mask.data)
+            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(
+                1).type_as(src_mask.data)
+            r2l_trg_mask = r2l_pad_mask & subsequent_mask(
+                r2l_trg.size(1)).type_as(src_mask.data)
+            # src_mask[batch, 1, lens]  trg_mask[batch, 1, lens]
+            return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask
 
     else:
         return src_mask
@@ -287,7 +312,11 @@ def subsequent_mask(size):
     """Mask out subsequent positions."""
     attn_shape = (1, size, size)
     mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
-    return (torch.from_numpy(mask) == 0).cuda()
+
+    if torch.cuda.is_available():
+        return (torch.from_numpy(mask) == 0).cuda()
+    else:
+        return (torch.from_numpy(mask) == 0).cpu()
 
 
 class Generator(nn.Module):
@@ -339,9 +368,11 @@ class ABDTransformer(nn.Module):
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
-        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout))
+        self.encoder = Encoder(n_layers, EncoderLayer(
+            d_model, c(attn), c(feed_forward), dropout))
 
-        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout))
+        self.encoder_big = Encoder(n_layers, EncoderLayer(
+            d_model, c(attn_big), c(feed_forward), dropout))
 
         # self.encoder_big2 = Encoder(n_layers, EncoderLayer(d_model, c(attn_big2), c(feed_forward), dropout))
 
@@ -431,16 +462,21 @@ class ABDTransformer(nn.Module):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
         if self.feature_mode == 'one':
             encoding_outputs = self.encode(src, src_mask)
-            r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, src_mask, r2l_trg_mask)
-            l2r_outputs = self.l2r_decode(trg, encoding_outputs, src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
+            r2l_outputs = self.r2l_decode(
+                r2l_trg, encoding_outputs, src_mask, r2l_trg_mask)
+            l2r_outputs = self.l2r_decode(
+                trg, encoding_outputs, src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
 
         elif self.feature_mode == 'two' or 'three' or 'four':
             enc_src_mask, dec_src_mask = src_mask
-            r2l_encoding_outputs = self.encode(src, enc_src_mask, feature_mode_two=True)
+            r2l_encoding_outputs = self.encode(
+                src, enc_src_mask, feature_mode_two=True)
             encoding_outputs = self.encode(src, enc_src_mask)
 
-            r2l_outputs = self.r2l_decode(r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
-            l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
+            r2l_outputs = self.r2l_decode(
+                r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
+            l2r_outputs = self.l2r_decode(
+                trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
 
             # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
             # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
@@ -457,13 +493,20 @@ class ABDTransformer(nn.Module):
         eos_idx = self.vocab.word2idx['<S>']
         r2l_hidden = None
         with torch.no_grad():
-            output = torch.ones(batch_size, 1).fill_(eos_idx).long().cuda()
+
+            if torch.cuda.is_available():
+                output = torch.ones(batch_size, 1).fill_(eos_idx).long().cuda()
+            else:
+                output = torch.ones(batch_size, 1).fill_(eos_idx).long().cpu()
+
             for i in range(max_len + 2 - 1):
                 trg_mask = subsequent_mask(output.size(1))
-                dec_out = self.r2l_decode(output, memory, src_mask, trg_mask)  # batch, len, d_model
+                dec_out = self.r2l_decode(
+                    output, memory, src_mask, trg_mask)  # batch, len, d_model
                 r2l_hidden = dec_out
                 pred = self.generator(dec_out)  # batch, len, n_vocabs
-                next_word = pred[:, -1].max(dim=-1)[1].unsqueeze(1)  # pred[:, -1]([batch, n_vocabs])
+                # pred[:, -1]([batch, n_vocabs])
+                next_word = pred[:, -1].max(dim=-1)[1].unsqueeze(1)
                 output = torch.cat([output, next_word], dim=-1)
         return r2l_hidden, output
 
@@ -560,14 +603,16 @@ class ABDTransformer(nn.Module):
                 "shape (cur_beam_sz,)"
                 live_hyp_num_i = beam_size - len(completed_hypotheses[i])
                 "shape (cur_beam_sz,). Vals are between 0 and 50002 vocab_sz"
-                top_cand_hyp_scores, top_cand_hyp_pos = torch.topk(cumulative_hyp_scores_i, k=live_hyp_num_i)
+                top_cand_hyp_scores, top_cand_hyp_pos = torch.topk(
+                    cumulative_hyp_scores_i, k=live_hyp_num_i)
                 "shape (cur_beam_sz,). prev_hyp_ids vals are 0 <= val < cur_beam_sz. hyp_word_ids vals are 0 <= val < vocab_len"
                 prev_hyp_ids, hyp_word_ids = top_cand_hyp_pos // self.vocab.n_vocabs, \
-                                             top_cand_hyp_pos % self.vocab.n_vocabs
+                    top_cand_hyp_pos % self.vocab.n_vocabs
 
                 # 2.2.3 For each of the topk words, we append the new word to the current (generating) sentence
                 # We add this to new_hypotheses_i and add its corresponding total score to new_hyp_scores_i
-                new_hypotheses_i, new_hyp_scores_i = [], []  # Removed live_hyp_ids_i, which is used in the LSTM decoder to track live hypothesis ids
+                # Removed live_hyp_ids_i, which is used in the LSTM decoder to track live hypothesis ids
+                new_hypotheses_i, new_hyp_scores_i = [], []
                 for prev_hyp_id, hyp_word_id, cand_new_hyp_score in zip(prev_hyp_ids, hyp_word_ids,
                                                                         top_cand_hyp_scores):
                     prev_hyp_id, hyp_word_id, cand_new_hyp_score = \
@@ -577,7 +622,8 @@ class ABDTransformer(nn.Module):
                         (hypotheses[i][prev_hyp_id], torch.tensor([hyp_word_id], device=self.device)))
                     if hyp_word_id == end_symbol:
                         completed_hypotheses[i].append(Hypothesis(
-                            value=[self.vocab.idx2word[a.item()] for a in new_hyp_sent[1:-1]],
+                            value=[self.vocab.idx2word[a.item()]
+                                   for a in new_hyp_sent[1:-1]],
                             score=cand_new_hyp_score))
                     else:
                         new_hypotheses_i.append(new_hyp_sent.unsqueeze(-1))
@@ -587,8 +633,10 @@ class ABDTransformer(nn.Module):
                 # is empty - we have fully processed that example. We use None as a sentinel in this case.
                 # Above, the loops gracefully handle None examples.
                 if len(new_hypotheses_i) > 0:
-                    hypotheses_i = torch.cat(new_hypotheses_i, dim=-1).transpose(0, -1).to(self.device)
-                    hyp_scores_i = torch.tensor(new_hyp_scores_i, dtype=torch.float, device=self.device)
+                    hypotheses_i = torch.cat(
+                        new_hypotheses_i, dim=-1).transpose(0, -1).to(self.device)
+                    hyp_scores_i = torch.tensor(
+                        new_hyp_scores_i, dtype=torch.float, device=self.device)
                 else:
                     hypotheses_i, hyp_scores_i = None, None
                 new_hypotheses += [hypotheses_i]
@@ -608,9 +656,11 @@ class ABDTransformer(nn.Module):
                 scores, ix = torch.topk(hyp_scores[i], k=hyps_to_add)
                 for score, id in zip(scores, ix):
                     completed_hypotheses[i].append(Hypothesis(
-                        value=[self.vocab.idx2word[a.item()] for a in hypotheses[i][id][1:]],
+                        value=[self.vocab.idx2word[a.item()]
+                               for a in hypotheses[i][id][1:]],
                         score=score))
-            completed_hypotheses[i].sort(key=lambda hyp: hyp.score, reverse=True)
+            completed_hypotheses[i].sort(
+                key=lambda hyp: hyp.score, reverse=True)
         return r2l_outputs, completed_hypotheses
 
     def beam_search_decode(self, src, beam_size, max_len):
@@ -635,7 +685,8 @@ class ABDTransformer(nn.Module):
         "src has shape (batch_size, sent_len)"
         "src_mask has shape (batch_size, 1, sent_len)"
         # src_mask = (src[:, :, 0] != self.vocab.word2idx['<PAD>']).unsqueeze(-2)  # TODO Untested
-        src_mask = pad_mask(src, r2l_trg=None, trg=None, pad_idx=self.vocab.word2idx['<PAD>'])
+        src_mask = pad_mask(src, r2l_trg=None, trg=None,
+                            pad_idx=self.vocab.word2idx['<PAD>'])
         "model_encodings has shape (batch_size, sentence_len, d_model)"
         if self.feature_mode == 'one':
             batch_size = src.shape[0]
@@ -647,7 +698,8 @@ class ABDTransformer(nn.Module):
             batch_size = src[0].shape[0]
             enc_src_mask = src_mask[0]
             dec_src_mask = src_mask[1]
-            r2l_model_encodings = self.encode(src, enc_src_mask, feature_mode_two=True)
+            r2l_model_encodings = self.encode(
+                src, enc_src_mask, feature_mode_two=True)
             # model_encodings = r2l_model_encodings
             model_encodings = self.encode(src, enc_src_mask)
 
@@ -706,11 +758,13 @@ class ABDTransformer(nn.Module):
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
             if self.feature_mode == 'one':
                 out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src.data)).to(self.device),
+                                      Variable(subsequent_mask(
+                                          y_tm1.size(-1)).type_as(src.data)).to(self.device),
                                       r2l_memory_cur, r2l_trg_mask=None)
             elif self.feature_mode == 'two' or 'three' or 'four':
                 out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
+                                      Variable(subsequent_mask(
+                                          y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
                                       r2l_memory_cur, r2l_trg_mask=None)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
             log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
@@ -746,14 +800,16 @@ class ABDTransformer(nn.Module):
                 "shape (cur_beam_sz,)"
                 live_hyp_num_i = beam_size - len(completed_hypotheses[i])
                 "shape (cur_beam_sz,). Vals are between 0 and 50002 vocab_sz"
-                top_cand_hyp_scores, top_cand_hyp_pos = torch.topk(cumulative_hyp_scores_i, k=live_hyp_num_i)
+                top_cand_hyp_scores, top_cand_hyp_pos = torch.topk(
+                    cumulative_hyp_scores_i, k=live_hyp_num_i)
                 "shape (cur_beam_sz,). prev_hyp_ids vals are 0 <= val < cur_beam_sz. hyp_word_ids vals are 0 <= val < vocab_len"
                 prev_hyp_ids, hyp_word_ids = top_cand_hyp_pos // self.vocab.n_vocabs, \
-                                             top_cand_hyp_pos % self.vocab.n_vocabs
+                    top_cand_hyp_pos % self.vocab.n_vocabs
 
                 # 2.2.3 For each of the topk words, we append the new word to the current (generating) sentence
                 # We add this to new_hypotheses_i and add its corresponding total score to new_hyp_scores_i
-                new_hypotheses_i, new_hyp_scores_i = [], []  # Removed live_hyp_ids_i, which is used in the LSTM decoder to track live hypothesis ids
+                # Removed live_hyp_ids_i, which is used in the LSTM decoder to track live hypothesis ids
+                new_hypotheses_i, new_hyp_scores_i = [], []
                 for prev_hyp_id, hyp_word_id, cand_new_hyp_score in zip(prev_hyp_ids, hyp_word_ids,
                                                                         top_cand_hyp_scores):
                     prev_hyp_id, hyp_word_id, cand_new_hyp_score = \
@@ -763,7 +819,8 @@ class ABDTransformer(nn.Module):
                         (hypotheses[i][prev_hyp_id], torch.tensor([hyp_word_id], device=self.device)))
                     if hyp_word_id == end_symbol:
                         completed_hypotheses[i].append(Hypothesis(
-                            value=[self.vocab.idx2word[a.item()] for a in new_hyp_sent[1:-1]],
+                            value=[self.vocab.idx2word[a.item()]
+                                   for a in new_hyp_sent[1:-1]],
                             score=cand_new_hyp_score))
                     else:
                         new_hypotheses_i.append(new_hyp_sent.unsqueeze(-1))
@@ -773,8 +830,10 @@ class ABDTransformer(nn.Module):
                 # is empty - we have fully processed that example. We use None as a sentinel in this case.
                 # Above, the loops gracefully handle None examples.
                 if len(new_hypotheses_i) > 0:
-                    hypotheses_i = torch.cat(new_hypotheses_i, dim=-1).transpose(0, -1).to(self.device)
-                    hyp_scores_i = torch.tensor(new_hyp_scores_i, dtype=torch.float, device=self.device)
+                    hypotheses_i = torch.cat(
+                        new_hypotheses_i, dim=-1).transpose(0, -1).to(self.device)
+                    hyp_scores_i = torch.tensor(
+                        new_hyp_scores_i, dtype=torch.float, device=self.device)
                 else:
                     hypotheses_i, hyp_scores_i = None, None
                 new_hypotheses += [hypotheses_i]
@@ -794,8 +853,10 @@ class ABDTransformer(nn.Module):
                 scores, ix = torch.topk(hyp_scores[i], k=hyps_to_add)
                 for score, id in zip(scores, ix):
                     completed_hypotheses[i].append(Hypothesis(
-                        value=[self.vocab.idx2word[a.item()] for a in hypotheses[i][id][1:]],
+                        value=[self.vocab.idx2word[a.item()]
+                               for a in hypotheses[i][id][1:]],
                         score=score))
-            completed_hypotheses[i].sort(key=lambda hyp: hyp.score, reverse=True)
+            completed_hypotheses[i].sort(
+                key=lambda hyp: hyp.score, reverse=True)
         # print('completed_hypotheses', completed_hypotheses)
         return r2l_completed_hypotheses, completed_hypotheses

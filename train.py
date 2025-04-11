@@ -38,8 +38,10 @@ def build_model(vocab):
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
                                n_heads_big=C.transformer.n_heads_big)
-
-    model.cuda()
+    
+    if torch.cuda.is_available():
+        model.cuda()
+    
     return model
 
 
@@ -167,7 +169,10 @@ def main():
 
     """ Test with Best Model """
     gc.collect()
-    torch.cuda.empty_cache()
+    
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    
     print("\n\n\n[BEST: {} SEED: {}]".format(best_epoch, seed))
     best_model = load_checkpoint(model, best_ckpt_fpath)
     r2l_best_scores, l2r_best_scores = evaluate(test_iter, best_model, vocab, C.beam_size, C.loader.max_caption_len,
@@ -194,7 +199,10 @@ def main():
     del train_iter, val_iter, test_iter, vocab, best_model, model, parameter_number, optimizer, lr_scheduler
     del train_loss
     gc.collect()
-    torch.cuda.empty_cache()
+    
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    
     file = C.ckpt_dpath
     ckpt_list = os.listdir(file)
     print(file)

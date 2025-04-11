@@ -3,7 +3,7 @@ import time
 
 
 class FeatureConfig(object):
-    # model = "MSVD_InceptionResNetV2"
+    model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
     # model = "MSVD_ResNet152+I3D"
@@ -25,7 +25,7 @@ class FeatureConfig(object):
     # model = "MSR-VTT_ResNet152+I3D+OFeat+rel"
     # model = "MSR-VTT_InceptionResNetV2+I3D+OFeat"
 
-    model = "MSR-VTT_InceptionResNetV2+I3D+OFeat+rel"
+    # model = "MSR-VTT_InceptionResNetV2+I3D+OFeat+rel"
 
     size = None
     feature_mode = None
@@ -129,8 +129,8 @@ class EvalConfig(object):
 
 
 class TrainConfig(object):
-    # corpus = 'MSVD'
-    corpus = 'MSR-VTT'
+    corpus = 'MSVD'
+    # corpus = 'MSR-VTT'
     msrvtt_dim = 1028
     rel_dim = 300
     feat = FeatureConfig

@@ -9,11 +9,8 @@ class FeatureConfig(object):
     # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
-
-
     # model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
-
     # model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
 
     # model = "MSR-VTT_InceptionResNetV2"
@@ -24,7 +21,6 @@ class FeatureConfig(object):
     # model = "MSR-VTT_ResNet152+I3D+OFeat"
     # model = "MSR-VTT_ResNet152+I3D+OFeat+rel"
     # model = "MSR-VTT_InceptionResNetV2+I3D+OFeat"
-
     # model = "MSR-VTT_InceptionResNetV2+I3D+OFeat+rel"
 
     size = None
@@ -187,7 +183,7 @@ class TrainConfig(object):
         hyperparams_id += " gc-{}".format(gradient_clip)
 
     timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time()))
-    model_id = " | ".join(
+    model_id = " _ ".join(
         [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
 
     """ Log """

@@ -6,3 +6,5 @@
 .vector_cache/*
 # Exclude all data
 data/*
+# Exclude all model weights
+*.ckpt

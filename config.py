@@ -3,10 +3,10 @@ import time
 
 
 class FeatureConfig(object):
-    model = "MSVD_InceptionResNetV2"
+    # model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
-    # model = "MSVD_ResNet152+I3D"
+    model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
     # model = "MSVD_InceptionResNetV2+I3D"
@@ -182,7 +182,7 @@ class TrainConfig(object):
     if gradient_clip is not None:
         hyperparams_id += " gc-{}".format(gradient_clip)
 
-    timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time()))
+    timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time())).replace(":", "_")
     model_id = " _ ".join(
         [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
 

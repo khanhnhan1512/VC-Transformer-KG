@@ -1,0 +1,428 @@
+MODEL ID: 2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0
+#vocabs: 3891 (9158), #words: 323223 (329680). Trim words which appear less than 3 times.
+{'Total': 91036339, 'Trainable': 91036339}
+
+
+loss: 2.726076024868449 = (1-reg): 0.4 * r2l_loss: 2.7638669571329335 + (reg):0.6 * l2r_loos: 2.700881932758894 
+{'testlen': 536, 'reflen': 541, 'guess': [536, 436, 336, 240], 'correct': [432, 266, 143, 68]}
+ratio: 0.9907578558207195
+{'testlen': 498, 'reflen': 496, 'guess': [498, 398, 298, 198], 'correct': [410, 251, 142, 66]}
+ratio: 1.0040322580624919
+loss: 2.557931152979533 = (1-reg): 0.4 * r2l_loss: 2.603185752586082 + (reg):0.6 * l2r_loos: 2.527761301287898 
+r2l_scores: {'Bleu_1': 0.7984867292700001, 'Bleu_2': 0.6947135949767148, 'Bleu_3': 0.5881918920815667, 'Bleu_4': 0.48887843380993273, 'METEOR': 0.34481856693431656, 'ROUGE_L': 0.7102620344404589, 'CIDEr': 0.8855274383700081}
+l2r_scores: {'Bleu_1': 0.8232931726891098, 'Bleu_2': 0.720564034977903, 'Bleu_3': 0.627777502422501, 'Bleu_4': 0.5358879569699995, 'METEOR': 0.3375891281616306, 'ROUGE_L': 0.7259713344021193, 'CIDEr': 0.9164259107402165}
+Saving checkpoint at epoch=1 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/1.ckpt
+
+
+loss: 2.07872462108487 = (1-reg): 0.4 * r2l_loss: 2.0994877080448338 + (reg):0.6 * l2r_loos: 2.0648824613602437 
+{'testlen': 534, 'reflen': 533, 'guess': [534, 434, 334, 234], 'correct': [437, 266, 159, 82]}
+ratio: 1.0018761726060001
+{'testlen': 512, 'reflen': 512, 'guess': [512, 412, 312, 212], 'correct': [418, 265, 157, 80]}
+ratio: 0.9999999999980469
+loss: 2.493939691119724 = (1-reg): 0.4 * r2l_loss: 2.5340902390303435 + (reg):0.6 * l2r_loos: 2.467172544090836 
+r2l_scores: {'Bleu_1': 0.8183520599235612, 'Bleu_2': 0.7082165045883565, 'Bleu_3': 0.6203844660179679, 'Bleu_4': 0.5378302000045555, 'METEOR': 0.3572153421113657, 'ROUGE_L': 0.7275892329215897, 'CIDEr': 1.0377967651898239}
+l2r_scores: {'Bleu_1': 0.816406249996811, 'Bleu_2': 0.7246486531453414, 'Bleu_3': 0.641701930305877, 'Bleu_4': 0.5619381803087966, 'METEOR': 0.35297312454721597, 'ROUGE_L': 0.7304173352291775, 'CIDEr': 0.989954639243238}
+Saving checkpoint at epoch=2 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/2.ckpt
+
+
+loss: 1.874704719684163 = (1-reg): 0.4 * r2l_loss: 1.8890037080889843 + (reg):0.6 * l2r_loos: 1.8651719589702418 
+{'testlen': 533, 'reflen': 533, 'guess': [533, 433, 333, 233], 'correct': [441, 278, 171, 89]}
+ratio: 0.9999999999981238
+{'testlen': 511, 'reflen': 511, 'guess': [511, 411, 311, 211], 'correct': [425, 270, 159, 78]}
+ratio: 0.9999999999980431
+loss: 2.455915016598172 = (1-reg): 0.4 * r2l_loss: 2.4776004861902305 + (reg):0.6 * l2r_loos: 2.441457913540028 
+r2l_scores: {'Bleu_1': 0.8273921200719422, 'Bleu_2': 0.7288432566692469, 'Bleu_3': 0.648544905673791, 'Bleu_4': 0.568150719010088, 'METEOR': 0.36627363323784284, 'ROUGE_L': 0.7452090337183311, 'CIDEr': 0.9486676615289911}
+l2r_scores: {'Bleu_1': 0.831702544028056, 'Bleu_2': 0.7391711128220791, 'Bleu_3': 0.653695611147179, 'Bleu_4': 0.5668716184459749, 'METEOR': 0.3603417027861628, 'ROUGE_L': 0.7331974064083207, 'CIDEr': 0.9197731455825727}
+Saving checkpoint at epoch=3 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/3.ckpt
+
+
+loss: 1.7634040036748668 = (1-reg): 0.4 * r2l_loss: 1.7726222314990934 + (reg):0.6 * l2r_loos: 1.7572584252279313 
+{'testlen': 557, 'reflen': 556, 'guess': [557, 457, 357, 257], 'correct': [457, 275, 159, 79]}
+ratio: 1.0017985611492775
+{'testlen': 517, 'reflen': 517, 'guess': [517, 417, 317, 217], 'correct': [433, 269, 158, 78]}
+ratio: 0.9999999999980658
+loss: 2.4355792654885184 = (1-reg): 0.4 * r2l_loss: 2.4630777685730547 + (reg):0.6 * l2r_loos: 2.41724682825583 
+r2l_scores: {'Bleu_1': 0.8204667863540027, 'Bleu_2': 0.7026495125739965, 'Bleu_3': 0.6035808731120641, 'Bleu_4': 0.5098883552184366, 'METEOR': 0.3596107480495596, 'ROUGE_L': 0.7405143703149456, 'CIDEr': 0.9255866048217329}
+l2r_scores: {'Bleu_1': 0.8375241779464699, 'Bleu_2': 0.7350329180162236, 'Bleu_3': 0.6457589999777721, 'Bleu_4': 0.5577782404694747, 'METEOR': 0.3583412680192421, 'ROUGE_L': 0.7443600952870999, 'CIDEr': 0.9777713102245588}
+Saving checkpoint at epoch=4 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/4.ckpt
+
+
+loss: 1.6878748334040408 = (1-reg): 0.4 * r2l_loss: 1.693732174888986 + (reg):0.6 * l2r_loos: 1.6839698484295704 
+{'testlen': 558, 'reflen': 558, 'guess': [558, 458, 358, 258], 'correct': [460, 286, 164, 86]}
+ratio: 0.9999999999982079
+{'testlen': 525, 'reflen': 525, 'guess': [525, 425, 325, 225], 'correct': [450, 292, 172, 83]}
+ratio: 0.9999999999980953
+loss: 2.4395829483314797 = (1-reg): 0.4 * r2l_loss: 2.4527368872253983 + (reg):0.6 * l2r_loos: 2.430813523575112 
+r2l_scores: {'Bleu_1': 0.8243727598536761, 'Bleu_2': 0.7174837906012765, 'Bleu_3': 0.6178195826576068, 'Bleu_4': 0.5294999685354929, 'METEOR': 0.36006590713416914, 'ROUGE_L': 0.7373608744222077, 'CIDEr': 0.9900139013353484}
+l2r_scores: {'Bleu_1': 0.8571428571395919, 'Bleu_2': 0.7674031294049166, 'Bleu_3': 0.6780016319733886, 'Bleu_4': 0.5823002116849191, 'METEOR': 0.36532135370039137, 'ROUGE_L': 0.7492053637072986, 'CIDEr': 1.0351109591711238}
+Saving checkpoint at epoch=5 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/5.ckpt
+
+
+loss: 1.6291022507870783 = (1-reg): 0.4 * r2l_loss: 1.6344610530822004 + (reg):0.6 * l2r_loos: 1.6255296288161982 
+{'testlen': 546, 'reflen': 547, 'guess': [546, 446, 346, 247], 'correct': [447, 274, 161, 79]}
+ratio: 0.9981718464332757
+{'testlen': 507, 'reflen': 506, 'guess': [507, 407, 307, 207], 'correct': [421, 269, 159, 74]}
+ratio: 1.001976284583
+loss: 2.4255499945746526 = (1-reg): 0.4 * r2l_loss: 2.449836504017865 + (reg):0.6 * l2r_loos: 2.4093588784888937 
+r2l_scores: {'Bleu_1': 0.817183274597736, 'Bleu_2': 0.7078966891487944, 'Bleu_3': 0.6151268857802088, 'Bleu_4': 0.522104232410445, 'METEOR': 0.3490686630482122, 'ROUGE_L': 0.723374908459775, 'CIDEr': 0.9152642731895174}
+l2r_scores: {'Bleu_1': 0.8303747534500387, 'Bleu_2': 0.7408256378819996, 'Bleu_3': 0.6575017585225802, 'Bleu_4': 0.5645963063227675, 'METEOR': 0.35597729420383806, 'ROUGE_L': 0.7397474462131564, 'CIDEr': 0.9088683709481237}
+Saving checkpoint at epoch=6 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/6.ckpt
+
+
+loss: 1.583779797319506 = (1-reg): 0.4 * r2l_loss: 1.5885257957020744 + (reg):0.6 * l2r_loos: 1.5806157146516393 
+{'testlen': 529, 'reflen': 527, 'guess': [529, 429, 329, 230], 'correct': [431, 264, 153, 83]}
+ratio: 1.0037950664117574
+{'testlen': 529, 'reflen': 529, 'guess': [529, 429, 329, 229], 'correct': [446, 286, 180, 94]}
+ratio: 0.9999999999981096
+loss: 2.410119538837009 = (1-reg): 0.4 * r2l_loss: 2.4377200497521296 + (reg):0.6 * l2r_loos: 2.3917190728364166 
+r2l_scores: {'Bleu_1': 0.8147448015107472, 'Bleu_2': 0.7080829162697948, 'Bleu_3': 0.6154903599414219, 'Bleu_4': 0.5385840719984004, 'METEOR': 0.35017603459853786, 'ROUGE_L': 0.7084201575100149, 'CIDEr': 0.9553466061831091}
+l2r_scores: {'Bleu_1': 0.8431001890327292, 'Bleu_2': 0.7497111394971488, 'Bleu_3': 0.6749757626463819, 'Bleu_4': 0.5960589679597209, 'METEOR': 0.3678068000171071, 'ROUGE_L': 0.7467441083255847, 'CIDEr': 1.0082483162952287}
+Saving checkpoint at epoch=7 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/7.ckpt
+
+
+loss: 1.5440730256721622 = (1-reg): 0.4 * r2l_loss: 1.5477363496530252 + (reg):0.6 * l2r_loos: 1.541630726798636 
+{'testlen': 520, 'reflen': 521, 'guess': [520, 420, 320, 223], 'correct': [437, 276, 159, 78]}
+ratio: 0.9980806142015393
+{'testlen': 518, 'reflen': 519, 'guess': [518, 418, 318, 218], 'correct': [437, 277, 167, 83]}
+ratio: 0.9980732177244739
+loss: 2.4147027651468913 = (1-reg): 0.4 * r2l_loss: 2.4345536797134963 + (reg):0.6 * l2r_loos: 2.401468697300664 
+r2l_scores: {'Bleu_1': 0.8387700440910163, 'Bleu_2': 0.7417093620133575, 'Bleu_3': 0.6485744389464932, 'Bleu_4': 0.5555312715741378, 'METEOR': 0.3610671701728633, 'ROUGE_L': 0.7314759443264818, 'CIDEr': 0.9925118597957233}
+l2r_scores: {'Bleu_1': 0.8420022865732936, 'Bleu_2': 0.7462583025177794, 'Bleu_3': 0.6633505581403016, 'Bleu_4': 0.577102721388101, 'METEOR': 0.3663128332026371, 'ROUGE_L': 0.735887590649778, 'CIDEr': 0.9756290500997267}
+Saving checkpoint at epoch=8 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/8.ckpt
+
+
+loss: 1.5107153391447223 = (1-reg): 0.4 * r2l_loss: 1.5142616846913197 + (reg):0.6 * l2r_loos: 1.5083510301933913 
+{'testlen': 563, 'reflen': 563, 'guess': [563, 463, 363, 263], 'correct': [463, 287, 169, 86]}
+ratio: 0.9999999999982239
+{'testlen': 544, 'reflen': 544, 'guess': [544, 444, 344, 244], 'correct': [448, 279, 165, 84]}
+ratio: 0.9999999999981618
+loss: 2.404073950096413 = (1-reg): 0.4 * r2l_loss: 2.4243886170563873 + (reg):0.6 * l2r_loos: 2.3905307363580772 
+r2l_scores: {'Bleu_1': 0.8223801065690147, 'Bleu_2': 0.7139811581090402, 'Bleu_3': 0.6191338189798842, 'Bleu_4': 0.5278056939355233, 'METEOR': 0.3597547417377618, 'ROUGE_L': 0.7305975196234824, 'CIDEr': 0.9852173013157955}
+l2r_scores: {'Bleu_1': 0.8235294117616782, 'Bleu_2': 0.7193664409100458, 'Bleu_3': 0.6284565877190699, 'Bleu_4': 0.5406657106210517, 'METEOR': 0.3542172250377415, 'ROUGE_L': 0.7425930350321515, 'CIDEr': 0.9221171675484038}
+Saving checkpoint at epoch=9 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/9.ckpt
+
+
+loss: 1.4813613559378953 = (1-reg): 0.4 * r2l_loss: 1.4832244771425842 + (reg):0.6 * l2r_loos: 1.4801191959224764 
+{'testlen': 544, 'reflen': 545, 'guess': [544, 444, 344, 246], 'correct': [437, 255, 143, 70]}
+ratio: 0.9981651376128474
+{'testlen': 536, 'reflen': 536, 'guess': [536, 436, 336, 236], 'correct': [437, 260, 148, 72]}
+ratio: 0.9999999999981344
+loss: 2.3986916489071315 = (1-reg): 0.4 * r2l_loss: 2.4209434703544335 + (reg):0.6 * l2r_loos: 2.3838569552810105 
+r2l_scores: {'Bleu_1': 0.8018335092977559, 'Bleu_2': 0.6779872681112238, 'Bleu_3': 0.5756264992892547, 'Bleu_4': 0.4824438042766651, 'METEOR': 0.3441520463328487, 'ROUGE_L': 0.711936590354062, 'CIDEr': 0.9140287924142834}
+l2r_scores: {'Bleu_1': 0.8152985074596445, 'Bleu_2': 0.6972712408707764, 'Bleu_3': 0.5982857349506087, 'Bleu_4': 0.505576186050247, 'METEOR': 0.346026813504366, 'ROUGE_L': 0.7257955865280056, 'CIDEr': 0.8957607674889738}
+Saving checkpoint at epoch=10 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/10.ckpt
+
+
+loss: 1.4551054976416415 = (1-reg): 0.4 * r2l_loss: 1.4560455749073966 + (reg):0.6 * l2r_loos: 1.4544787014507856 
+{'testlen': 544, 'reflen': 543, 'guess': [544, 444, 344, 244], 'correct': [445, 263, 152, 73]}
+ratio: 1.001841620624306
+{'testlen': 532, 'reflen': 532, 'guess': [532, 432, 332, 232], 'correct': [448, 281, 167, 81]}
+ratio: 0.9999999999981203
+loss: 2.379202878033673 = (1-reg): 0.4 * r2l_loss: 2.39974504576789 + (reg):0.6 * l2r_loos: 2.36550798062925 
+r2l_scores: {'Bleu_1': 0.8180147058808492, 'Bleu_2': 0.696092484480944, 'Bleu_3': 0.5982366442383104, 'Bleu_4': 0.5030811177928749, 'METEOR': 0.34906226179284544, 'ROUGE_L': 0.7319452181134829, 'CIDEr': 0.9141200015490658}
+l2r_scores: {'Bleu_1': 0.8421052631547288, 'Bleu_2': 0.7401069413240448, 'Bleu_3': 0.6507124469459316, 'Bleu_4': 0.5569177938235068, 'METEOR': 0.3627259798198057, 'ROUGE_L': 0.7465595051045265, 'CIDEr': 0.9765659892248546}
+Saving checkpoint at epoch=11 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/11.ckpt
+
+
+loss: 1.432226104736328 = (1-reg): 0.4 * r2l_loss: 1.4326338033988828 + (reg):0.6 * l2r_loos: 1.4319542325520125 
+{'testlen': 568, 'reflen': 567, 'guess': [568, 468, 368, 268], 'correct': [463, 279, 166, 83]}
+ratio: 1.0017636684285682
+{'testlen': 514, 'reflen': 514, 'guess': [514, 414, 314, 214], 'correct': [422, 262, 157, 77]}
+ratio: 0.9999999999980544
+loss: 2.4056158118777806 = (1-reg): 0.4 * r2l_loss: 2.421504244097957 + (reg):0.6 * l2r_loos: 2.395023418355871 
+r2l_scores: {'Bleu_1': 0.8151408450689874, 'Bleu_2': 0.6971006741812369, 'Bleu_3': 0.6029534136608128, 'Bleu_4': 0.5104446347138029, 'METEOR': 0.35434993808934817, 'ROUGE_L': 0.7184458612756071, 'CIDEr': 0.9829111919915536}
+l2r_scores: {'Bleu_1': 0.8210116731485564, 'Bleu_2': 0.7208171998931465, 'Bleu_3': 0.6380774972189431, 'Bleu_4': 0.5529352909807601, 'METEOR': 0.34933930564542454, 'ROUGE_L': 0.7179512329623381, 'CIDEr': 0.9398080303500849}
+Saving checkpoint at epoch=12 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/12.ckpt
+
+
+loss: 1.4084366311401617 = (1-reg): 0.4 * r2l_loss: 1.4103495500908523 + (reg):0.6 * l2r_loos: 1.4071612754415292 
+{'testlen': 536, 'reflen': 537, 'guess': [536, 436, 336, 237], 'correct': [443, 270, 155, 81]}
+ratio: 0.9981378026052177
+{'testlen': 520, 'reflen': 519, 'guess': [520, 420, 320, 220], 'correct': [430, 273, 171, 87]}
+ratio: 1.0019267822716726
+loss: 2.394629356596205 = (1-reg): 0.4 * r2l_loss: 2.4199852342958805 + (reg):0.6 * l2r_loos: 2.3777253327546295 
+r2l_scores: {'Bleu_1': 0.8249520111261911, 'Bleu_2': 0.7140816200831758, 'Bleu_3': 0.6169158946211791, 'Bleu_4': 0.5319870681805462, 'METEOR': 0.35359088051992643, 'ROUGE_L': 0.7217258343063087, 'CIDEr': 0.9858186029851009}
+l2r_scores: {'Bleu_1': 0.8269230769214867, 'Bleu_2': 0.7331439149291813, 'Bleu_3': 0.6597937544252447, 'Bleu_4': 0.5805375197104952, 'METEOR': 0.3576141852380972, 'ROUGE_L': 0.7390775806716953, 'CIDEr': 0.9935871444115321}
+Saving checkpoint at epoch=13 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/13.ckpt
+
+
+loss: 1.3906994906409842 = (1-reg): 0.4 * r2l_loss: 1.3913838909493117 + (reg):0.6 * l2r_loos: 1.3902431447388697 
+{'testlen': 538, 'reflen': 538, 'guess': [538, 438, 338, 238], 'correct': [443, 273, 160, 80]}
+ratio: 0.9999999999981413
+{'testlen': 527, 'reflen': 527, 'guess': [527, 427, 327, 227], 'correct': [440, 274, 164, 86]}
+ratio: 0.9999999999981025
+loss: 2.383847974847864 = (1-reg): 0.4 * r2l_loss: 2.4060355089328906 + (reg):0.6 * l2r_loos: 2.369056174490187 
+r2l_scores: {'Bleu_1': 0.8234200743463813, 'Bleu_2': 0.7163990372576114, 'Bleu_3': 0.623980603525237, 'Bleu_4': 0.5345724523087695, 'METEOR': 0.36452274936042434, 'ROUGE_L': 0.7361774173399313, 'CIDEr': 0.9717218156080577}
+l2r_scores: {'Bleu_1': 0.8349146110025241, 'Bleu_2': 0.7319516169714841, 'Bleu_3': 0.6452880385214742, 'Bleu_4': 0.564850294632466, 'METEOR': 0.36647332470011856, 'ROUGE_L': 0.7361942317552408, 'CIDEr': 0.9146718092831274}
+Saving checkpoint at epoch=14 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/14.ckpt
+
+
+loss: 1.3707965330999405 = (1-reg): 0.4 * r2l_loss: 1.3727788662128761 + (reg):0.6 * l2r_loos: 1.3694749074294919 
+{'testlen': 543, 'reflen': 543, 'guess': [543, 443, 343, 243], 'correct': [449, 272, 155, 74]}
+ratio: 0.9999999999981584
+{'testlen': 535, 'reflen': 535, 'guess': [535, 435, 335, 235], 'correct': [451, 277, 167, 85]}
+ratio: 0.9999999999981308
+loss: 2.3824330188609935 = (1-reg): 0.4 * r2l_loss: 2.4098479217953153 + (reg):0.6 * l2r_loos: 2.364156297401146 
+r2l_scores: {'Bleu_1': 0.8268876611387592, 'Bleu_2': 0.7125344137724006, 'Bleu_3': 0.6121855708634601, 'Bleu_4': 0.5141249477371153, 'METEOR': 0.36196027824787175, 'ROUGE_L': 0.7277518286796161, 'CIDEr': 0.9036195362307228}
+l2r_scores: {'Bleu_1': 0.8429906542024561, 'Bleu_2': 0.7326670084816755, 'Bleu_3': 0.6444090713518593, 'Bleu_4': 0.5577749422037677, 'METEOR': 0.37363439670867604, 'ROUGE_L': 0.7454085300856562, 'CIDEr': 0.9052480347602596}
+Saving checkpoint at epoch=15 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/15.ckpt
+
+
+loss: 1.3510572058255554 = (1-reg): 0.4 * r2l_loss: 1.3527982775500564 + (reg):0.6 * l2r_loos: 1.3498964191655645 
+{'testlen': 542, 'reflen': 543, 'guess': [542, 442, 342, 242], 'correct': [451, 278, 165, 85]}
+ratio: 0.9981583793720108
+{'testlen': 522, 'reflen': 522, 'guess': [522, 422, 322, 222], 'correct': [431, 259, 160, 85]}
+ratio: 0.9999999999980843
+loss: 2.371964837886669 = (1-reg): 0.4 * r2l_loss: 2.407954518000285 + (reg):0.6 * l2r_loos: 2.347971604488514 
+r2l_scores: {'Bleu_1': 0.83056949045834, 'Bleu_2': 0.7221021026924805, 'Bleu_3': 0.6308865354689295, 'Bleu_4': 0.54470832599355, 'METEOR': 0.3587147351375909, 'ROUGE_L': 0.7411388971765571, 'CIDEr': 0.9966385696256821}
+l2r_scores: {'Bleu_1': 0.8256704980811276, 'Bleu_2': 0.7118640156534232, 'Bleu_3': 0.6314700110161509, 'Bleu_4': 0.5572255680538505, 'METEOR': 0.34137399583254396, 'ROUGE_L': 0.7204593785115773, 'CIDEr': 0.8850919666350502}
+Saving checkpoint at epoch=16 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/16.ckpt
+
+
+loss: 1.3358812182848572 = (1-reg): 0.4 * r2l_loss: 1.337865173425831 + (reg):0.6 * l2r_loos: 1.3345585098032091 
+{'testlen': 508, 'reflen': 510, 'guess': [508, 408, 308, 208], 'correct': [419, 257, 149, 80]}
+ratio: 0.9960784313705959
+{'testlen': 522, 'reflen': 522, 'guess': [522, 422, 322, 222], 'correct': [435, 270, 167, 90]}
+ratio: 0.9999999999980843
+loss: 2.4100966736122413 = (1-reg): 0.4 * r2l_loss: 2.4244219258979514 + (reg):0.6 * l2r_loos: 2.40054639533714 
+r2l_scores: {'Bleu_1': 0.8215622769652332, 'Bleu_2': 0.7179625884883689, 'Bleu_3': 0.6286030059780425, 'Bleu_4': 0.555407254362891, 'METEOR': 0.3542583578768542, 'ROUGE_L': 0.7163615220972673, 'CIDEr': 0.9843444124379874}
+l2r_scores: {'Bleu_1': 0.8333333333301405, 'Bleu_2': 0.7301885752638898, 'Bleu_3': 0.6514937026920955, 'Bleu_4': 0.5786354677105334, 'METEOR': 0.36730029765160505, 'ROUGE_L': 0.7333733129267328, 'CIDEr': 0.9855560701288485}
+Saving checkpoint at epoch=17 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/17.ckpt
+
+
+loss: 1.3210558423057932 = (1-reg): 0.4 * r2l_loss: 1.3232136197168318 + (reg):0.6 * l2r_loos: 1.3196172523498535 
+{'testlen': 516, 'reflen': 516, 'guess': [516, 416, 316, 216], 'correct': [425, 260, 150, 76]}
+ratio: 0.999999999998062
+{'testlen': 515, 'reflen': 515, 'guess': [515, 415, 315, 215], 'correct': [436, 281, 169, 87]}
+ratio: 0.9999999999980582
+loss: 2.373688448799981 = (1-reg): 0.4 * r2l_loss: 2.4188785526487564 + (reg):0.6 * l2r_loos: 2.343561601638794 
+r2l_scores: {'Bleu_1': 0.8236434108495208, 'Bleu_2': 0.7174797082696593, 'Bleu_3': 0.6251839317323863, 'Bleu_4': 0.5414967019302581, 'METEOR': 0.3622707457356362, 'ROUGE_L': 0.7200332842457244, 'CIDEr': 0.9882099940171274}
+l2r_scores: {'Bleu_1': 0.846601941744285, 'Bleu_2': 0.7571270136304326, 'Bleu_3': 0.6750011997463489, 'Bleu_4': 0.593948249539736, 'METEOR': 0.37334958894387665, 'ROUGE_L': 0.747958579722258, 'CIDEr': 1.0582121955070924}
+Saving checkpoint at epoch=18 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/18.ckpt
+
+
+loss: 1.305436279421947 = (1-reg): 0.4 * r2l_loss: 1.3088107705116272 + (reg):0.6 * l2r_loos: 1.303186550374891 
+{'testlen': 520, 'reflen': 521, 'guess': [520, 420, 320, 222], 'correct': [439, 273, 165, 88]}
+ratio: 0.9980806142015393
+{'testlen': 531, 'reflen': 531, 'guess': [531, 431, 331, 231], 'correct': [456, 294, 182, 97]}
+ratio: 0.9999999999981167
+loss: 2.368517799730654 = (1-reg): 0.4 * r2l_loss: 2.391693842852557 + (reg):0.6 * l2r_loos: 2.35306698039726 
+r2l_scores: {'Bleu_1': 0.8426088085948654, 'Bleu_2': 0.7393534179779321, 'Bleu_3': 0.6552408796534637, 'Bleu_4': 0.5775962534129465, 'METEOR': 0.37032692474990736, 'ROUGE_L': 0.742732640670416, 'CIDEr': 1.0157617025962906}
+l2r_scores: {'Bleu_1': 0.8587570621436581, 'Bleu_2': 0.7653678069888241, 'Bleu_3': 0.6854796905658762, 'Bleu_4': 0.6064372680310436, 'METEOR': 0.37234131121707725, 'ROUGE_L': 0.7493003456887389, 'CIDEr': 1.0456643968478985}
+Saving checkpoint at epoch=19 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/19.ckpt
+
+
+loss: 1.290911078218554 = (1-reg): 0.4 * r2l_loss: 1.2932636123797934 + (reg):0.6 * l2r_loos: 1.2893426537904582 
+{'testlen': 528, 'reflen': 529, 'guess': [528, 428, 328, 228], 'correct': [421, 258, 149, 77]}
+ratio: 0.9981096408298713
+{'testlen': 542, 'reflen': 542, 'guess': [542, 442, 342, 242], 'correct': [452, 288, 175, 92]}
+ratio: 0.999999999998155
+loss: 2.3858316280223706 = (1-reg): 0.4 * r2l_loss: 2.4272812331164326 + (reg):0.6 * l2r_loos: 2.3581984343352143 
+r2l_scores: {'Bleu_1': 0.795839784284008, 'Bleu_2': 0.6919736032116208, 'Bleu_3': 0.6010210057224076, 'Bleu_4': 0.520116433468454, 'METEOR': 0.3493069433867748, 'ROUGE_L': 0.7136046414073445, 'CIDEr': 0.9894054515799886}
+l2r_scores: {'Bleu_1': 0.8339483394803175, 'Bleu_2': 0.7371479860410051, 'Bleu_3': 0.6526902168230917, 'Bleu_4': 0.5701950498586706, 'METEOR': 0.361769965605338, 'ROUGE_L': 0.7424325472940747, 'CIDEr': 1.0062041422109984}
+Saving checkpoint at epoch=20 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/20.ckpt
+
+
+loss: 1.2770963288916917 = (1-reg): 0.4 * r2l_loss: 1.2818385163682406 + (reg):0.6 * l2r_loos: 1.273934802579098 
+{'testlen': 526, 'reflen': 526, 'guess': [526, 426, 326, 226], 'correct': [430, 256, 150, 76]}
+ratio: 0.9999999999980989
+{'testlen': 528, 'reflen': 528, 'guess': [528, 428, 328, 228], 'correct': [442, 276, 169, 91]}
+ratio: 0.9999999999981061
+loss: 2.3938302446294712 = (1-reg): 0.4 * r2l_loss: 2.4188682785740605 + (reg):0.6 * l2r_loos: 2.377138093665794 
+r2l_scores: {'Bleu_1': 0.8174904942934696, 'Bleu_2': 0.7009007727790372, 'Bleu_3': 0.6091565413765148, 'Bleu_4': 0.5250769724069079, 'METEOR': 0.34226129231233066, 'ROUGE_L': 0.7094327092548874, 'CIDEr': 0.9298347681334242}
+l2r_scores: {'Bleu_1': 0.8371212121180411, 'Bleu_2': 0.7347284044957714, 'Bleu_3': 0.6527629657545561, 'Bleu_4': 0.5772225200298593, 'METEOR': 0.36376203577426397, 'ROUGE_L': 0.7485506993038895, 'CIDEr': 0.9982073874384614}
+Saving checkpoint at epoch=21 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/21.ckpt
+
+
+loss: 1.2638537881804295 = (1-reg): 0.4 * r2l_loss: 1.2675589470003472 + (reg):0.6 * l2r_loos: 1.2613836160644156 
+{'testlen': 524, 'reflen': 524, 'guess': [524, 424, 324, 224], 'correct': [426, 266, 153, 84]}
+ratio: 0.9999999999980916
+{'testlen': 519, 'reflen': 519, 'guess': [519, 419, 319, 219], 'correct': [438, 273, 165, 90]}
+ratio: 0.9999999999980732
+loss: 2.4083141998008446 = (1-reg): 0.4 * r2l_loss: 2.435700379477607 + (reg):0.6 * l2r_loos: 2.3900566224698667 
+r2l_scores: {'Bleu_1': 0.8129770992335382, 'Bleu_2': 0.7141625066031766, 'Bleu_3': 0.6221763578117085, 'Bleu_4': 0.5482049404720383, 'METEOR': 0.3610165716559984, 'ROUGE_L': 0.718207202533213, 'CIDEr': 0.9715000719365549}
+l2r_scores: {'Bleu_1': 0.8439306358348981, 'Bleu_2': 0.7415282284314605, 'Bleu_3': 0.6576319117560437, 'Bleu_4': 0.5847049333225771, 'METEOR': 0.3594568966487719, 'ROUGE_L': 0.7432279386199557, 'CIDEr': 1.012402340688652}
+Saving checkpoint at epoch=22 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/22.ckpt
+
+
+loss: 1.2506017417595034 = (1-reg): 0.4 * r2l_loss: 1.2549001155134107 + (reg):0.6 * l2r_loos: 1.2477360963039712 
+{'testlen': 533, 'reflen': 534, 'guess': [533, 433, 333, 233], 'correct': [431, 251, 142, 69]}
+ratio: 0.9981273408221009
+{'testlen': 552, 'reflen': 551, 'guess': [552, 452, 352, 252], 'correct': [455, 288, 173, 91]}
+ratio: 1.0018148820308497
+loss: 2.404352304670546 = (1-reg): 0.4 * r2l_loss: 2.4291376211025097 + (reg):0.6 * l2r_loos: 2.3878286317542745 
+r2l_scores: {'Bleu_1': 0.8071146861075232, 'Bleu_2': 0.6833656294135277, 'Bleu_3': 0.5835953922728806, 'Bleu_4': 0.4923268032820293, 'METEOR': 0.34592665089682995, 'ROUGE_L': 0.717715303652497, 'CIDEr': 0.9336357403330685}
+l2r_scores: {'Bleu_1': 0.8242753623173473, 'Bleu_2': 0.7247082176761992, 'Bleu_3': 0.6367123452547029, 'Bleu_4': 0.5525450158365449, 'METEOR': 0.36849602681412225, 'ROUGE_L': 0.7403183519509233, 'CIDEr': 0.9477641419747104}
+Saving checkpoint at epoch=23 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/23.ckpt
+
+
+loss: 1.2387168468021956 = (1-reg): 0.4 * r2l_loss: 1.2435226744511088 + (reg):0.6 * l2r_loos: 1.2355128990235875 
+{'testlen': 519, 'reflen': 521, 'guess': [519, 419, 319, 220], 'correct': [435, 264, 154, 78]}
+ratio: 0.9961612284049978
+{'testlen': 524, 'reflen': 524, 'guess': [524, 424, 324, 224], 'correct': [435, 272, 164, 86]}
+ratio: 0.9999999999980916
+loss: 2.400813440040306 = (1-reg): 0.4 * r2l_loss: 2.4316449174174557 + (reg):0.6 * l2r_loos: 2.3802590096438374 
+r2l_scores: {'Bleu_1': 0.8349266380379492, 'Bleu_2': 0.7239062391076088, 'Bleu_3': 0.6316459246577071, 'Bleu_4': 0.5462039780812022, 'METEOR': 0.3476134354985883, 'ROUGE_L': 0.7168570104978359, 'CIDEr': 0.9318469759009266}
+l2r_scores: {'Bleu_1': 0.8301526717525567, 'Bleu_2': 0.7297607625489133, 'Bleu_3': 0.6459813083571226, 'Bleu_4': 0.5671887028071685, 'METEOR': 0.35834993960069234, 'ROUGE_L': 0.7414356724459324, 'CIDEr': 0.937057073225533}
+Saving checkpoint at epoch=24 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/24.ckpt
+
+
+loss: 1.226853708790951 = (1-reg): 0.4 * r2l_loss: 1.2320178749522224 + (reg):0.6 * l2r_loos: 1.2234108723577906 
+{'testlen': 526, 'reflen': 529, 'guess': [526, 426, 326, 227], 'correct': [431, 258, 147, 74]}
+ratio: 0.9943289224933944
+{'testlen': 549, 'reflen': 550, 'guess': [549, 449, 349, 249], 'correct': [448, 275, 162, 81]}
+ratio: 0.9981818181800033
+loss: 2.4023848339363383 = (1-reg): 0.4 * r2l_loss: 2.4286807263339005 + (reg):0.6 * l2r_loos: 2.3848541259765623 
+r2l_scores: {'Bleu_1': 0.8147316003609988, 'Bleu_2': 0.7004446971175841, 'Bleu_3': 0.603656884238676, 'Bleu_4': 0.5167432862469922, 'METEOR': 0.33110788099044464, 'ROUGE_L': 0.689722143611978, 'CIDEr': 0.8645853197806913}
+l2r_scores: {'Bleu_1': 0.8145441049168992, 'Bleu_2': 0.7056753487499394, 'Bleu_3': 0.6133421417044733, 'Bleu_4': 0.5231795449680678, 'METEOR': 0.3560176659370759, 'ROUGE_L': 0.7230959215700711, 'CIDEr': 0.8996055560453411}
+Saving checkpoint at epoch=25 to ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/25.ckpt
+Epoch 00014: reducing learning rate of group 0 to 5.0000e-05.
+
+
+
+[BEST: 18 SEED: 904666]
+{'testlen': 3588, 'reflen': 3592, 'guess': [3588, 2919, 2250, 1582], 'correct': [2866, 1685, 962, 472]}
+ratio: 0.9988864142536195
+{'testlen': 3561, 'reflen': 3560, 'guess': [3561, 2891, 2221, 1551], 'correct': [2837, 1691, 981, 464]}
+ratio: 1.0002808988761236
+r2l scores: {'Bleu_1': 0.797883691629242, 'Bleu_2': 0.6782825084955162, 'Bleu_3': 0.5813574050130023, 'Bleu_4': 0.4919208670595364, 'METEOR': 0.347213917055291, 'ROUGE_L': 0.6985790524103627, 'CIDEr': 0.8437736002232641}
+l2r scores: {'Bleu_1': 0.7966863240660498, 'Bleu_2': 0.6826395385083116, 'Bleu_3': 0.5904291293169829, 'Bleu_4': 0.49814110226082287, 'METEOR': 0.35153432829261005, 'ROUGE_L': 0.7141121219898493, 'CIDEr': 0.8518687835640791}
+./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0
+['19.ckpt', '2.ckpt', 'best.ckpt', '22.ckpt', '4.ckpt', '10.ckpt', '21.ckpt', '11.ckpt', '5.ckpt', '8.ckpt', '3.ckpt', '13.ckpt', '6.ckpt', '9.ckpt', '20.ckpt', '16.ckpt', '15.ckpt', '12.ckpt', '7.ckpt', '23.ckpt', '14.ckpt', '24.ckpt', '17.ckpt', '1.ckpt', '18.ckpt', '25.ckpt']
+Build data_loader according to 19.ckpt
+#vocabs: 3891 (9158), #words: 323223 (329680). Trim words which appear less than 3 times.
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/0.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/1.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/2.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/3.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3548, 'reflen': 3546, 'guess': [3548, 2878, 2208, 1538], 'correct': [2829, 1650, 931, 407]}
+ratio: 1.00056401579216
+[TEST L2R] in 4.ckpt is {'Bleu_1': 0.797350620067419, 'Bleu_2': 0.6761160498207026, 'Bleu_3': 0.5776494545749898, 'Bleu_4': 0.4752343173686608, 'METEOR': 0.346849189089673, 'ROUGE_L': 0.7110525359970838, 'CIDEr': 0.8111663386477578}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/4.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3458, 'reflen': 3456, 'guess': [3458, 2788, 2118, 1448], 'correct': [2731, 1608, 919, 426]}
+ratio: 1.0005787037034142
+[TEST L2R] in 5.ckpt is {'Bleu_1': 0.7897628687100088, 'Bleu_2': 0.6749086480734608, 'Bleu_3': 0.582496312769006, 'Bleu_4': 0.49105500825905113, 'METEOR': 0.336415791559524, 'ROUGE_L': 0.7044915656467587, 'CIDEr': 0.8182465750645023}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/5.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3522, 'reflen': 3517, 'guess': [3522, 2852, 2182, 1512], 'correct': [2781, 1614, 902, 387]}
+ratio: 1.0014216661924933
+[TEST L2R] in 6.ckpt is {'Bleu_1': 0.7896081771718372, 'Bleu_2': 0.668471387927617, 'Bleu_3': 0.5695158464491367, 'Bleu_4': 0.4663040128905138, 'METEOR': 0.33981629095446086, 'ROUGE_L': 0.7064078168309058, 'CIDEr': 0.7538963299907548}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/6.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3651, 'reflen': 3643, 'guess': [3651, 2981, 2311, 1641], 'correct': [2940, 1744, 1010, 467]}
+ratio: 1.0021959923137518
+[TEST L2R] in 7.ckpt is {'Bleu_1': 0.805258833196164, 'Bleu_2': 0.6863726993550021, 'Bleu_3': 0.5904917171267929, 'Bleu_4': 0.4919969748938368, 'METEOR': 0.3502390984608181, 'ROUGE_L': 0.7153014376220758, 'CIDEr': 0.8578663609218004}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/7.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3557, 'reflen': 3552, 'guess': [3557, 2887, 2217, 1547], 'correct': [2818, 1664, 975, 461]}
+ratio: 1.0014076576573758
+[TEST L2R] in 8.ckpt is {'Bleu_1': 0.7922406522348068, 'Bleu_2': 0.6757434283222957, 'Bleu_3': 0.5855997213743097, 'Bleu_4': 0.49459907406157516, 'METEOR': 0.3472248527502413, 'ROUGE_L': 0.7106081796206883, 'CIDEr': 0.8228921279059593}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/8.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3729, 'reflen': 3720, 'guess': [3729, 3059, 2389, 1719], 'correct': [2983, 1749, 1006, 470]}
+ratio: 1.0024193548384401
+[TEST L2R] in 9.ckpt is {'Bleu_1': 0.7999463663178332, 'Bleu_2': 0.676294104044166, 'Bleu_3': 0.5774987002982602, 'Bleu_4': 0.47903666336157236, 'METEOR': 0.35170026495142875, 'ROUGE_L': 0.7184062864541801, 'CIDEr': 0.8768925431813331}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/9.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3718, 'reflen': 3718, 'guess': [3718, 3048, 2378, 1709], 'correct': [2951, 1765, 1048, 530]}
+ratio: 0.999999999999731
+[TEST L2R] in 10.ckpt is {'Bleu_1': 0.7937062937058667, 'Bleu_2': 0.677945504992479, 'Bleu_3': 0.5872815191758485, 'Bleu_4': 0.5006315350660622, 'METEOR': 0.35376327363945637, 'ROUGE_L': 0.719238195224161, 'CIDEr': 0.8614240681486639}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/10.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3621, 'reflen': 3617, 'guess': [3621, 2951, 2281, 1611], 'correct': [2862, 1688, 967, 446]}
+ratio: 1.001105888857893
+[TEST L2R] in 11.ckpt is {'Bleu_1': 0.7903893951944794, 'Bleu_2': 0.6723914287897628, 'Bleu_3': 0.5765653099170822, 'Bleu_4': 0.4799502377270216, 'METEOR': 0.34491439139923685, 'ROUGE_L': 0.7108344136468568, 'CIDEr': 0.8163387949521583}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/11.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3446, 'reflen': 3447, 'guess': [3446, 2776, 2106, 1437], 'correct': [2758, 1617, 947, 440]}
+ratio: 0.9997098926599943
+[TEST L2R] in 12.ckpt is {'Bleu_1': 0.8001160092526041, 'Bleu_2': 0.6825881505698567, 'Bleu_3': 0.5938740623813642, 'Bleu_4': 0.5031972259687291, 'METEOR': 0.34816089881621637, 'ROUGE_L': 0.7143223583189832, 'CIDEr': 0.8232189150535661}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/12.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3613, 'reflen': 3610, 'guess': [3613, 2943, 2273, 1603], 'correct': [2888, 1722, 998, 478]}
+ratio: 1.0008310249304706
+[TEST L2R] in 13.ckpt is {'Bleu_1': 0.7993357320783838, 'Bleu_2': 0.6838896893875487, 'Bleu_3': 0.5899760827352268, 'Bleu_4': 0.49744995743637616, 'METEOR': 0.3536554599487268, 'ROUGE_L': 0.7187348448650621, 'CIDEr': 0.8690889926115746}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/13.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3670, 'reflen': 3668, 'guess': [3670, 3000, 2330, 1660], 'correct': [2943, 1768, 1037, 494]}
+ratio: 1.0005452562701744
+[TEST L2R] in 14.ckpt is {'Bleu_1': 0.8019073569480104, 'Bleu_2': 0.6874523515812108, 'Bleu_3': 0.594706492416911, 'Bleu_4': 0.500186222479886, 'METEOR': 0.3570887094278792, 'ROUGE_L': 0.718723819723533, 'CIDEr': 0.8395559303187644}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/14.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3628, 'reflen': 3621, 'guess': [3628, 2958, 2288, 1618], 'correct': [2910, 1726, 1008, 484]}
+ratio: 1.0019331676329737
+[TEST L2R] in 15.ckpt is {'Bleu_1': 0.8020948180813666, 'Bleu_2': 0.6841229600581258, 'Bleu_3': 0.5907779553805251, 'Bleu_4': 0.49835052735499374, 'METEOR': 0.3504099974797252, 'ROUGE_L': 0.7183500784132645, 'CIDEr': 0.8320557841296287}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/15.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3571, 'reflen': 3568, 'guess': [3571, 2901, 2231, 1561], 'correct': [2837, 1698, 989, 473]}
+ratio: 1.0008408071746073
+[TEST L2R] in 16.ckpt is {'Bleu_1': 0.7944553346399343, 'Bleu_2': 0.6819141798742687, 'Bleu_3': 0.590725050377604, 'Bleu_4': 0.4999235555154849, 'METEOR': 0.35059417329852033, 'ROUGE_L': 0.7114576661666951, 'CIDEr': 0.8484653003843621}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/16.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3539, 'reflen': 3534, 'guess': [3539, 2869, 2199, 1529], 'correct': [2830, 1698, 995, 476]}
+ratio: 1.001414827390775
+[TEST L2R] in 17.ckpt is {'Bleu_1': 0.7996609211639447, 'Bleu_2': 0.6879494143476368, 'Bleu_3': 0.5982788092958586, 'Bleu_4': 0.5081332127391261, 'METEOR': 0.3560813303067082, 'ROUGE_L': 0.7200868854430945, 'CIDEr': 0.8415971152508259}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/17.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3561, 'reflen': 3560, 'guess': [3561, 2891, 2221, 1551], 'correct': [2837, 1691, 981, 464]}
+ratio: 1.0002808988761236
+[TEST L2R] in 18.ckpt is {'Bleu_1': 0.7966863240660498, 'Bleu_2': 0.6826395385083116, 'Bleu_3': 0.5904291293169829, 'Bleu_4': 0.49814110226082287, 'METEOR': 0.35153432829261005, 'ROUGE_L': 0.7141121219898492, 'CIDEr': 0.8518687835640789}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/18.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3587, 'reflen': 3581, 'guess': [3587, 2917, 2247, 1577], 'correct': [2866, 1685, 951, 444]}
+ratio: 1.0016755096339007
+[TEST L2R] in 19.ckpt is {'Bleu_1': 0.7989963758012827, 'Bleu_2': 0.679366523486685, 'Bleu_3': 0.5802234049699543, 'Bleu_4': 0.484266304534004, 'METEOR': 0.34989368854844716, 'ROUGE_L': 0.7116608651375679, 'CIDEr': 0.8458588358057076}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/19.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3666, 'reflen': 3665, 'guess': [3666, 2996, 2326, 1656], 'correct': [2917, 1778, 1049, 498]}
+ratio: 1.0002728512957708
+[TEST L2R] in 20.ckpt is {'Bleu_1': 0.7956901254771425, 'Bleu_2': 0.6871743780636168, 'Bleu_3': 0.5971726345685929, 'Bleu_4': 0.503056976254798, 'METEOR': 0.35614158950466446, 'ROUGE_L': 0.7206774509359247, 'CIDEr': 0.8482601632898418}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/20.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3534, 'reflen': 3534, 'guess': [3534, 2864, 2194, 1524], 'correct': [2804, 1677, 988, 484]}
+ratio: 0.999999999999717
+[TEST L2R] in 21.ckpt is {'Bleu_1': 0.7934352009050404, 'Bleu_2': 0.6816096910407813, 'Bleu_3': 0.5936501904705106, 'Bleu_4': 0.5077068901085049, 'METEOR': 0.3554441513536924, 'ROUGE_L': 0.71338904720355, 'CIDEr': 0.8462807148102549}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/21.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3532, 'reflen': 3531, 'guess': [3532, 2862, 2192, 1522], 'correct': [2813, 1677, 982, 467]}
+ratio: 1.0002832058903992
+[TEST L2R] in 22.ckpt is {'Bleu_1': 0.7964326160813148, 'Bleu_2': 0.6831345257577635, 'Bleu_3': 0.5935096748322584, 'Bleu_4': 0.5032646304266496, 'METEOR': 0.35220803080292495, 'ROUGE_L': 0.7116224454027603, 'CIDEr': 0.8222493500985243}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/22.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3673, 'reflen': 3669, 'guess': [3673, 3003, 2333, 1663], 'correct': [2949, 1784, 1053, 513]}
+ratio: 1.0010902153172523
+[TEST L2R] in 23.ckpt is {'Bleu_1': 0.8028859243123324, 'Bleu_2': 0.6906319742094489, 'Bleu_3': 0.5993341136897724, 'Bleu_4': 0.507642562370344, 'METEOR': 0.35783886158466355, 'ROUGE_L': 0.7246524894352387, 'CIDEr': 0.8635810744067692}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/23.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3495, 'reflen': 3497, 'guess': [3495, 2825, 2155, 1485], 'correct': [2789, 1661, 976, 467]}
+ratio: 0.9994280812121821
+[TEST L2R] in 24.ckpt is {'Bleu_1': 0.797540618679398, 'Bleu_2': 0.6845855594161022, 'Bleu_3': 0.5963984360310892, 'Bleu_4': 0.5081452237461699, 'METEOR': 0.3557359621982712, 'ROUGE_L': 0.7198018387811458, 'CIDEr': 0.8534309792297662}
+Now is test in the ./checkpoints/checkpoints_MSVD_I3D/2025-04-12 10:35:02 _ Transformer _ MSVD _ FEAT MSVD_I3D fsl-50 mcl-10 _ EMB 512 _ Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 _ OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 _ bs-32 gc-5.0/24.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3641, 'reflen': 3640, 'guess': [3641, 2971, 2301, 1631], 'correct': [2892, 1728, 1012, 483]}
+ratio: 1.0002747252744504
+[TEST L2R] in 25.ckpt is {'Bleu_1': 0.7942872837130475, 'Bleu_2': 0.6796876017947895, 'Bleu_3': 0.5878874601360845, 'Bleu_4': 0.4952721868872885, 'METEOR': 0.34970822952066655, 'ROUGE_L': 0.7103295891487019, 'CIDEr': 0.8247184834171079}

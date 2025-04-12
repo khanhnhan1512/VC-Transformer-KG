@@ -1,0 +1,429 @@
+MODEL ID: 2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0
+#vocabs: 3891 (9158), #words: 323223 (329680). Trim words which appear less than 3 times.
+{'Total': 91365043, 'Trainable': 91365043}
+
+
+loss: 2.686717873088649 = (1-reg): 0.4 * r2l_loss: 2.7214573999311105 + (reg):0.6 * l2r_loos: 2.663558060223939 
+{'testlen': 541, 'reflen': 542, 'guess': [541, 441, 341, 245], 'correct': [418, 248, 135, 66]}
+ratio: 0.9981549815479739
+{'testlen': 477, 'reflen': 475, 'guess': [477, 377, 277, 177], 'correct': [394, 245, 143, 68]}
+ratio: 1.0042105263136754
+loss: 2.5970618866108084 = (1-reg): 0.4 * r2l_loss: 2.6361448111357513 + (reg):0.6 * l2r_loos: 2.57100644464846 
+r2l_scores: {'Bleu_1': 0.771216396291091, 'Bleu_2': 0.6579506064622686, 'Bleu_3': 0.5551211021372287, 'Bleu_4': 0.4631104434458264, 'METEOR': 0.338761148969396, 'ROUGE_L': 0.6987252859978021, 'CIDEr': 0.9886275168401626}
+l2r_scores: {'Bleu_1': 0.825995807126151, 'Bleu_2': 0.7326579871365905, 'Bleu_3': 0.6519579944573443, 'Bleu_4': 0.5712137103917124, 'METEOR': 0.3511110097182662, 'ROUGE_L': 0.7190254256628339, 'CIDEr': 1.0119228349143647}
+Saving checkpoint at epoch=1 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/1.ckpt
+
+
+loss: 2.044381848006952 = (1-reg): 0.4 * r2l_loss: 2.063844714946434 + (reg):0.6 * l2r_loos: 2.0314065020983336 
+{'testlen': 506, 'reflen': 506, 'guess': [506, 406, 306, 207], 'correct': [397, 240, 130, 58]}
+ratio: 0.9999999999980237
+{'testlen': 489, 'reflen': 487, 'guess': [489, 389, 289, 189], 'correct': [391, 240, 138, 68]}
+ratio: 1.0041067761786364
+loss: 2.5241100028709127 = (1-reg): 0.4 * r2l_loss: 2.571328514593619 + (reg):0.6 * l2r_loos: 2.492630865838793 
+r2l_scores: {'Bleu_1': 0.784584980234053, 'Bleu_2': 0.681024285164331, 'Bleu_3': 0.5819009166072913, 'Bleu_4': 0.48473144416652086, 'METEOR': 0.32722404350331297, 'ROUGE_L': 0.6734580647581885, 'CIDEr': 0.9283917636889921}
+l2r_scores: {'Bleu_1': 0.7995910020433546, 'Bleu_2': 0.7023680849165094, 'Bleu_3': 0.6175947479695224, 'Bleu_4': 0.5395596604691004, 'METEOR': 0.3363599674008558, 'ROUGE_L': 0.6918340073635089, 'CIDEr': 0.9810110926624924}
+Saving checkpoint at epoch=2 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/2.ckpt
+
+
+loss: 1.8505784872711681 = (1-reg): 0.4 * r2l_loss: 1.8635722679388327 + (reg):0.6 * l2r_loos: 1.8419158726051206 
+{'testlen': 526, 'reflen': 525, 'guess': [526, 426, 326, 228], 'correct': [400, 244, 141, 73]}
+ratio: 1.0019047619028536
+{'testlen': 480, 'reflen': 478, 'guess': [480, 380, 280, 180], 'correct': [373, 230, 135, 67]}
+ratio: 1.0041841004163092
+loss: 2.506085159160473 = (1-reg): 0.4 * r2l_loss: 2.533692873848809 + (reg):0.6 * l2r_loos: 2.487679884168837 
+r2l_scores: {'Bleu_1': 0.7604562737628129, 'Bleu_2': 0.6599746239212015, 'Bleu_3': 0.5732604703407441, 'Bleu_4': 0.4955768376216811, 'METEOR': 0.35241426388717545, 'ROUGE_L': 0.6843482471829481, 'CIDEr': 0.9696092693654399}
+l2r_scores: {'Bleu_1': 0.7770833333317144, 'Bleu_2': 0.6858133217417727, 'Bleu_3': 0.6098118465958997, 'Bleu_4': 0.5390108000502966, 'METEOR': 0.35101151650034274, 'ROUGE_L': 0.6916924495093727, 'CIDEr': 0.9662877761761892}
+Saving checkpoint at epoch=3 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/3.ckpt
+
+
+loss: 1.7425373048469668 = (1-reg): 0.4 * r2l_loss: 1.751218421263773 + (reg):0.6 * l2r_loos: 1.7367498002286816 
+{'testlen': 532, 'reflen': 530, 'guess': [532, 432, 332, 232], 'correct': [415, 244, 138, 68]}
+ratio: 1.0037735849037666
+{'testlen': 515, 'reflen': 512, 'guess': [515, 415, 315, 215], 'correct': [411, 261, 162, 85]}
+ratio: 1.0058593749980353
+loss: 2.482480384685375 = (1-reg): 0.4 * r2l_loss: 2.510118740576285 + (reg):0.6 * l2r_loos: 2.4640546931160823 
+r2l_scores: {'Bleu_1': 0.7800751879684585, 'Bleu_2': 0.6637755816787906, 'Bleu_3': 0.5678860261344993, 'Bleu_4': 0.4813390745271067, 'METEOR': 0.3594229426924624, 'ROUGE_L': 0.6922477775062346, 'CIDEr': 0.9446505163900784}
+l2r_scores: {'Bleu_1': 0.7980582524256349, 'Bleu_2': 0.7084570097450095, 'Bleu_3': 0.6367131529149204, 'Bleu_4': 0.565201079302539, 'METEOR': 0.35898387622307715, 'ROUGE_L': 0.7192834897986167, 'CIDEr': 1.0395303142331986}
+Saving checkpoint at epoch=4 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/4.ckpt
+
+
+loss: 1.6708632383190218 = (1-reg): 0.4 * r2l_loss: 1.6765961288233273 + (reg):0.6 * l2r_loos: 1.6670412241826291 
+{'testlen': 518, 'reflen': 521, 'guess': [518, 418, 318, 222], 'correct': [408, 238, 137, 70]}
+ratio: 0.9942418426084564
+{'testlen': 514, 'reflen': 514, 'guess': [514, 414, 314, 214], 'correct': [411, 252, 146, 72]}
+ratio: 0.9999999999980544
+loss: 2.457728048607155 = (1-reg): 0.4 * r2l_loss: 2.481815794662193 + (reg):0.6 * l2r_loos: 2.4416694305561206 
+r2l_scores: {'Bleu_1': 0.7830963222378716, 'Bleu_2': 0.665810010172726, 'Bleu_3': 0.5747684967044322, 'Bleu_4': 0.49394339090644374, 'METEOR': 0.3458041810858108, 'ROUGE_L': 0.6898506948800768, 'CIDEr': 0.9875202404583697}
+l2r_scores: {'Bleu_1': 0.799610894938523, 'Bleu_2': 0.6976529761836094, 'Bleu_3': 0.6093975493648776, 'Bleu_4': 0.5252973481071715, 'METEOR': 0.3536066351088277, 'ROUGE_L': 0.7132185758668715, 'CIDEr': 1.025437005057304}
+Saving checkpoint at epoch=5 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/5.ckpt
+
+
+loss: 1.6150653191863513 = (1-reg): 0.4 * r2l_loss: 1.6192974966862164 + (reg):0.6 * l2r_loos: 1.6122437813242927 
+{'testlen': 548, 'reflen': 548, 'guess': [548, 448, 348, 250], 'correct': [433, 263, 154, 81]}
+ratio: 0.9999999999981752
+{'testlen': 531, 'reflen': 529, 'guess': [531, 431, 331, 231], 'correct': [428, 280, 177, 98]}
+ratio: 1.0037807183345864
+loss: 2.4550065323158545 = (1-reg): 0.4 * r2l_loss: 2.4759627174448084 + (reg):0.6 * l2r_loos: 2.441035610658151 
+r2l_scores: {'Bleu_1': 0.7901459853985762, 'Bleu_2': 0.6810712317197813, 'Bleu_3': 0.5898960884575105, 'Bleu_4': 0.5078294582174844, 'METEOR': 0.3609837762758842, 'ROUGE_L': 0.7007615128241886, 'CIDEr': 1.0358485191760218}
+l2r_scores: {'Bleu_1': 0.8060263653468813, 'Bleu_2': 0.7236274026441701, 'Bleu_3': 0.6542219239675768, 'Bleu_4': 0.5870800795047137, 'METEOR': 0.3793731972339721, 'ROUGE_L': 0.7394232697346689, 'CIDEr': 1.1540730871762408}
+Saving checkpoint at epoch=6 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/6.ckpt
+
+
+loss: 1.5699101938185145 = (1-reg): 0.4 * r2l_loss: 1.573191198677313 + (reg):0.6 * l2r_loos: 1.56772277112867 
+{'testlen': 545, 'reflen': 543, 'guess': [545, 445, 345, 245], 'correct': [428, 250, 139, 61]}
+ratio: 1.0036832412504537
+{'testlen': 533, 'reflen': 531, 'guess': [533, 433, 333, 233], 'correct': [423, 261, 152, 72]}
+ratio: 1.0037664783408593
+loss: 2.4415569340741192 = (1-reg): 0.4 * r2l_loss: 2.4623508153138336 + (reg):0.6 * l2r_loos: 2.427694227077343 
+r2l_scores: {'Bleu_1': 0.7853211009159903, 'Bleu_2': 0.664222575442218, 'Bleu_3': 0.5622649217760639, 'Bleu_4': 0.4586661395396296, 'METEOR': 0.34679723585857863, 'ROUGE_L': 0.7004408616946651, 'CIDEr': 0.9794702114247381}
+l2r_scores: {'Bleu_1': 0.7936210131317193, 'Bleu_2': 0.691644431381952, 'Bleu_3': 0.6021735948843104, 'Bleu_4': 0.5096657209033304, 'METEOR': 0.3410302660257634, 'ROUGE_L': 0.7054953082363576, 'CIDEr': 0.9903430297573932}
+Saving checkpoint at epoch=7 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/7.ckpt
+
+
+loss: 1.5324777245130696 = (1-reg): 0.4 * r2l_loss: 1.5346215778882386 + (reg):0.6 * l2r_loos: 1.531048409039857 
+{'testlen': 540, 'reflen': 540, 'guess': [540, 440, 340, 242], 'correct': [425, 258, 153, 80]}
+ratio: 0.9999999999981481
+{'testlen': 526, 'reflen': 523, 'guess': [526, 426, 326, 226], 'correct': [421, 255, 153, 78]}
+ratio: 1.005736137665381
+loss: 2.4472264960960106 = (1-reg): 0.4 * r2l_loss: 2.4739760045652037 + (reg):0.6 * l2r_loos: 2.4293933656480577 
+r2l_scores: {'Bleu_1': 0.7870370370341221, 'Bleu_2': 0.6793304784758935, 'Bleu_3': 0.5921861389491779, 'Bleu_4': 0.511873131295646, 'METEOR': 0.35747983190449095, 'ROUGE_L': 0.7064010945834454, 'CIDEr': 1.0076714742580666}
+l2r_scores: {'Bleu_1': 0.8003802281353605, 'Bleu_2': 0.69217110657996, 'Bleu_3': 0.6080886834495066, 'Bleu_4': 0.5278028510403554, 'METEOR': 0.3544136096204354, 'ROUGE_L': 0.717546189240787, 'CIDEr': 1.0780560531688383}
+Saving checkpoint at epoch=8 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/8.ckpt
+
+
+loss: 1.4998195058791364 = (1-reg): 0.4 * r2l_loss: 1.5016870558066446 + (reg):0.6 * l2r_loos: 1.4985743919747774 
+{'testlen': 525, 'reflen': 523, 'guess': [525, 425, 325, 225], 'correct': [417, 248, 141, 69]}
+ratio: 1.0038240917762833
+{'testlen': 529, 'reflen': 528, 'guess': [529, 429, 329, 229], 'correct': [425, 258, 155, 84]}
+ratio: 1.0018939393920419
+loss: 2.437536534556636 = (1-reg): 0.4 * r2l_loss: 2.4632001294030084 + (reg):0.6 * l2r_loos: 2.420427357708966 
+r2l_scores: {'Bleu_1': 0.7942857142842014, 'Bleu_2': 0.6808003199384374, 'Bleu_3': 0.5858571726235711, 'Bleu_4': 0.49832245411023135, 'METEOR': 0.3468807865092985, 'ROUGE_L': 0.6895049734348423, 'CIDEr': 0.9353412610909224}
+l2r_scores: {'Bleu_1': 0.8034026465013169, 'Bleu_2': 0.6951008761069869, 'Bleu_3': 0.6105817566131752, 'Bleu_4': 0.537549941500404, 'METEOR': 0.3557097884944258, 'ROUGE_L': 0.7086605987278964, 'CIDEr': 1.0747950180087975}
+Saving checkpoint at epoch=9 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/9.ckpt
+
+
+loss: 1.4715671128914005 = (1-reg): 0.4 * r2l_loss: 1.4727405860775806 + (reg):0.6 * l2r_loos: 1.47078471613712 
+{'testlen': 537, 'reflen': 537, 'guess': [537, 437, 337, 241], 'correct': [423, 254, 149, 80]}
+ratio: 0.9999999999981378
+{'testlen': 549, 'reflen': 547, 'guess': [549, 449, 349, 249], 'correct': [438, 271, 166, 88]}
+ratio: 1.003656307127964
+loss: 2.4289467370068585 = (1-reg): 0.4 * r2l_loss: 2.4551093172144007 + (reg):0.6 * l2r_loos: 2.411504876172101 
+r2l_scores: {'Bleu_1': 0.7877094972037701, 'Bleu_2': 0.6766423570688551, 'Bleu_3': 0.5871624080890294, 'Bleu_4': 0.5091396484080294, 'METEOR': 0.3492935436135505, 'ROUGE_L': 0.7015272407931967, 'CIDEr': 1.0249736659631785}
+l2r_scores: {'Bleu_1': 0.79781420764882, 'Bleu_2': 0.6939247185993463, 'Bleu_3': 0.6118370782321609, 'Bleu_4': 0.5333934465675688, 'METEOR': 0.3598860727440162, 'ROUGE_L': 0.7109504135530489, 'CIDEr': 1.0641807976640378}
+Saving checkpoint at epoch=10 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/10.ckpt
+
+
+loss: 1.4449653032959484 = (1-reg): 0.4 * r2l_loss: 1.4454052031626468 + (reg):0.6 * l2r_loos: 1.4446719570628932 
+{'testlen': 500, 'reflen': 500, 'guess': [500, 400, 300, 201], 'correct': [405, 237, 135, 67]}
+ratio: 0.999999999998
+{'testlen': 524, 'reflen': 522, 'guess': [524, 424, 324, 224], 'correct': [411, 254, 155, 83]}
+ratio: 1.003831417622598
+loss: 2.444979265001085 = (1-reg): 0.4 * r2l_loss: 2.4741843205911143 + (reg):0.6 * l2r_loos: 2.4255091119695593 
+r2l_scores: {'Bleu_1': 0.8099999999967601, 'Bleu_2': 0.6927661943223852, 'Bleu_3': 0.599968748369488, 'Bleu_4': 0.5179837771020996, 'METEOR': 0.34390384852517264, 'ROUGE_L': 0.6905327895966871, 'CIDEr': 1.0223749476913797}
+l2r_scores: {'Bleu_1': 0.7843511450366711, 'Bleu_2': 0.6854711759880808, 'Bleu_3': 0.6080253610457789, 'Bleu_4': 0.537215814910679, 'METEOR': 0.3576457301819403, 'ROUGE_L': 0.7013995487460057, 'CIDEr': 0.9588453334007281}
+Saving checkpoint at epoch=11 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/11.ckpt
+
+
+loss: 1.4218367763425483 = (1-reg): 0.4 * r2l_loss: 1.4222950767689064 + (reg):0.6 * l2r_loos: 1.4215311669130795 
+{'testlen': 516, 'reflen': 518, 'guess': [516, 416, 316, 221], 'correct': [410, 249, 147, 72]}
+ratio: 0.9961389961370731
+{'testlen': 513, 'reflen': 511, 'guess': [513, 413, 313, 213], 'correct': [407, 246, 149, 77]}
+ratio: 1.0039138943228887
+loss: 2.4258330821990968 = (1-reg): 0.4 * r2l_loss: 2.4557455866425126 + (reg):0.6 * l2r_loos: 2.4058912952740985 
+r2l_scores: {'Bleu_1': 0.791499861393907, 'Bleu_2': 0.6869684213786209, 'Bleu_3': 0.6024765707315793, 'Bleu_4': 0.5161421774710128, 'METEOR': 0.34481813659002325, 'ROUGE_L': 0.691567589160862, 'CIDEr': 1.0309104658719144}
+l2r_scores: {'Bleu_1': 0.7933723196865626, 'Bleu_2': 0.6874340657661939, 'Bleu_3': 0.608183560547294, 'Bleu_4': 0.534015408107198, 'METEOR': 0.36177393332432023, 'ROUGE_L': 0.7056689979420209, 'CIDEr': 1.0122227438570095}
+Saving checkpoint at epoch=12 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/12.ckpt
+
+
+loss: 1.4000638457595325 = (1-reg): 0.4 * r2l_loss: 1.400292926538186 + (reg):0.6 * l2r_loos: 1.3999110521644842 
+{'testlen': 503, 'reflen': 506, 'guess': [503, 403, 303, 207], 'correct': [403, 251, 148, 76]}
+ratio: 0.9940711462430948
+{'testlen': 533, 'reflen': 531, 'guess': [533, 433, 333, 233], 'correct': [421, 259, 158, 80]}
+ratio: 1.0037664783408593
+loss: 2.436342317086679 = (1-reg): 0.4 * r2l_loss: 2.4707586694646766 + (reg):0.6 * l2r_loos: 2.413397945298089 
+r2l_scores: {'Bleu_1': 0.7964285784692939, 'Bleu_2': 0.7022029387467674, 'Bleu_3': 0.6209424948094376, 'Bleu_4': 0.5436905593786466, 'METEOR': 0.34137985494288065, 'ROUGE_L': 0.6809808719504024, 'CIDEr': 0.9584969837697019}
+l2r_scores: {'Bleu_1': 0.7898686679159664, 'Bleu_2': 0.6873586102601461, 'Bleu_3': 0.6074723791328623, 'Bleu_4': 0.5267183133255312, 'METEOR': 0.3576360547537715, 'ROUGE_L': 0.6978985691268664, 'CIDEr': 0.9626479204742965}
+Saving checkpoint at epoch=13 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/13.ckpt
+
+
+loss: 1.3801092107960435 = (1-reg): 0.4 * r2l_loss: 1.3812237971727965 + (reg):0.6 * l2r_loos: 1.3793660804091907 
+{'testlen': 523, 'reflen': 526, 'guess': [523, 423, 323, 224], 'correct': [413, 246, 143, 68]}
+ratio: 0.9942965779448778
+{'testlen': 536, 'reflen': 534, 'guess': [536, 436, 336, 236], 'correct': [434, 261, 157, 79]}
+ratio: 1.0037453183501803
+loss: 2.4393238067626952 = (1-reg): 0.4 * r2l_loss: 2.475311207771301 + (reg):0.6 * l2r_loos: 2.4153320806997796 
+r2l_scores: {'Bleu_1': 0.7851582345991456, 'Bleu_2': 0.6737990251666937, 'Bleu_3': 0.5846568373252592, 'Bleu_4': 0.4955850594166622, 'METEOR': 0.34481957800200325, 'ROUGE_L': 0.676074461350671, 'CIDEr': 1.0373663217803177}
+l2r_scores: {'Bleu_1': 0.8097014925358028, 'Bleu_2': 0.6962087527540686, 'Bleu_3': 0.6095552989009535, 'Bleu_4': 0.5247332752959923, 'METEOR': 0.3465754071403621, 'ROUGE_L': 0.709427206195602, 'CIDEr': 1.0456355393173542}
+Saving checkpoint at epoch=14 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/14.ckpt
+
+
+loss: 1.3615526444013002 = (1-reg): 0.4 * r2l_loss: 1.3606420366881324 + (reg):0.6 * l2r_loos: 1.362159640593607 
+{'testlen': 516, 'reflen': 518, 'guess': [516, 416, 316, 218], 'correct': [408, 243, 143, 72]}
+ratio: 0.9961389961370731
+{'testlen': 528, 'reflen': 526, 'guess': [528, 428, 328, 228], 'correct': [421, 261, 163, 85]}
+ratio: 1.003802281366913
+loss: 2.433792575200399 = (1-reg): 0.4 * r2l_loss: 2.461122547255622 + (reg):0.6 * l2r_loos: 2.4155724728548966 
+r2l_scores: {'Bleu_1': 0.7876388864602781, 'Bleu_2': 0.676983977681001, 'Bleu_3': 0.5911633131836551, 'Bleu_4': 0.510597611113963, 'METEOR': 0.34829587371463144, 'ROUGE_L': 0.7020034291758849, 'CIDEr': 1.0271262474733656}
+l2r_scores: {'Bleu_1': 0.7973484848469747, 'Bleu_2': 0.6973044805933396, 'Bleu_3': 0.6228539515976723, 'Bleu_4': 0.5478487659948473, 'METEOR': 0.36952431221042126, 'ROUGE_L': 0.7143862578817368, 'CIDEr': 1.1053237800489395}
+Saving checkpoint at epoch=15 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/15.ckpt
+
+
+loss: 1.3440863931374472 = (1-reg): 0.4 * r2l_loss: 1.344700963575332 + (reg):0.6 * l2r_loos: 1.343676606592585 
+{'testlen': 529, 'reflen': 529, 'guess': [529, 429, 329, 231], 'correct': [423, 266, 152, 77]}
+ratio: 0.9999999999981096
+{'testlen': 518, 'reflen': 516, 'guess': [518, 418, 318, 218], 'correct': [416, 261, 159, 82]}
+ratio: 1.0038759689903025
+loss: 2.439684166731658 = (1-reg): 0.4 * r2l_loss: 2.4600148448237666 + (reg):0.6 * l2r_loos: 2.426130247116089 
+r2l_scores: {'Bleu_1': 0.7996219281633283, 'Bleu_2': 0.7041327104109991, 'Bleu_3': 0.6118602548471452, 'Bleu_4': 0.5256647665407163, 'METEOR': 0.35180842346417857, 'ROUGE_L': 0.6990235776292066, 'CIDEr': 1.0353321357348468}
+l2r_scores: {'Bleu_1': 0.8030888030872527, 'Bleu_2': 0.7081314748396262, 'Bleu_3': 0.6305689768923285, 'Bleu_4': 0.554164613092815, 'METEOR': 0.3686596125222546, 'ROUGE_L': 0.7124618159953162, 'CIDEr': 1.0663783356142997}
+Saving checkpoint at epoch=16 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/16.ckpt
+
+
+loss: 1.3264823758797568 = (1-reg): 0.4 * r2l_loss: 1.3281751497847134 + (reg):0.6 * l2r_loos: 1.3253537880788084 
+{'testlen': 522, 'reflen': 520, 'guess': [522, 422, 322, 222], 'correct': [416, 249, 143, 69]}
+ratio: 1.0038461538442234
+{'testlen': 507, 'reflen': 505, 'guess': [507, 407, 307, 207], 'correct': [410, 257, 155, 76]}
+ratio: 1.003960396037616
+loss: 2.4329384724299112 = (1-reg): 0.4 * r2l_loss: 2.469989386311284 + (reg):0.6 * l2r_loos: 2.4082377354303994 
+r2l_scores: {'Bleu_1': 0.7969348658988564, 'Bleu_2': 0.6857327032482373, 'Bleu_3': 0.5932849020258232, 'Bleu_4': 0.5047443909201528, 'METEOR': 0.35388339409632263, 'ROUGE_L': 0.7009675279625642, 'CIDEr': 1.020055240968028}
+l2r_scores: {'Bleu_1': 0.8086785009845983, 'Bleu_2': 0.7145906110541268, 'Bleu_3': 0.6364573575914826, 'Bleu_4': 0.5546739823490076, 'METEOR': 0.3606394037068708, 'ROUGE_L': 0.7163355364736753, 'CIDEr': 1.0561816326714568}
+Saving checkpoint at epoch=17 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/17.ckpt
+
+
+loss: 1.3112613060826162 = (1-reg): 0.4 * r2l_loss: 1.311738895939999 + (reg):0.6 * l2r_loos: 1.3109428421395724 
+{'testlen': 521, 'reflen': 522, 'guess': [521, 421, 321, 223], 'correct': [420, 249, 147, 70]}
+ratio: 0.9980842911858274
+{'testlen': 538, 'reflen': 537, 'guess': [538, 438, 338, 238], 'correct': [425, 254, 151, 72]}
+ratio: 1.001862197391058
+loss: 2.447305248401783 = (1-reg): 0.4 * r2l_loss: 2.4832986275355022 + (reg):0.6 * l2r_loos: 2.4233095195558336 
+r2l_scores: {'Bleu_1': 0.8045962209556392, 'Bleu_2': 0.6891770877069674, 'Bleu_3': 0.6010078274535523, 'Bleu_4': 0.5106813476171685, 'METEOR': 0.3428846152429858, 'ROUGE_L': 0.7027234796187597, 'CIDEr': 1.0326949374407013}
+l2r_scores: {'Bleu_1': 0.7899628252773421, 'Bleu_2': 0.6768355013857081, 'Bleu_3': 0.5893077725537432, 'Bleu_4': 0.4988218993937569, 'METEOR': 0.3420846241947465, 'ROUGE_L': 0.6963750229104774, 'CIDEr': 0.9679571945019662}
+Saving checkpoint at epoch=18 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/18.ckpt
+Epoch 00007: reducing learning rate of group 0 to 5.0000e-05.
+
+
+loss: 1.2486543675328865 = (1-reg): 0.4 * r2l_loss: 1.2529590666880372 + (reg):0.6 * l2r_loos: 1.245784501951249 
+{'testlen': 514, 'reflen': 515, 'guess': [514, 414, 314, 216], 'correct': [393, 237, 134, 66]}
+ratio: 0.9980582524252465
+{'testlen': 542, 'reflen': 541, 'guess': [542, 442, 342, 242], 'correct': [423, 254, 152, 77]}
+ratio: 1.001848428833638
+loss: 2.4378758041946975 = (1-reg): 0.4 * r2l_loss: 2.4607749974286115 + (reg):0.6 * l2r_loos: 2.422609547332481 
+r2l_scores: {'Bleu_1': 0.7631053537795194, 'Bleu_2': 0.6603037857402814, 'Bleu_3': 0.5705222653223249, 'Bleu_4': 0.4878269192202394, 'METEOR': 0.33415294018747554, 'ROUGE_L': 0.6635463953270728, 'CIDEr': 0.9564349608383291}
+l2r_scores: {'Bleu_1': 0.7804428044266044, 'Bleu_2': 0.669693778072437, 'Bleu_3': 0.5841485952730223, 'Bleu_4': 0.5018354562096011, 'METEOR': 0.35299096410842695, 'ROUGE_L': 0.6868364312961114, 'CIDEr': 1.0041722309101122}
+Saving checkpoint at epoch=19 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/19.ckpt
+
+
+loss: 1.2307970169724012 = (1-reg): 0.4 * r2l_loss: 1.2346407495561194 + (reg):0.6 * l2r_loos: 1.2282344662947733 
+{'testlen': 510, 'reflen': 511, 'guess': [510, 410, 310, 212], 'correct': [407, 244, 139, 66]}
+ratio: 0.9980430528356203
+{'testlen': 520, 'reflen': 519, 'guess': [520, 420, 320, 220], 'correct': [418, 258, 158, 77]}
+ratio: 1.0019267822716726
+loss: 2.436715516337642 = (1-reg): 0.4 * r2l_loss: 2.458854986120153 + (reg):0.6 * l2r_loos: 2.421955755904869 
+r2l_scores: {'Bleu_1': 0.7964759660058675, 'Bleu_2': 0.6878021729875948, 'Bleu_3': 0.5959953599129575, 'Bleu_4': 0.5064321730771579, 'METEOR': 0.3391795867339968, 'ROUGE_L': 0.6893817430498494, 'CIDEr': 1.033012528841385}
+l2r_scores: {'Bleu_1': 0.803846153844608, 'Bleu_2': 0.7027027883743479, 'Bleu_3': 0.6247172347251889, 'Bleu_4': 0.5404799984821749, 'METEOR': 0.3564249964926791, 'ROUGE_L': 0.704624491956953, 'CIDEr': 1.0333477555677668}
+Saving checkpoint at epoch=20 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/20.ckpt
+
+
+loss: 1.2188435154273862 = (1-reg): 0.4 * r2l_loss: 1.222693352972875 + (reg):0.6 * l2r_loos: 1.2162768981886691 
+{'testlen': 519, 'reflen': 519, 'guess': [519, 419, 319, 220], 'correct': [401, 239, 136, 66]}
+ratio: 0.9999999999980732
+{'testlen': 536, 'reflen': 534, 'guess': [536, 436, 336, 236], 'correct': [427, 259, 159, 82]}
+ratio: 1.0037453183501803
+loss: 2.4469211684332954 = (1-reg): 0.4 * r2l_loss: 2.471343720400775 + (reg):0.6 * l2r_loos: 2.430639358803078 
+r2l_scores: {'Bleu_1': 0.7726396917118588, 'Bleu_2': 0.6638660299877447, 'Bleu_3': 0.5727560772979957, 'Bleu_4': 0.48725644601096135, 'METEOR': 0.34021180611754537, 'ROUGE_L': 0.6849567809100106, 'CIDEr': 0.956057801477165}
+l2r_scores: {'Bleu_1': 0.7966417910432899, 'Bleu_2': 0.6879203867016648, 'Bleu_3': 0.6072647454352201, 'Bleu_4': 0.5281521038691819, 'METEOR': 0.3594199695663832, 'ROUGE_L': 0.7065709309303264, 'CIDEr': 1.0266994887159475}
+Saving checkpoint at epoch=21 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/21.ckpt
+
+
+loss: 1.2105242576755462 = (1-reg): 0.4 * r2l_loss: 1.2154246168058427 + (reg):0.6 * l2r_loos: 1.207257291293535 
+{'testlen': 515, 'reflen': 515, 'guess': [515, 415, 315, 216], 'correct': [406, 246, 149, 71]}
+ratio: 0.9999999999980582
+{'testlen': 525, 'reflen': 523, 'guess': [525, 425, 325, 225], 'correct': [415, 257, 157, 75]}
+ratio: 1.0038240917762833
+loss: 2.462228711446126 = (1-reg): 0.4 * r2l_loss: 2.488684486459803 + (reg):0.6 * l2r_loos: 2.444591400358412 
+r2l_scores: {'Bleu_1': 0.7883495145600452, 'Bleu_2': 0.6836013433138847, 'Bleu_3': 0.6046357796051597, 'Bleu_4': 0.5191842769755296, 'METEOR': 0.33990764305672133, 'ROUGE_L': 0.6805553599760509, 'CIDEr': 0.9368949739725457}
+l2r_scores: {'Bleu_1': 0.7904761904746849, 'Bleu_2': 0.6913794922029878, 'Bleu_3': 0.6135026260135612, 'Bleu_4': 0.5267226641146899, 'METEOR': 0.35993155664943294, 'ROUGE_L': 0.7079271280925377, 'CIDEr': 1.0131223603115975}
+Saving checkpoint at epoch=22 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/22.ckpt
+
+
+loss: 1.2008683093649442 = (1-reg): 0.4 * r2l_loss: 1.2057221354812873 + (reg):0.6 * l2r_loos: 1.1976323644059603 
+{'testlen': 527, 'reflen': 528, 'guess': [527, 427, 327, 228], 'correct': [405, 234, 134, 65]}
+ratio: 0.9981060606041703
+{'testlen': 529, 'reflen': 527, 'guess': [529, 429, 329, 229], 'correct': [415, 250, 153, 75]}
+ratio: 1.0037950664117574
+loss: 2.464786888051916 = (1-reg): 0.4 * r2l_loss: 2.4855602105458576 + (reg):0.6 * l2r_loos: 2.4509378865913107 
+r2l_scores: {'Bleu_1': 0.7670440753638925, 'Bleu_2': 0.6477271585847406, 'Bleu_3': 0.5556982858910188, 'Bleu_4': 0.4700758047696654, 'METEOR': 0.330334523032864, 'ROUGE_L': 0.6634146177951458, 'CIDEr': 0.8811868930342055}
+l2r_scores: {'Bleu_1': 0.7844990548189329, 'Bleu_2': 0.6761414654951646, 'Bleu_3': 0.5968385840099565, 'Bleu_4': 0.5136876371799838, 'METEOR': 0.3568732469288655, 'ROUGE_L': 0.6898981747595974, 'CIDEr': 1.012007339468242}
+Saving checkpoint at epoch=23 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/23.ckpt
+
+
+loss: 1.1922289533302433 = (1-reg): 0.4 * r2l_loss: 1.197987557512815 + (reg):0.6 * l2r_loos: 1.188389823163142 
+{'testlen': 514, 'reflen': 513, 'guess': [514, 414, 314, 215], 'correct': [407, 247, 144, 72]}
+ratio: 1.0019493177368384
+{'testlen': 529, 'reflen': 528, 'guess': [529, 429, 329, 229], 'correct': [423, 268, 166, 88]}
+ratio: 1.0018939393920419
+loss: 2.4552826722462973 = (1-reg): 0.4 * r2l_loss: 2.4879891784102828 + (reg):0.6 * l2r_loos: 2.4334782088244404 
+r2l_scores: {'Bleu_1': 0.7918287937727786, 'Bleu_2': 0.687327865251524, 'Bleu_3': 0.600602195547166, 'Bleu_4': 0.5189956236286757, 'METEOR': 0.3510939393380048, 'ROUGE_L': 0.6972524019877503, 'CIDEr': 0.9899274434523774}
+l2r_scores: {'Bleu_1': 0.79962192816484, 'Bleu_2': 0.7067748687025817, 'Bleu_3': 0.6316717614485916, 'Bleu_4': 0.5578666432910637, 'METEOR': 0.36827723530555945, 'ROUGE_L': 0.7223003482896906, 'CIDEr': 1.0741493775024304}
+Saving checkpoint at epoch=24 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/24.ckpt
+Epoch 00013: reducing learning rate of group 0 to 2.5000e-05.
+
+
+loss: 1.1583890270795978 = (1-reg): 0.4 * r2l_loss: 1.1661612799910248 + (reg):0.6 * l2r_loos: 1.1532074686738312 
+{'testlen': 517, 'reflen': 519, 'guess': [517, 417, 317, 220], 'correct': [401, 237, 136, 73]}
+ratio: 0.9961464354508744
+{'testlen': 535, 'reflen': 533, 'guess': [535, 435, 335, 235], 'correct': [423, 258, 159, 83]}
+ratio: 1.0037523452138766
+loss: 2.4558040459950763 = (1-reg): 0.4 * r2l_loss: 2.4810173449692905 + (reg):0.6 * l2r_loos: 2.438995028425146 
+r2l_scores: {'Bleu_1': 0.7726339252945531, 'Bleu_2': 0.661382964238002, 'Bleu_3': 0.571788214446889, 'Bleu_4': 0.4985760705820975, 'METEOR': 0.3352254255316786, 'ROUGE_L': 0.657810795128523, 'CIDEr': 0.9216287239901004}
+l2r_scores: {'Bleu_1': 0.7906542056059987, 'Bleu_2': 0.6847917462540362, 'Bleu_3': 0.6060239445651985, 'Bleu_4': 0.5295047927620967, 'METEOR': 0.3587643517863908, 'ROUGE_L': 0.7046204728751465, 'CIDEr': 1.0399324527729057}
+Saving checkpoint at epoch=25 to ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/25.ckpt
+
+
+
+[BEST: 6 SEED: 904666]
+{'testlen': 3712, 'reflen': 3720, 'guess': [3712, 3042, 2372, 1715], 'correct': [2929, 1722, 931, 406]}
+ratio: 0.9978494623653231
+{'testlen': 3642, 'reflen': 3641, 'guess': [3642, 2972, 2302, 1632], 'correct': [2902, 1693, 942, 408]}
+ratio: 1.000274649821203
+r2l scores: {'Bleu_1': 0.7873637654572481, 'Bleu_2': 0.6668938175152382, 'Bleu_3': 0.5584755096464179, 'Bleu_4': 0.4503856889047381, 'METEOR': 0.33692098788387864, 'ROUGE_L': 0.6935596238033316, 'CIDEr': 0.8130339140163036}
+l2r scores: {'Bleu_1': 0.796814936847667, 'Bleu_2': 0.6737252276682116, 'Bleu_3': 0.5705631699769554, 'Bleu_4': 0.4642081948493449, 'METEOR': 0.34832689609405965, 'ROUGE_L': 0.7123108590787914, 'CIDEr': 0.8135868341350732}
+./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0
+['19.ckpt', '2.ckpt', 'best.ckpt', '22.ckpt', '4.ckpt', '10.ckpt', '21.ckpt', '11.ckpt', '5.ckpt', '8.ckpt', '3.ckpt', '13.ckpt', '6.ckpt', '9.ckpt', '20.ckpt', '16.ckpt', '15.ckpt', '12.ckpt', '7.ckpt', '23.ckpt', '14.ckpt', '24.ckpt', '17.ckpt', '1.ckpt', '18.ckpt', '25.ckpt']
+Build data_loader according to 19.ckpt
+#vocabs: 3891 (9158), #words: 323223 (329680). Trim words which appear less than 3 times.
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/0.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/1.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/2.ckpt
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/3.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3488, 'reflen': 3494, 'guess': [3488, 2818, 2148, 1478], 'correct': [2773, 1663, 929, 394]}
+ratio: 0.9982827704633662
+[TEST L2R] in 4.ckpt is {'Bleu_1': 0.7936450778487432, 'Bleu_2': 0.683778215812888, 'Bleu_3': 0.5866174315398384, 'Bleu_4': 0.4814319442221244, 'METEOR': 0.350488112854621, 'ROUGE_L': 0.7061467115301857, 'CIDEr': 0.8226097140702294}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/4.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3459, 'reflen': 3455, 'guess': [3459, 2789, 2119, 1449], 'correct': [2798, 1667, 939, 424]}
+ratio: 1.0011577424020257
+[TEST L2R] in 5.ckpt is {'Bleu_1': 0.8089043076031197, 'Bleu_2': 0.6953318403117169, 'Bleu_3': 0.5983743330433788, 'Bleu_4': 0.5003847726616876, 'METEOR': 0.35872090972450527, 'ROUGE_L': 0.7162143317495117, 'CIDEr': 0.8434737107486758}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/5.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3642, 'reflen': 3641, 'guess': [3642, 2972, 2302, 1632], 'correct': [2902, 1693, 942, 408]}
+ratio: 1.000274649821203
+[TEST L2R] in 6.ckpt is {'Bleu_1': 0.796814936847667, 'Bleu_2': 0.6737252276682116, 'Bleu_3': 0.5705631699769554, 'Bleu_4': 0.4642081948493449, 'METEOR': 0.34832689609405965, 'ROUGE_L': 0.7123108590787914, 'CIDEr': 0.8135868341350732}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/6.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3581, 'reflen': 3581, 'guess': [3581, 2911, 2241, 1571], 'correct': [2878, 1724, 992, 450]}
+ratio: 0.9999999999997208
+[TEST L2R] in 7.ckpt is {'Bleu_1': 0.8036861211947479, 'Bleu_2': 0.6899073349819255, 'Bleu_3': 0.5950458720473425, 'Bleu_4': 0.49564635561414777, 'METEOR': 0.36130688836809144, 'ROUGE_L': 0.7167511921899555, 'CIDEr': 0.8576018856096439}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/7.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3517, 'reflen': 3519, 'guess': [3517, 2847, 2177, 1507], 'correct': [2840, 1713, 989, 447]}
+ratio: 0.9994316567203753
+[TEST L2R] in 8.ckpt is {'Bleu_1': 0.8070473262206928, 'Bleu_2': 0.6966441027493014, 'Bleu_3': 0.6040009309306565, 'Bleu_4': 0.5055510672134056, 'METEOR': 0.3601077022064555, 'ROUGE_L': 0.720212247494902, 'CIDEr': 0.8433792020258242}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/8.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3456, 'reflen': 3461, 'guess': [3456, 2786, 2116, 1446], 'correct': [2806, 1686, 971, 434]}
+ratio: 0.9985553308289515
+[TEST L2R] in 9.ckpt is {'Bleu_1': 0.810747490954236, 'Bleu_2': 0.6999497713135526, 'Bleu_3': 0.6077659049955503, 'Bleu_4': 0.5093021728034227, 'METEOR': 0.35944257406359764, 'ROUGE_L': 0.715395812645424, 'CIDEr': 0.8797130476127286}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/9.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3680, 'reflen': 3683, 'guess': [3680, 3010, 2340, 1670], 'correct': [2977, 1789, 1023, 469]}
+ratio: 0.9991854466464841
+[TEST L2R] in 10.ckpt is {'Bleu_1': 0.8083081757560172, 'Bleu_2': 0.6928406908293613, 'Bleu_3': 0.5940971942513557, 'Bleu_4': 0.49251414482355715, 'METEOR': 0.36141172129994603, 'ROUGE_L': 0.7228451982825146, 'CIDEr': 0.8854168973302594}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/10.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3484, 'reflen': 3490, 'guess': [3484, 2814, 2144, 1474], 'correct': [2816, 1696, 970, 444]}
+ratio: 0.9982808022919776
+[TEST L2R] in 11.ckpt is {'Bleu_1': 0.8068755956737678, 'Bleu_2': 0.6967551790821332, 'Bleu_3': 0.6030034730361277, 'Bleu_4': 0.5067272395581668, 'METEOR': 0.36330694493228005, 'ROUGE_L': 0.7191002018910808, 'CIDEr': 0.8692909359434307}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/11.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3509, 'reflen': 3512, 'guess': [3509, 2839, 2169, 1499], 'correct': [2819, 1686, 976, 447]}
+ratio: 0.9991457858767087
+[TEST L2R] in 12.ckpt is {'Bleu_1': 0.8026762444019377, 'Bleu_2': 0.6901295843489886, 'Bleu_3': 0.5982647563171845, 'Bleu_4': 0.5025782765256182, 'METEOR': 0.36593331128512724, 'ROUGE_L': 0.7201263797865922, 'CIDEr': 0.8541561662901861}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/12.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3554, 'reflen': 3559, 'guess': [3554, 2884, 2214, 1544], 'correct': [2844, 1698, 970, 445]}
+ratio: 0.9985951109859516
+[TEST L2R] in 13.ckpt is {'Bleu_1': 0.799100080953656, 'Bleu_2': 0.6854350449694414, 'Bleu_3': 0.5901629094190948, 'Bleu_4': 0.4931787594721504, 'METEOR': 0.3611253234628377, 'ROUGE_L': 0.7082579960490462, 'CIDEr': 0.8697847900194615}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/13.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3675, 'reflen': 3676, 'guess': [3675, 3005, 2335, 1665], 'correct': [2979, 1797, 1036, 476]}
+ratio: 0.999727965179271
+[TEST L2R] in 14.ckpt is {'Bleu_1': 0.8103917001444514, 'Bleu_2': 0.6960496267389352, 'Bleu_3': 0.5989791451127563, 'Bleu_4': 0.4978258123747243, 'METEOR': 0.36151769509663273, 'ROUGE_L': 0.7204358979684722, 'CIDEr': 0.875950239049334}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/14.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3583, 'reflen': 3581, 'guess': [3583, 2913, 2243, 1573], 'correct': [2865, 1735, 994, 456]}
+ratio: 1.0005585032111142
+[TEST L2R] in 15.ckpt is {'Bleu_1': 0.7996092659780074, 'Bleu_2': 0.6901101362549421, 'Bleu_3': 0.5953851172901702, 'Bleu_4': 0.4973447190900199, 'METEOR': 0.3624318777920463, 'ROUGE_L': 0.7191295563766165, 'CIDEr': 0.9003599812776408}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/15.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3508, 'reflen': 3505, 'guess': [3508, 2838, 2168, 1498], 'correct': [2810, 1680, 958, 438]}
+ratio: 1.0008559201138372
+[TEST L2R] in 16.ckpt is {'Bleu_1': 0.8010262257694409, 'Bleu_2': 0.6886076020715947, 'Bleu_3': 0.5939500898177247, 'Bleu_4': 0.49751140217841755, 'METEOR': 0.36077514443051906, 'ROUGE_L': 0.7186098420985477, 'CIDEr': 0.8410153740049393}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/16.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3460, 'reflen': 3461, 'guess': [3460, 2790, 2120, 1450], 'correct': [2827, 1696, 955, 433]}
+ratio: 0.9997110661655592
+[TEST L2R] in 17.ckpt is {'Bleu_1': 0.8168159150390093, 'Bleu_2': 0.7045473058683028, 'Bleu_3': 0.6069050758068808, 'Bleu_4': 0.5082637906751779, 'METEOR': 0.3622167595198729, 'ROUGE_L': 0.7204977960999486, 'CIDEr': 0.8653028753941752}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/17.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3592, 'reflen': 3589, 'guess': [3592, 2922, 2252, 1582], 'correct': [2904, 1732, 997, 445]}
+ratio: 1.0008358874335468
+[TEST L2R] in 18.ckpt is {'Bleu_1': 0.8084632516701535, 'Bleu_2': 0.6922516188963042, 'Bleu_3': 0.5964191471946151, 'Bleu_4': 0.4942561319011356, 'METEOR': 0.3525233364577367, 'ROUGE_L': 0.7128151309188997, 'CIDEr': 0.8717402064889501}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/18.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3602, 'reflen': 3600, 'guess': [3602, 2932, 2262, 1592], 'correct': [2899, 1749, 1001, 459]}
+ratio: 1.0005555555552776
+[TEST L2R] in 19.ckpt is {'Bleu_1': 0.804830649638866, 'Bleu_2': 0.6928914066710404, 'Bleu_3': 0.5967017008357481, 'Bleu_4': 0.4974911534124473, 'METEOR': 0.36182887245299117, 'ROUGE_L': 0.7147859786659022, 'CIDEr': 0.8768443776082389}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/19.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3579, 'reflen': 3576, 'guess': [3579, 2909, 2239, 1569], 'correct': [2903, 1757, 1005, 458]}
+ratio: 1.0008389261742168
+[TEST L2R] in 20.ckpt is {'Bleu_1': 0.8111204246994101, 'Bleu_2': 0.6999333529625048, 'Bleu_3': 0.6035896469623566, 'Bleu_4': 0.5033464037597104, 'METEOR': 0.36226806396133365, 'ROUGE_L': 0.7183162793735917, 'CIDEr': 0.8813171853415708}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/20.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3591, 'reflen': 3591, 'guess': [3591, 2921, 2251, 1581], 'correct': [2889, 1733, 989, 449]}
+ratio: 0.9999999999997216
+[TEST L2R] in 21.ckpt is {'Bleu_1': 0.8045112781950406, 'Bleu_2': 0.6908751489610463, 'Bleu_3': 0.5941188243851263, 'Bleu_4': 0.49400756838384263, 'METEOR': 0.3563028671915117, 'ROUGE_L': 0.7096426065847912, 'CIDEr': 0.8765210101206219}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/21.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3629, 'reflen': 3628, 'guess': [3629, 2959, 2289, 1619], 'correct': [2934, 1783, 1021, 474]}
+ratio: 1.000275633957828
+[TEST L2R] in 22.ckpt is {'Bleu_1': 0.8084871865525466, 'Bleu_2': 0.6979748268716454, 'Bleu_3': 0.6012011780473014, 'Bleu_4': 0.5022243211575355, 'METEOR': 0.36394044689387056, 'ROUGE_L': 0.720860810426501, 'CIDEr': 0.9035880057304161}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/22.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3571, 'reflen': 3572, 'guess': [3571, 2901, 2231, 1561], 'correct': [2868, 1721, 983, 444]}
+ratio: 0.9997200447925533
+[TEST L2R] in 23.ckpt is {'Bleu_1': 0.802911502678275, 'Bleu_2': 0.6900643668187767, 'Bleu_3': 0.5941605937600526, 'Bleu_4': 0.4941883421001248, 'METEOR': 0.36114386496518813, 'ROUGE_L': 0.7135814158869465, 'CIDEr': 0.8598297404466148}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/23.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3604, 'reflen': 3605, 'guess': [3604, 2934, 2264, 1594], 'correct': [2886, 1728, 985, 456]}
+ratio: 0.9997226074893205
+[TEST L2R] in 24.ckpt is {'Bleu_1': 0.8005547542089794, 'Bleu_2': 0.68655776449103, 'Bleu_3': 0.5896547801187535, 'Bleu_4': 0.49208187995731306, 'METEOR': 0.36003904897639266, 'ROUGE_L': 0.7142483011907134, 'CIDEr': 0.8562741541891851}
+Now is test in the ./checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-04-11 12:04:04 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/24.ckpt
+Finish build data_loader.
+Finish the model load in CUDA. Try to enter Test Set.
+{'testlen': 3676, 'reflen': 3673, 'guess': [3676, 3006, 2336, 1666], 'correct': [2945, 1767, 1006, 471]}
+ratio: 1.0008167710315816
+[TEST L2R] in 25.ckpt is {'Bleu_1': 0.8011425462457016, 'Bleu_2': 0.686244196728449, 'Bleu_3': 0.5875265595598635, 'Bleu_4': 0.48933593005112014, 'METEOR': 0.36078188010990747, 'ROUGE_L': 0.7141081393809318, 'CIDEr': 0.9000827637043969}

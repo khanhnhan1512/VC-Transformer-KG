@@ -1,0 +1,10 @@
+# Exclude all .zip files
+*.zip
+# Exclude all .pyc files
+*.pyc
+# Exclude .vector_cache folder
+.vector_cache/*
+# Exclude all data
+data/*
+# Exclude logs file
+logs/*

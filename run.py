@@ -10,7 +10,11 @@ from utils import dict_to_cls, get_predicted_captions, get_groundtruth_captions,
 
 
 def build_loader(ckpt_fpath):
-    checkpoint = torch.load(ckpt_fpath)
+    if torch.cuda.is_available():
+        checkpoint = torch.load(ckpt_fpath)
+    else:
+        checkpoint = torch.load(ckpt_fpath, map_location=torch.device('cpu'))
+        
     config = dict_to_cls(checkpoint['config'])
     """ Build Data Loader """
     if config.corpus == "MSVD":
@@ -37,7 +41,11 @@ def run(ckpt_fpath, test_iter, vocab, ckpt, l2r_test_vid2GTs, f, captioning_fpat
     if not os.path.exists(captioning_dpath):
         os.makedirs(captioning_dpath)
 
-    checkpoint = torch.load(ckpt_fpath)
+    if torch.cuda.is_available():
+        checkpoint = torch.load(ckpt_fpath)
+    else:
+        checkpoint = torch.load(ckpt_fpath, map_location=torch.device('cpu'))
+        
     """ Load Config """
     config = dict_to_cls(checkpoint['config'])
 
@@ -73,29 +81,39 @@ def run(ckpt_fpath, test_iter, vocab, ckpt, l2r_test_vid2GTs, f, captioning_fpat
 
 if __name__ == "__main__":
 
-    best_ckpt_file_number = 11  # 需要测试的文件
+    # 需要测试的文件
+    # Files to be tested
+    best_ckpt_file_number = 11
     file = "//checkpoints/checkpoints_MSR-VTT_InceptionResNetV2+I3D/111"
 
     # 打开最后保存的文件地址
+    # Open the last saved file address
     f = open("./result/test|{}.txt".format(C.model_id), 'w')
     ckpt_list = os.listdir(file)
     print(file, '\n')
     print(ckpt_list, '\n')
-    print('依据文件加载数据： ' + ckpt_list[0], '\n')
+    # print('依据文件加载数据： ' + ckpt_list[0], '\n')
+    print('Loading data from a file: ' + ckpt_list[0], '\n')
     # 按照第一个ckpt加载数据
+    # Load data according to the first ckpt
     test_iter, vocab, l2r_test_vid2GTs = build_loader(
         os.path.join(file, ckpt_list[0]))
-    print('结束数据加载。', '\n')
+    # print('结束数据加载。', '\n')
+    print('End data loading.', '\n')
 
     # 循环测试所有文件
+    # Loop through all files
     for i in range(len(ckpt_list)):
-        print("跳过文件：" + file + '/' + ckpt_list[i], '\n')
+        # print("跳过文件：" + file + '/' + ckpt_list[i], '\n')
+        print("Skip files: " + file + '/' + ckpt_list[i], '\n')
 
         # 只对最优的ckpt进行测试
+        # Only the best ckpt is tested
         if ckpt_list[i] not in [f'{best_ckpt_file_number}.ckpt']:
             continue
 
-        print("现在正在测试的文件：" + file + '/' + ckpt_list[i], '\n')
+        # print("现在正在测试的文件：" + file + '/' + ckpt_list[i], '\n')
+        print("The files currently being tested: " + file + '/' + ckpt_list[i], '\n')
         ckpt_fpath = os.path.join(file, ckpt_list[i])
         captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
         run(ckpt_fpath, test_iter, vocab, str(i + 1) +

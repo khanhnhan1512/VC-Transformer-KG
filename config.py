@@ -6,10 +6,10 @@ class FeatureConfig(object):
     # model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
-    model = "MSVD_ResNet152+I3D"
+    # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
-    # model = "MSVD_InceptionResNetV2+I3D"
+    model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
 
@@ -183,9 +183,11 @@ class TrainConfig(object):
         hyperparams_id += " gc-{}".format(gradient_clip)
 
     timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time())).replace(":", "_")
-    model_id = " _ ".join(
-        [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
-
+    # model_id = " _ ".join(
+    #     [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
+    model_id = " _ ".join( # Remove timestamp
+        [exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
+    
     """ Log """
     log_dpath = "./logs/logs_{}/{}".format(feat.model, model_id)
     ckpt_dpath = os.path.join("./checkpoints/checkpoints_{}".format(feat.model), model_id)

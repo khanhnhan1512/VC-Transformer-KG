@@ -7,7 +7,7 @@ channels:
   - https://repo.anaconda.com/pkgs/r
 dependencies:
   - python=3.10.16
-  - numpy
+  - numpy=1.26.4
   - pandas
   - h5py
   - spacy

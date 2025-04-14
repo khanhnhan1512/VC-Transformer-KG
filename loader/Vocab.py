@@ -162,10 +162,12 @@ class Vectors(object):
                         if isinstance(word, six.binary_type):
                             word = word.decode('utf-8')
                     except UnicodeDecodeError:
-                        logger.info("Skipping non-UTF8 token {}".format(repr(word)))
+                        logger.info(
+                            "Skipping non-UTF8 token {}".format(repr(word)))
                         continue
 
-                    vectors[vectors_loaded] = torch.tensor([float(x) for x in entries])
+                    vectors[vectors_loaded] = torch.tensor(
+                        [float(x) for x in entries])
                     vectors_loaded += 1
                     itos.append(word)
 
@@ -182,7 +184,13 @@ class Vectors(object):
             torch.save((self.itos, self.stoi, self.vectors, self.dim), path_pt)
         else:
             logger.info('Loading vectors from {}'.format(path_pt))
-            self.itos, self.stoi, self.vectors, self.dim = torch.load(path_pt)
+
+            if torch.cuda.is_available():
+                self.itos, self.stoi, self.vectors, self.dim = torch.load(
+                    path_pt)
+            else:
+                self.itos, self.stoi, self.vectors, self.dim = torch.load(path_pt,
+                                                                          map_location=torch.device('cpu'))
 
     def __len__(self):
         return len(self.vectors)

@@ -436,7 +436,7 @@ def load_checkpoint(model, ckpt_fpath):
         checkpoint = torch.load(ckpt_fpath)
     else:
         checkpoint = torch.load(ckpt_fpath, map_location=torch.device('cpu'))
-        
+
     model.load_state_dict(checkpoint['abd_transformer'])
     return model
 

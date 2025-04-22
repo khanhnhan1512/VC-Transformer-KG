@@ -3,13 +3,13 @@ import time
 
 
 class FeatureConfig(object):
-    # model = "MSVD_InceptionResNetV2"
+    model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
     # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
-    model = "MSVD_InceptionResNetV2+I3D"
+    # model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
 

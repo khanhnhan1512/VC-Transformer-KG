@@ -334,7 +334,7 @@ class ABDTransformer(nn.Module):
                  device='cuda', n_heads_big=128):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
-        self.device = device
+        self.device = device if torch.cuda.is_available() else 'cpu'
         self.feature_mode = feature_mode
 
         c = copy.deepcopy

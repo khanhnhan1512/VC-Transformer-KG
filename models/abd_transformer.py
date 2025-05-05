@@ -6,6 +6,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import namedtuple
 from torch.autograd import Variable
+import sys
+sys.path.append('.')
+from .deepseek-V3_model import MLA, precompute_freqs_cis, apply_rotary_emb, ModelArgs
 
 Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 
@@ -102,52 +105,24 @@ def self_attention(query, key, value, dropout=None, mask=None):
     return torch.matmul(self_attn, value), self_attn
 
 
-class MultiHeadAttention(nn.Module):
-
-    def __init__(self, head, d_model, dropout=0.1):
-        super(MultiHeadAttention, self).__init__()
-        assert (d_model % head == 0)
-        self.d_k = d_model // head
-        self.head = head
+class MultiLatentAttentionWrapper(nn.Module):
+    def __init__(self, d_model, n_heads, max_seq_len=2048):
+        super().__init__()
+        args = ModelArgs()
+        args.dim = d_model
+        args.n_heads = n_heads
+        args.max_seq_len = max_seq_len
+        self.freqs_cis = precompute_freqs_cis(args)
+        self.mla = MLA(args)
         self.d_model = d_model
-        self.linear_query = nn.Linear(d_model, d_model)
-        self.linear_key = nn.Linear(d_model, d_model)
-        self.linear_value = nn.Linear(d_model, d_model)
-        self.linear_out = nn.Linear(d_model, d_model)
-        self.dropout = nn.Dropout(p=dropout)
-        self.attn = None
+        self.n_heads = n_heads
+        self.max_seq_len = max_seq_len
 
-    def forward(self, query, key, value, mask=None):
-        if mask is not None:
-            # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
-            # 再1，2维交换变成[batch, head, -1, d_k], 所以mask要在第一维添加一维，与后面的self attention计算维度一样
-            mask = mask.unsqueeze(1)
-        n_batch = query.size(0)
-        # if self.head == 1:
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        # else:
-        #     query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        #     key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #     value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        #     # 变为三维， 或者说是concat head
-        #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
-
-        query = self.linear_query(query).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        key = self.linear_key(key).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        value = self.linear_value(value).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-
-        x, self.attn = self_attention(
-            query, key, value, dropout=self.dropout, mask=mask)
-        # 变为三维， 或者说是concat head
-        x = x.transpose(1, 2).contiguous().view(
-            n_batch, -1, self.head * self.d_k)
-
-        return self.linear_out(x)
+    def forward(self, x, start_pos=0, mask=None):
+        # x: (batch, seq_len, d_model)
+        seq_len = x.size(1)
+        freqs_cis = self.freqs_cis[start_pos:start_pos+seq_len].to(x.device)
+        return self.mla(x, start_pos, freqs_cis, mask)
 
 
 class PositionWiseFeedForward(nn.Module):
@@ -341,9 +316,8 @@ class ABDTransformer(nn.Module):
 
         # attn_no_heads = MultiHeadAttention(1, d_model, dropout)
 
-        attn = MultiHeadAttention(n_heads, d_model, dropout)
-
-        attn_big = MultiHeadAttention(n_heads_big, d_model, dropout)
+        attn = MultiLatentAttentionWrapper(d_model, n_heads)
+        attn_big = MultiLatentAttentionWrapper(d_model, n_heads_big)
 
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 
@@ -531,7 +505,7 @@ class ABDTransformer(nn.Module):
         "List after init: List 4 bt of List of len max_len_completed, init: List of len 4 bt of []"
         completed_hypotheses = [copy.deepcopy([]) for _ in range(batch_size)]
         "List len batch_sz of shape (cur beam_sz), init: List(4 bt)[(1 init_beam_sz)]"
-        "hyp_scores[i] is shape (cur beam_sz)"
+        "hyp_scores[i] is shape (cur_beam_sz)"
         hyp_scores = [copy.deepcopy(torch.full((1,), 0, dtype=torch.float, device=self.device))
                       for _ in range(batch_size)]  # probs are log_probs must be init at 0.
 
@@ -721,7 +695,7 @@ class ABDTransformer(nn.Module):
         "List after init: List 4 bt of List of len max_len_completed, init: List of len 4 bt of []"
         completed_hypotheses = [copy.deepcopy([]) for _ in range(batch_size)]
         "List len batch_sz of shape (cur beam_sz), init: List(4 bt)[(1 init_beam_sz)]"
-        "hyp_scores[i] is shape (cur beam_sz)"
+        "hyp_scores[i] is shape (cur_beam_sz)"
         hyp_scores = [copy.deepcopy(torch.full((1,), 0, dtype=torch.float, device=self.device))
                       for _ in range(batch_size)]  # probs are log_probs must be init at 0.
 
@@ -858,5 +832,4 @@ class ABDTransformer(nn.Module):
                         score=score))
             completed_hypotheses[i].sort(
                 key=lambda hyp: hyp.score, reverse=True)
-        # print('completed_hypotheses', completed_hypotheses)
         return r2l_completed_hypotheses, completed_hypotheses

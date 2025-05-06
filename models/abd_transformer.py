@@ -182,6 +182,7 @@ class MultiHeadAttention(nn.Module):
         self.linear_key = nn.Linear(d_model, d_model)
         self.linear_value = nn.Linear(d_model, d_model)
         self.linear_out = nn.Linear(d_model, d_model)
+        self.is_cross_attention = False # Flag to potentially differentiate behavior if needed externally
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
 
@@ -204,19 +205,27 @@ class MultiHeadAttention(nn.Module):
 
         # --- Apply RoPE ---
         if self.qk_rope_head_dim > 0:
-            # Slice freqs_cis based on query and key sequence lengths
-            freqs_cis_q = freqs_cis[:q_len]
-            freqs_cis_k = freqs_cis[:k_len]
+            # Determine if it's self-attention. A simple check:
+            # If query and key have the same shape and sequence length, assume self-attention.
+            # Note: This might not be perfectly robust if views are involved, but often sufficient.
+            # A more robust method might involve passing an explicit flag if needed.
+            is_self_attention = (q_len == k_len) # Simplified check based on lengths
 
+            # Always apply RoPE to Query based on its sequence length
+            freqs_cis_q = freqs_cis[:q_len] # Slice for query length
             q_rope = query[..., :self.qk_rope_head_dim]
-            k_rope = key[..., :self.qk_rope_head_dim]
-
-            # Apply RoPE using the correctly sliced freqs_cis
-            q_rope = apply_rotary_emb(q_rope, freqs_cis=freqs_cis_q)
-            k_rope = apply_rotary_emb(k_rope, freqs_cis=freqs_cis_k) # Use freqs_cis_k
-
+            q_rope = apply_rotary_emb(q_rope, freqs_cis_slice=freqs_cis_q) # Use renamed arg for clarity
             query = torch.cat((q_rope, query[..., self.qk_rope_head_dim:]), dim=-1)
-            key = torch.cat((k_rope, key[..., self.qk_rope_head_dim:]), dim=-1)
+
+            # Apply RoPE to Key ONLY if it's self-attention
+            if is_self_attention:
+                freqs_cis_k = freqs_cis[:k_len] # Slice for key length (k_len == q_len here)
+                k_rope = key[..., :self.qk_rope_head_dim]
+                k_rope = apply_rotary_emb(k_rope, freqs_cis_slice=freqs_cis_k) # Use renamed arg for clarity
+                key = torch.cat((k_rope, key[..., self.qk_rope_head_dim:]), dim=-1)
+            # Else: key comes from encoder memory in cross-attention.
+            # It already has positional information from the encoder. Do not apply decoder RoPE.
+
         # --- End RoPE ---
 
         # Calculate attention scores

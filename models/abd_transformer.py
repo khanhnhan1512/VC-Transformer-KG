@@ -437,6 +437,14 @@ class ABDTransformer(nn.Module):
         # --- End RoPE Precomputation ---
 
 
+        # --- RoPE Precomputation ---
+        self.rope_args = RoPEArgs(qk_rope_head_dim=qk_rope_head_dim,
+                                  max_seq_len=max_seq_len,
+                                  rope_theta=rope_theta)
+        self.register_buffer("freqs_cis", precompute_freqs_cis(self.rope_args), persistent=False)
+        # --- End RoPE Precomputation ---
+
+
         # attn_no_heads = MultiHeadAttention(1, d_model, dropout)
 
         # Pass qk_rope_head_dim to MultiHeadAttention instances

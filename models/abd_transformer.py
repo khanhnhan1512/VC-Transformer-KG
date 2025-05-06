@@ -37,20 +37,22 @@ def precompute_freqs_cis(args: RoPEArgs) -> torch.Tensor:
     # freqs_cis needs to be [seq_len, dim // 2]
     return freqs_cis
 
-def apply_rotary_emb(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
+def apply_rotary_emb(x: torch.Tensor, freqs_cis_slice: torch.Tensor) -> torch.Tensor:
     """
     Applies rotary positional embeddings to the input tensor.
     Assumes x has shape [bsz, ..., seqlen, dim] or similar where dim is the last dim.
-    freqs_cis has shape [seqlen, dim // 2]
+    freqs_cis_slice has shape [seqlen, dim // 2], matching x's seqlen.
     """
     # x: [bsz, n_heads, seqlen, head_dim]
-    # freqs_cis: [seqlen, head_dim // 2]
+    # freqs_cis_slice: [seqlen, head_dim // 2]
     seqlen = x.size(-2)
     head_dim = x.size(-1)
-    # Slice freqs_cis to match sequence length
-    freqs_cis = freqs_cis[:seqlen] # [seqlen, head_dim // 2]
+
+    # Ensure the passed freqs_cis_slice has the correct sequence length
+    assert freqs_cis_slice.shape[0] == seqlen, f"Sequence length mismatch: x has {seqlen}, freqs_cis_slice has {freqs_cis_slice.shape[0]}"
+
     # Reshape freqs_cis to broadcast: [1, 1, seqlen, head_dim // 2]
-    freqs_cis = freqs_cis.unsqueeze(0).unsqueeze(0)
+    freqs_cis_reshaped = freqs_cis_slice.unsqueeze(0).unsqueeze(0)
 
     # Reshape x to [bsz, n_heads, seqlen, head_dim // 2, 2] to view as complex
     x_ = x.float().reshape(*x.shape[:-1], -1, 2)
@@ -58,7 +60,7 @@ def apply_rotary_emb(x: torch.Tensor, freqs_cis: torch.Tensor) -> torch.Tensor:
 
     # Apply rotation: element-wise multiplication with complex numbers
     # freqs_cis needs to be broadcastable to x_complex shape
-    x_rotated = x_complex * freqs_cis # [bsz, n_heads, seqlen, head_dim // 2]
+    x_rotated = x_complex * freqs_cis_reshaped # [bsz, n_heads, seqlen, head_dim // 2]
 
     # Reshape back to original shape
     x_out = torch.view_as_real(x_rotated) # [bsz, n_heads, seqlen, head_dim // 2, 2]
@@ -187,7 +189,7 @@ class MultiHeadAttention(nn.Module):
         self.attn = None
 
     # freqs_cis should be the full buffer [max_seq_len, dim // 2]
-    def forward(self, query, key, value, freqs_cis, mask=None): # Added freqs_cis
+    def forward(self, query, key, value, freqs_cis, mask=None): # freqs_cis is the full buffer
         if mask is not None:
             # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
             # 再1，2维交换变成[batch, head, -1, d_k], 所以mask要在第一维添加一维，与后面的self attention计算维度一样
@@ -214,14 +216,14 @@ class MultiHeadAttention(nn.Module):
             # Always apply RoPE to Query based on its sequence length
             freqs_cis_q = freqs_cis[:q_len] # Slice for query length
             q_rope = query[..., :self.qk_rope_head_dim]
-            q_rope = apply_rotary_emb(q_rope, freqs_cis_slice=freqs_cis_q) # Use renamed arg for clarity
+            q_rope = apply_rotary_emb(q_rope, freqs_cis_slice=freqs_cis_q) # Pass the slice
             query = torch.cat((q_rope, query[..., self.qk_rope_head_dim:]), dim=-1)
 
             # Apply RoPE to Key ONLY if it's self-attention
             if is_self_attention:
                 freqs_cis_k = freqs_cis[:k_len] # Slice for key length (k_len == q_len here)
                 k_rope = key[..., :self.qk_rope_head_dim]
-                k_rope = apply_rotary_emb(k_rope, freqs_cis_slice=freqs_cis_k) # Use renamed arg for clarity
+                k_rope = apply_rotary_emb(k_rope, freqs_cis_slice=freqs_cis_k) # Pass the slice
                 key = torch.cat((k_rope, key[..., self.qk_rope_head_dim:]), dim=-1)
             # Else: key comes from encoder memory in cross-attention.
             # It already has positional information from the encoder. Do not apply decoder RoPE.

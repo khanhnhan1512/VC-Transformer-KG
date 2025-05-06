@@ -13,7 +13,7 @@ from tensorboardX import SummaryWriter
 from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils import evaluate, get_lr, load_checkpoint, save_checkpoint, test, train
-
+from models.dynamic_tanh import convert_ln_to_dyt
 
 def build_loaders():
     corpus = None
@@ -42,7 +42,7 @@ def build_model(vocab):
     if torch.cuda.is_available():
         model.cuda()
     
-    return model
+    return convert_ln_to_dyt(model)
 
 
 def log_train(summary_writer, e, loss, lr, reg_lambda, scores=None):

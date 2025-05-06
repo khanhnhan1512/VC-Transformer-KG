@@ -185,6 +185,7 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
 
+    # freqs_cis should be the full buffer [max_seq_len, dim // 2]
     def forward(self, query, key, value, freqs_cis, mask=None): # Added freqs_cis
         if mask is not None:
             # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
@@ -203,11 +204,17 @@ class MultiHeadAttention(nn.Module):
 
         # --- Apply RoPE ---
         if self.qk_rope_head_dim > 0:
+            # Slice freqs_cis based on query and key sequence lengths
+            freqs_cis_q = freqs_cis[:q_len]
+            freqs_cis_k = freqs_cis[:k_len]
+
             q_rope = query[..., :self.qk_rope_head_dim]
             k_rope = key[..., :self.qk_rope_head_dim]
-            # Pass the correct slice of freqs_cis based on sequence length
-            q_rope = apply_rotary_emb(q_rope, freqs_cis=freqs_cis)
-            k_rope = apply_rotary_emb(k_rope, freqs_cis=freqs_cis)
+
+            # Apply RoPE using the correctly sliced freqs_cis
+            q_rope = apply_rotary_emb(q_rope, freqs_cis=freqs_cis_q)
+            k_rope = apply_rotary_emb(k_rope, freqs_cis=freqs_cis_k) # Use freqs_cis_k
+
             query = torch.cat((q_rope, query[..., self.qk_rope_head_dim:]), dim=-1)
             key = torch.cat((k_rope, key[..., self.qk_rope_head_dim:]), dim=-1)
         # --- End RoPE ---
@@ -456,7 +463,7 @@ class ABDTransformer(nn.Module):
         # --- RoPE Precomputation ---
         # Use the potentially adjusted self.qk_rope_head_dim
         self.rope_args = RoPEArgs(qk_rope_head_dim=self.qk_rope_head_dim,
-                                  max_seq_len=max_len,
+                                  max_seq_len=max_seq_len, # Fix: Use max_seq_len parameter
                                   rope_theta=rope_theta)
         self.register_buffer("freqs_cis", precompute_freqs_cis(self.rope_args), persistent=False)
         # --- End RoPE Precomputation ---
@@ -522,60 +529,57 @@ class ABDTransformer(nn.Module):
              # Handle single tensor input
              max_len = src.size(1)
 
-        # Slice freqs_cis based on the max sequence length found
-        current_freqs_cis = self.freqs_cis[:max_len]
-
         if self.feature_mode == 'two':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1) # Keep positional encoding for now
-            x1 = self.encoder_big(x1, current_freqs_cis, src_mask[0]) # Pass freqs_cis
+            x1 = self.encoder_big(x1, self.freqs_cis, src_mask[0]) # Pass full buffer
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, current_freqs_cis, src_mask[1]) # Pass freqs_cis
+            x2 = self.encoder_big(x2, self.freqs_cis, src_mask[1]) # Pass full buffer
             return x1 + x2
         if feature_mode_two: # This seems redundant with the above block? Assuming it's intended.
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder_big(x1, current_freqs_cis, src_mask[0]) # Pass freqs_cis
+            x1 = self.encoder_big(x1, self.freqs_cis, src_mask[0]) # Pass full buffer
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, current_freqs_cis, src_mask[1]) # Pass freqs_cis
+            x2 = self.encoder_big(x2, self.freqs_cis, src_mask[1]) # Pass full buffer
             return x1 + x2
         if self.feature_mode == 'one':
             x = self.src_embed(src)
             x = self.pos_embed(x)
-            return self.encoder(x, current_freqs_cis, src_mask) # Pass freqs_cis
+            return self.encoder(x, self.freqs_cis, src_mask) # Pass full buffer
         elif self.feature_mode == 'two': # This is also redundant? Consolidate logic if possible.
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder_big(x1, current_freqs_cis, src_mask[0]) # Pass freqs_cis
+            x1 = self.encoder_big(x1, self.freqs_cis, src_mask[0]) # Pass full buffer
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, current_freqs_cis, src_mask[1]) # Pass freqs_cis
+            x2 = self.encoder_big(x2, self.freqs_cis, src_mask[1]) # Pass full buffer
             return x1 + x2
         elif self.feature_mode == 'three':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder(x1, current_freqs_cis, src_mask[0]) # Pass freqs_cis
+            x1 = self.encoder(x1, self.freqs_cis, src_mask[0]) # Pass full buffer
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder(x2, current_freqs_cis, src_mask[1]) # Pass freqs_cis
+            x2 = self.encoder(x2, self.freqs_cis, src_mask[1]) # Pass full buffer
             x3 = self.object_src_embed(src[2])
             x3 = self.pos_embed(x3)
-            x3 = self.encoder(x3, current_freqs_cis, src_mask[2]) # Pass freqs_cis
+            x3 = self.encoder(x3, self.freqs_cis, src_mask[2]) # Pass full buffer
             return x1 + x2 + x3
         elif self.feature_mode == 'four':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder(x1, current_freqs_cis, src_mask[0]) # Pass freqs_cis
+            x1 = self.encoder(x1, self.freqs_cis, src_mask[0]) # Pass full buffer
 
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder(x2, current_freqs_cis, src_mask[1]) # Pass freqs_cis
+            x2 = self.encoder(x2, self.freqs_cis, src_mask[1]) # Pass full buffer
 
             x3 = self.object_src_embed(src[2])
             # x3 = self.pos_embed(x3) # Original code commented this out
-            x3 = self.encoder(x3, current_freqs_cis, src_mask[2]) # Pass freqs_cis
+            x3 = self.encoder(x3, self.freqs_cis, src_mask[2]) # Pass full buffer
             # x3 = self.encoder_no_attention(x3, src_mask[2]) # Original code used this
 
             x4 = self.rel_src_embed(src[3])
@@ -584,30 +588,20 @@ class ABDTransformer(nn.Module):
             # If encoder_no_attention internally uses layers that need it, it must be passed.
             # Assuming EncoderLayerNoAttention doesn't need it.
             x4 = self.encoder_no_attention(x4, src_mask[3]) # No freqs_cis needed here
-            # x4 = self.encoder(x4, current_freqs_cis, src_mask[3]) # Original code used this
+            # x4 = self.encoder(x4, self.freqs_cis, src_mask[3]) # Original code used this
             return x1 + x2 + x3 + x4
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
-        # Get sequence length of the target
-        max_len = r2l_trg.size(1)
-        # Slice freqs_cis
-        current_freqs_cis = self.freqs_cis[:max_len]
-
         x = self.trg_embed(r2l_trg)
         x = self.pos_embed(x) # Keep positional encoding for now
-        # Pass sliced freqs_cis to the decoder
-        return self.r2l_decoder(x, memory, current_freqs_cis, src_mask, r2l_trg_mask)
+        # Pass full self.freqs_cis to the decoder
+        return self.r2l_decoder(x, memory, self.freqs_cis, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-         # Get sequence length of the target
-        max_len = trg.size(1)
-        # Slice freqs_cis
-        current_freqs_cis = self.freqs_cis[:max_len]
-
         x = self.trg_embed(trg)
         x = self.pos_embed(x) # Keep positional encoding for now
-        # Pass sliced freqs_cis to the decoder
-        return self.l2r_decoder(x, memory, current_freqs_cis, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
+        # Pass full self.freqs_cis to the decoder
+        return self.l2r_decoder(x, memory, self.freqs_cis, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
     def forward(self, src, r2l_trg, trg, mask):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
@@ -655,14 +649,12 @@ class ABDTransformer(nn.Module):
 
             for i in range(max_len + 1): # Adjusted loop range
                 current_len = output.size(1)
-                # Slice freqs_cis for the current length
-                current_freqs_cis = self.freqs_cis[:current_len]
                 # Create target mask for the current length
                 trg_mask = subsequent_mask(current_len).to(self.device) # Use self.device
 
-                # Pass sliced freqs_cis to r2l_decoder
+                # Pass full self.freqs_cis to r2l_decoder
                 dec_out = self.r2l_decoder(
-                    output, memory, current_freqs_cis, src_mask, trg_mask) # Pass freqs_cis
+                    output, memory, self.freqs_cis, src_mask, trg_mask) # Pass full buffer
                 r2l_hidden = dec_out # Store the full output sequence hidden states if needed
                 pred = self.generator(dec_out[:, -1]) # Get prediction for the last token only
                 next_word = pred.max(dim=-1)[1].unsqueeze(1)
@@ -713,17 +705,13 @@ class ABDTransformer(nn.Module):
             src_mask_cur = torch.cat(src_mask_l, dim=0)
             y_tm1 = torch.cat(last_tokens, dim=0) # Shape: [total_beams, current_len]
 
-            # --- RoPE Slicing for Beam Search ---
-            current_freqs_cis = self.freqs_cis[:max_hyp_len]
-            # --- End RoPE Slicing ---
-
             # Create target mask for the current max length
             tgt_mask = subsequent_mask(max_hyp_len).to(self.device)
             # Slice mask if y_tm1 length is less than max_hyp_len (shouldn't happen if max_hyp_len derived correctly)
             current_tgt_mask = tgt_mask[:, :y_tm1.size(1), :y_tm1.size(1)]
 
-            # Pass sliced freqs_cis and target mask to decoder
-            out = self.r2l_decoder(y_tm1, model_encodings_cur, current_freqs_cis, src_mask_cur, current_tgt_mask)
+            # Pass full self.freqs_cis to decoder
+            out = self.r2l_decoder(y_tm1, model_encodings_cur, self.freqs_cis, src_mask_cur, current_tgt_mask) # Pass full buffer
             # r2l_outputs = out # Store full output if needed
 
             log_prob = self.generator(out[:, -1, :]) # Get log_prob for the last token: [total_beams, vocab_size]
@@ -932,16 +920,12 @@ class ABDTransformer(nn.Module):
             r2l_memory_cur = torch.cat(r2l_memory_l, dim=0) if r2l_memory_l else None
 
 
-            # --- RoPE Slicing ---
-            current_freqs_cis = self.freqs_cis[:max_hyp_len]
-            # --- End RoPE Slicing ---
-
             tgt_mask = subsequent_mask(max_hyp_len).to(self.device)
             current_tgt_mask = tgt_mask[:, :y_tm1.size(1), :y_tm1.size(1)]
 
-            # Pass sliced freqs_cis to l2r_decoder
+            # Pass full self.freqs_cis to l2r_decoder
             # Handle r2l_memory_cur potentially being None
-            out = self.l2r_decoder(y_tm1, model_encodings_cur, current_freqs_cis, src_mask_cur,
+            out = self.l2r_decoder(y_tm1, model_encodings_cur, self.freqs_cis, src_mask_cur,
                                    current_tgt_mask, r2l_memory_cur, r2l_trg_mask=None) # Pass None for r2l_trg_mask?
 
             log_prob = self.generator(out[:, -1, :]) # [total_beams, vocab_size]

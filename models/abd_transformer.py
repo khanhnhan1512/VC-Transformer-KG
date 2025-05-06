@@ -360,7 +360,9 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
             dec_src_mask = src_image_mask & src_motion_mask
             src_mask = (enc_src_mask, dec_src_mask)
         if len(src) == 2:
-            src_image_mask = (src[0][:[:, 0] != pad_idx).unsqueeze(1)
+            # --- Fix: Correct slicing syntax ---
+            src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
+            # --- End Fix ---
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
             enc_src_mask = (src_image_mask, src_motion_mask)
             dec_src_mask = src_image_mask & src_motion_mask
@@ -425,20 +427,44 @@ class ABDTransformer(nn.Module):
         self.feature_mode = feature_mode
         self.d_model = d_model # Store d_model
         self.n_heads = n_heads # Store n_heads
-        self.qk_rope_head_dim = qk_rope_head_dim # Store RoPE dim
+        # self.qk_rope_head_dim = qk_rope_head_dim # Store RoPE dim # Original line
 
         c = copy.deepcopy
 
+        # --- Adjust RoPE Dim based on head constraints ---
+        config_qk_rope_head_dim = qk_rope_head_dim # Store the requested dim
+
+        # Calculate d_k for both attention types
+        d_k_attn = d_model // n_heads
+        d_k_attn_big = d_model // n_heads_big
+        min_d_k = min(d_k_attn, d_k_attn_big)
+
+        # Ensure qk_rope_head_dim is valid (<= min_d_k) and even
+        valid_qk_rope_head_dim = min_d_k if min_d_k % 2 == 0 else min_d_k - 1
+        if valid_qk_rope_head_dim < 0: valid_qk_rope_head_dim = 0 # Cannot be negative
+
+        # Use the smaller of the configured value and the maximum valid value
+        self.qk_rope_head_dim = min(config_qk_rope_head_dim, valid_qk_rope_head_dim)
+
+        # Optional: Add a warning if the dimension was reduced
+        if self.qk_rope_head_dim < config_qk_rope_head_dim:
+            print(f"Warning: Requested qk_rope_head_dim ({config_qk_rope_head_dim}) exceeds minimum head dimension ({min_d_k}). "
+                  f"Using adjusted qk_rope_head_dim = {self.qk_rope_head_dim}.")
+        # --- End RoPE Dim Adjustment ---
+
+
         # --- RoPE Precomputation ---
-        self.rope_args = RoPEArgs(qk_rope_head_dim=qk_rope_head_dim,
-                                  max_seq_len=max_seq_len,
+        # Use the potentially adjusted self.qk_rope_head_dim
+        self.rope_args = RoPEArgs(qk_rope_head_dim=self.qk_rope_head_dim,
+                                  max_seq_len=max_len,
                                   rope_theta=rope_theta)
         self.register_buffer("freqs_cis", precompute_freqs_cis(self.rope_args), persistent=False)
         # --- End RoPE Precomputation ---
 
+
         # attn_no_heads = MultiHeadAttention(1, d_model, dropout)
 
-        # Pass qk_rope_head_dim to MultiHeadAttention instances
+        # Pass the potentially adjusted self.qk_rope_head_dim to MultiHeadAttention instances
         attn = MultiHeadAttention(n_heads, d_model, dropout, qk_rope_head_dim=self.qk_rope_head_dim)
         attn_big = MultiHeadAttention(n_heads_big, d_model, dropout, qk_rope_head_dim=self.qk_rope_head_dim)
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)

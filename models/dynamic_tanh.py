@@ -15,11 +15,19 @@ class DynamicTanh(nn.Module):
         self.bias = nn.Parameter(torch.zeros(normalized_shape))
 
     def forward(self, x):
-        x = torch.tanh(self.alpha * x)
+        # Đảm bảo self.alpha cùng thiết bị với x
+        alpha = self.alpha.to(x.device)
+        x = torch.tanh(alpha * x)
+        
+        # Tương tự với weight và bias
         if self.channels_last:
-            x = x * self.weight + self.bias
+            weight = self.weight.to(x.device)
+            bias = self.bias.to(x.device)
+            x = x * weight + bias
         else:
-            x = x * self.weight[:, None, None] + self.bias[:, None, None]
+            weight = self.weight.to(x.device)
+            bias = self.bias.to(x.device)
+            x = x * weight[:, None, None] + bias[:, None, None]
         return x
 
     def extra_repr(self):

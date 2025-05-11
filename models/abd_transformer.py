@@ -186,9 +186,7 @@ class MultiHeadAttention(nn.Module):
         self.linear_out = nn.Linear(d_model, d_model)
         self.is_cross_attention = False # Flag to potentially differentiate behavior if needed externally
         self.dropout = nn.Dropout(p=dropout)
-        self.attn = None
-
-    # freqs_cis should be the full buffer [max_seq_len, dim // 2]
+        self.attn = None    # freqs_cis should be the full buffer [max_seq_len, dim // 2]
     def forward(self, query, key, value, freqs_cis, mask=None): # freqs_cis is the full buffer
         if mask is not None:
             # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
@@ -196,6 +194,14 @@ class MultiHeadAttention(nn.Module):
             mask = mask.unsqueeze(1)
         n_batch = query.size(0)
         q_len, k_len, v_len = query.size(1), key.size(1), value.size(1) # Get sequence lengths
+        
+        # Ensure inputs are float tensors (convert from long/int if needed)
+        if query.dtype != torch.float32 and query.dtype != torch.float16:
+            query = query.float()
+        if key.dtype != torch.float32 and key.dtype != torch.float16:
+            key = key.float()
+        if value.dtype != torch.float32 and value.dtype != torch.float16:
+            value = value.float()
 
         # Project and reshape query, key, value
         query = self.linear_query(query).view(

@@ -6,8 +6,8 @@ class FeatureConfig(object):
     model = "MSVD_InceptionResNetV2"
     model = "MSVD_ResNet152"
     model = "MSVD_I3D"
-    
-    model = "MSVD_ResNet152+I3D"
+
+    # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
     # model = "MSVD_InceptionResNetV2+I3D"
@@ -217,17 +217,32 @@ class TrainConfig(object):
 
 class MSVDSplitConfig(object):
     model = "MSVD_rel"
+    data_folder: str = "../data/MSVD"
+    feature_folder: str = os.path.join(data_folder, "features")
+    metadata_folder: str = os.path.join(data_folder, "metadata")
 
-    video_fpath = "../data/MSVD/features/{}.hdf5".format(model)
-    caption_fpath = "../data/MSVD/metadata/MSR Video Description Corpus.csv"
+    # video_fpath = "../data/MSVD/features/{}.hdf5".format(model)
+    video_fpath = os.path.join(feature_folder, "{}.hdf5".format(model))
+    # caption_fpath = "../data/MSVD/metadata/MSR Video Description Corpus.csv"
+    caption_fpath = os.path.join(
+        metadata_folder, "MSR Video Description Corpus.csv")
 
-    train_video_fpath = "../data/MSVD/features/{}_train.hdf5".format(model)
-    val_video_fpath = "../data/MSVD/features/{}_val.hdf5".format(model)
-    test_video_fpath = "../data/MSVD/features/{}_test.hdf5".format(model)
+    # train_video_fpath = "../data/MSVD/features/{}_train.hdf5".format(model)
+    # val_video_fpath = "../data/MSVD/features/{}_val.hdf5".format(model)
+    # test_video_fpath = "../data/MSVD/features/{}_test.hdf5".format(model)
+    train_video_fpath = os.path.join(
+        feature_folder, "{}_train.hdf5".format(model))
+    val_video_fpath = os.path.join(
+        feature_folder, "{}_val.hdf5".format(model))
+    test_video_fpath = os.path.join(
+        feature_folder, "{}_test.hdf5".format(model))
 
-    train_metadata_fpath = "../data/MSVD/metadata/train.csv"
-    val_metadata_fpath = "../data/MSVD/metadata/val.csv"
-    test_metadata_fpath = "../data/MSVD/metadata/test.csv"
+    # train_metadata_fpath = "../data/MSVD/metadata/train.csv"
+    # val_metadata_fpath = "../data/MSVD/metadata/val.csv"
+    # test_metadata_fpath = "../data/MSVD/metadata/test.csv"
+    train_metadata_fpath = os.path.join(metadata_folder, "train.csv")
+    val_metadata_fpath = os.path.join(metadata_folder, "val.csv")
+    test_metadata_fpath = os.path.join(metadata_folder, "test.csv")
 
 
 class MSRVTTSplitConfig(object):

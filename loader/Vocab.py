@@ -189,8 +189,8 @@ class Vectors(object):
                 self.itos, self.stoi, self.vectors, self.dim = torch.load(
                     path_pt)
             else:
-                self.itos, self.stoi, self.vectors, self.dim = torch.load(path_pt,
-                                                                          map_location=torch.device('cpu'))
+                self.itos, self.stoi, self.vectors, self.dim = torch.load(
+                    path_pt, map_location=torch.device('cpu'))
 
     def __len__(self):
         return len(self.vectors)

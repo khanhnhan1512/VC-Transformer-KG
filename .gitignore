@@ -8,3 +8,13 @@
 data/*
 # Exclude all model weights
 *.ckpt
+# Exclude all logs
+logs/*
+server_logs/*
+# Exclude all checkpoints
+checkpoints/*
+# Exclude all results
+captioning/*
+result/*
+# Exclude development files
+development/*

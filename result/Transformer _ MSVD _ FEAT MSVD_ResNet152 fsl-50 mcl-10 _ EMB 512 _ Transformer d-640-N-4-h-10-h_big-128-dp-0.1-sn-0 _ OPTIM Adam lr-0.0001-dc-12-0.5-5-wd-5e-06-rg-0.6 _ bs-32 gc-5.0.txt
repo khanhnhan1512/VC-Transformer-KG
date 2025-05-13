@@ -1,7 +1,0 @@
-#vocabs: 3891 (9158), #words: 323223 (329680). Trim words which appear less than 3 times.
-
-
-
-[BEST: 1 SEED:904666]
-r2l scores: {'Bleu_1': 0.0, 'Bleu_2': 0.0, 'Bleu_3': 0.0, 'Bleu_4': 0.0, 'METEOR': 0.0, 'ROUGE_L': 0.026865671641791045, 'CIDEr': 0.0}
-l2r scores: {'Bleu_1': 0.0, 'Bleu_2': 0.0, 'Bleu_3': 0.0, 'Bleu_4': 0.0, 'METEOR': 0.0, 'ROUGE_L': 0.028358208955223882, 'CIDEr': 0.0}

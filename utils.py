@@ -140,7 +140,7 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip, fea
     criterion = LabelSmoothing(vocab.n_vocabs, pad_idx, C.label_smoothing)
     t = tqdm(train_iter)
     # t.set_description('Train:')
-    for batch in t:
+    for i, batch in enumerate(t):
 
         _, feats, r2l_captions, l2r_captions = parse_batch(batch, feature_mode)
 
@@ -171,6 +171,10 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip, fea
         t.set_description("[Epoch #{0}] loss: {3:.3f} = (reg: {1:.3f} * r2l_loss: {4:.3f} + "
                           "(1 - reg): {2:.3f} * l2r_loss: {5:.3f})"
                           .format(e, 1 - reg_lambda, reg_lambda, *loss_checker.mean(last=10)))
+
+        if i + 1 == 1:  # ! Only train 1 batch for debug
+            break
+
     total_loss, r2l_loss, l2r_loss = loss_checker.mean()
     loss = {
         'total': total_loss,
@@ -211,6 +215,8 @@ def test(model, val_iter, vocab, reg_lambda, feature_mode):
             loss = reg_lambda * l2r_loss + (1 - reg_lambda) * r2l_loss
             loss_checker.update(loss.item(), r2l_loss.item(), l2r_loss.item())
 
+            break  # ! Only test 1 batch for debug
+
         total_loss, r2l_loss, l2r_loss = loss_checker.mean()
         loss = {
             'total': total_loss,
@@ -246,6 +252,9 @@ def get_predicted_captions(data_iter, model, beam_size, max_len, feature_mode):
                     if vid not in onlyonce_dataset:
                         onlyonce_dataset[vid] = (
                             image_feat, motion_feat, object_feat, rel_feat)
+
+            # break  # ! Only test 1 batch for debug
+
         onlyonce_iter = []
         vids = list(onlyonce_dataset.keys())
         feats = list(onlyonce_dataset.values())
@@ -335,6 +344,9 @@ def get_groundtruth_captions(data_iter, vocab, feature_mode):
             l2r_caption = idxs_to_sentence(l2r_caption, vocab.idx2word, S_idx)
             r2l_vid2GTs[vid].append(r2l_caption)
             l2r_vid2GTs[vid].append(l2r_caption)
+
+        # break  # ! Only test 1 batch for debug
+
     return r2l_vid2GTs, l2r_vid2GTs
 
 

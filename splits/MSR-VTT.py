@@ -47,7 +47,7 @@ def save_video(fpath, vids, videos):
 
 
 def save_metadata(fpath, vids, metadata):
-    data = {vid: metadata[vid] for vid in vids }
+    data = {vid: metadata[vid] for vid in vids}
     with open(fpath, 'w') as fout:
         json.dump(data, fout)
     print("Saved {}".format(fpath))
@@ -72,4 +72,3 @@ def split():
 
 if __name__ == "__main__":
     split()
-

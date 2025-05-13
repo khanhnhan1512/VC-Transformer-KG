@@ -25,11 +25,6 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
-
-        # Ensure that a_2 and b_2 are properly shaped for broadcasting
-        if x.size(-1) != self.a_2.size(0):
-            return x  # Return input unchanged if dimensions don't match
-
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 

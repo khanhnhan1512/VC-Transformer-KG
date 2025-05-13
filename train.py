@@ -38,10 +38,17 @@ def build_model(vocab):
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
                                n_heads_big=C.transformer.n_heads_big)
-    
+
+    # Initialize model with Xavier
+    for p in model.parameters():
+        if p.dim() > 1:
+            torch.nn.init.xavier_uniform_(p)
+        else:
+            torch.nn.init.zeros_(p)
+
     if torch.cuda.is_available():
         model.cuda()
-    
+
     return model
 
 
@@ -128,7 +135,7 @@ def main():
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
                                      patience=C.lr_decay_patience, verbose=True)
 
-    best_val_CIDEr = 0.
+    best_val_CIDEr = float('-inf')
     best_epoch = None
     best_ckpt_fpath = None
     for e in range(1, C.epochs + 1):
@@ -169,12 +176,16 @@ def main():
 
     """ Test with Best Model """
     gc.collect()
-    
+
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    
+
     print("\n\n\n[BEST: {} SEED: {}]".format(best_epoch, seed))
-    best_model = load_checkpoint(model, best_ckpt_fpath)
+    # ! Not need to load the model if train in only 1 epoch
+    if C.epochs > 1:
+        best_model = load_checkpoint(model, best_ckpt_fpath)
+    else:
+        best_model = model
     r2l_best_scores, l2r_best_scores = evaluate(test_iter, best_model, vocab, C.beam_size, C.loader.max_caption_len,
                                                 C.feat.feature_mode)
     print("r2l scores: {}".format(r2l_best_scores))
@@ -199,26 +210,28 @@ def main():
     del train_iter, val_iter, test_iter, vocab, best_model, model, parameter_number, optimizer, lr_scheduler
     del train_loss
     gc.collect()
-    
+
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-    
-    file = C.ckpt_dpath
-    ckpt_list = os.listdir(file)
-    print(file)
-    print(ckpt_list)
-    print('Build data_loader according to ' + ckpt_list[0])
-    test_iter, vocab, l2r_test_vid2GTs = build_loader(
-        file + '/' + ckpt_list[0])
-    for i in range(len(ckpt_list) - 1):  # because have a best.ckpt
-        print("Now is test in the " + file + '/' + str(i) + '.ckpt')
-        if i + 1 <= 3:
-            continue
-        ckpt_fpath = file + '/' + str(i + 1) + '.ckpt'
-        print('Finish build data_loader.')
-        captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
-        run(ckpt_fpath, test_iter, vocab, str(i + 1) +
-            '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
+
+    """ Test with All Checkpoints """
+    # file = C.ckpt_dpath
+    # ckpt_list = os.listdir(file)
+    # print(file)
+    # print(ckpt_list)
+    # print('Build data_loader according to ' + ckpt_list[0])
+    # test_iter, vocab, l2r_test_vid2GTs = build_loader(
+    #     file + '/' + ckpt_list[0])
+    # for i in range(len(ckpt_list) - 1):  # because have a best.ckpt
+    #     print("Now is test in the " + file + '/' + str(i) + '.ckpt')
+    #     if i + 1 <= 3:
+    #         continue
+    #     ckpt_fpath = file + '/' + str(i + 1) + '.ckpt'
+    #     print('Finish build data_loader.')
+    #     captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
+    #     run(ckpt_fpath, test_iter, vocab, str(i + 1) +
+    #         '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
+
     f.close()
 
 

@@ -188,6 +188,7 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None    # freqs_cis should be the full buffer [max_seq_len, dim // 2]    def forward(self, query, key, value, freqs_cis, mask=None): # freqs_cis is the full buffer
         # Check for empty batches or invalid shapes
+    def forward(self, query, key, value, freqs_cis, mask=None): # Added freqs_cis
         if query.size(0) == 0 or key.size(0) == 0 or value.size(0) == 0:
             # Return empty tensor with appropriate dimensions
             return torch.zeros(0, 0, self.d_model, device=query.device)
@@ -496,7 +497,10 @@ class ABDTransformer(nn.Module):
                  # --- End RoPE Config ---
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
-        self.device = device
+        if torch.cuda.is_available():
+            self.device = device
+        else:
+            self.device = 'cpu'
         self.feature_mode = feature_mode
         self.d_model = d_model # Store d_model
         self.n_heads = n_heads # Store n_heads
@@ -710,17 +714,21 @@ class ABDTransformer(nn.Module):
         # Simplified greedy decode - RoPE integration needs careful step handling
         eos_idx = self.vocab.word2idx['<S>']
         r2l_hidden = None
+ 
         with torch.no_grad():
             output = torch.ones(batch_size, 1).fill_(eos_idx).long().to(self.device) # Use self.device
-
             for i in range(max_len + 1): # Adjusted loop range
                 current_len = output.size(1)
                 # Create target mask for the current length
                 trg_mask = subsequent_mask(current_len).to(self.device) # Use self.device
 
+                # Embed the token IDs
+                output_emb = self.trg_embed(output)
+                output_emb = self.pos_embed(output_emb)
+                
                 # Pass full self.freqs_cis to r2l_decoder
                 dec_out = self.r2l_decoder(
-                    output, memory, self.freqs_cis, src_mask, trg_mask) # Pass full buffer
+                    output_emb, memory, self.freqs_cis, src_mask, trg_mask) # Pass full buffer
                 r2l_hidden = dec_out # Store the full output sequence hidden states if needed
                 pred = self.generator(dec_out[:, -1]) # Get prediction for the last token only
                 next_word = pred.max(dim=-1)[1].unsqueeze(1)
@@ -774,10 +782,16 @@ class ABDTransformer(nn.Module):
             # Create target mask for the current max length
             tgt_mask = subsequent_mask(max_hyp_len).to(self.device)
             # Slice mask if y_tm1 length is less than max_hyp_len (shouldn't happen if max_hyp_len derived correctly)
-            current_tgt_mask = tgt_mask[:, :y_tm1.size(1), :y_tm1.size(1)]
-
+            current_tgt_mask = tgt_mask[:, :y_tm1.size(1), :y_tm1.size(1)]            # First embed the token IDs before passing to decoder
+            if y_tm1.dtype == torch.long:  # Check if these are token indices
+                # Apply embedding and positional encoding
+                y_tm1_emb = self.trg_embed(y_tm1)
+                y_tm1_emb = self.pos_embed(y_tm1_emb)
+            else:
+                y_tm1_emb = y_tm1  # Already embedded
+            
             # Pass full self.freqs_cis to decoder
-            out = self.r2l_decoder(y_tm1, model_encodings_cur, self.freqs_cis, src_mask_cur, current_tgt_mask) # Pass full buffer
+            out = self.r2l_decoder(y_tm1_emb, model_encodings_cur, self.freqs_cis, src_mask_cur, current_tgt_mask) # Pass full buffer
             # r2l_outputs = out # Store full output if needed
 
             log_prob = self.generator(out[:, -1, :]) # Get log_prob for the last token: [total_beams, vocab_size]
@@ -983,15 +997,21 @@ class ABDTransformer(nn.Module):
             src_mask_cur = torch.cat(src_mask_l, dim=0)
             y_tm1 = torch.cat(last_tokens, dim=0)
             # Handle potential empty r2l_memory_l if placeholders were used or errors occurred
-            r2l_memory_cur = torch.cat(r2l_memory_l, dim=0) if r2l_memory_l else None
-
-
+            r2l_memory_cur = torch.cat(r2l_memory_l, dim=0) if r2l_memory_l else None            
             tgt_mask = subsequent_mask(max_hyp_len).to(self.device)
             current_tgt_mask = tgt_mask[:, :y_tm1.size(1), :y_tm1.size(1)]
 
+            # First embed the token IDs before passing to decoder
+            if y_tm1.dtype == torch.long:  # Check if these are token indices
+                # Apply embedding and positional encoding
+                y_tm1_emb = self.trg_embed(y_tm1)
+                y_tm1_emb = self.pos_embed(y_tm1_emb)
+            else:
+                y_tm1_emb = y_tm1  # Already embedded
+                
             # Pass full self.freqs_cis to l2r_decoder
             # Handle r2l_memory_cur potentially being None
-            out = self.l2r_decoder(y_tm1, model_encodings_cur, self.freqs_cis, src_mask_cur,
+            out = self.l2r_decoder(y_tm1_emb, model_encodings_cur, self.freqs_cis, src_mask_cur,
                                    current_tgt_mask, r2l_memory_cur, r2l_trg_mask=None) # Pass None for r2l_trg_mask?
 
             log_prob = self.generator(out[:, -1, :]) # [total_beams, vocab_size]

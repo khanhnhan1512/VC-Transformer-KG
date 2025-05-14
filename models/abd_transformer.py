@@ -187,6 +187,7 @@ class MultiHeadAttention(nn.Module):
         self.is_cross_attention = False # Flag to potentially differentiate behavior if needed externally
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None    # freqs_cis should be the full buffer [max_seq_len, dim // 2]    def forward(self, query, key, value, freqs_cis, mask=None): # freqs_cis is the full buffer
+    def forward(self, query, key, value, freqs_cis, mask=None):
         # Check for empty batches or invalid shapes
     def forward(self, query, key, value, freqs_cis, mask=None): # Added freqs_cis
         if query.size(0) == 0 or key.size(0) == 0 or value.size(0) == 0:

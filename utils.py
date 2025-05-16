@@ -193,7 +193,7 @@ def test(model, val_iter, vocab, reg_lambda, feature_mode):
     t = tqdm(val_iter)
     t.set_description('Test:')
     with torch.no_grad():
-        for batch in t:
+        for i, batch in enumerate(t):
 
             _, feats, r2l_captions, l2r_captions = parse_batch(
                 batch, feature_mode)
@@ -215,7 +215,8 @@ def test(model, val_iter, vocab, reg_lambda, feature_mode):
             loss = reg_lambda * l2r_loss + (1 - reg_lambda) * r2l_loss
             loss_checker.update(loss.item(), r2l_loss.item(), l2r_loss.item())
 
-            break  # ! Only test 1 batch for debug
+            if i + 1 == 1:  # ! Only test 1 batch for debug
+                break
 
         total_loss, r2l_loss, l2r_loss = loss_checker.mean()
         loss = {

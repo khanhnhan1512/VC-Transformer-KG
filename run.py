@@ -8,6 +8,7 @@ from config import TrainConfig as C
 from models.abd_transformer import ABDTransformer
 from utils import dict_to_cls, get_predicted_captions, get_groundtruth_captions, save_result, score
 
+from models.dynamic_tanh import convert_ln_to_dyt
 
 def build_loader(ckpt_fpath):
     if torch.cuda.is_available():
@@ -59,6 +60,8 @@ def run(ckpt_fpath, test_iter, vocab, ckpt, l2r_test_vid2GTs, f, captioning_fpat
         model = ABDTransformer(vocab, config.feat.size, config.transformer.d_model, config.transformer.d_ff,
                                config.transformer.n_heads, config.transformer.n_layers, config.transformer.dropout,
                                config.feat.feature_mode, n_heads_big=config.transformer.n_heads_big)
+    model = convert_ln_to_dyt(model)
+    
     model.load_state_dict(checkpoint['abd_transformer'])
 
     if torch.cuda.is_available():

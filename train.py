@@ -14,6 +14,8 @@ from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils import evaluate, get_lr, load_checkpoint, save_checkpoint, test, train
 
+from models.dynamic_tanh import convert_ln_to_dyt
+
 
 def build_loaders():
     corpus = None
@@ -38,6 +40,8 @@ def build_model(vocab):
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
                                n_heads_big=C.transformer.n_heads_big)
+
+    model = convert_ln_to_dyt(model)
 
     # Initialize model with Xavier
     for p in model.parameters():

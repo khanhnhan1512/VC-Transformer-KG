@@ -1,9 +1,10 @@
 import os
 import time
+import re
 
 
 class FeatureConfig(object):
-    model = "MSVD_InceptionResNetV2"
+    # model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
     # model = "MSVD_ResNet152+I3D"
@@ -14,7 +15,7 @@ class FeatureConfig(object):
     # model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
 
-    # model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
+    model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
 
     # model = "MSR-VTT_InceptionResNetV2"
     # model = "MSR-VTT_ResNet152"
@@ -189,6 +190,11 @@ class TrainConfig(object):
     timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time()))
     model_id = " | ".join(
         [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
+
+    # Hàm làm sạch tên thư mục (xóa ký tự không hợp lệ với Windows)
+    def sanitize_filename(name):
+        return re.sub(r'[<>:"/\\|?*]', '_', name)
+    model_id = sanitize_filename(model_id)
 
     """ Log """
     log_dpath = "./logs/logs_{}/{}".format(feat.model, model_id)

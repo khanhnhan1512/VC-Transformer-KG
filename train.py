@@ -133,41 +133,41 @@ def main():
     best_val_CIDEr = 0.
     best_epoch = None
     best_ckpt_fpath = None
-    # for e in range(1, C.epochs + 1):
-    #     ckpt_fpath = C.ckpt_fpath_tpl.format(e)
+    for e in range(1, C.epochs + 1):
+        ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 
-    #     """ Train """
-    #     print("\n")
-    #     train_loss = train(e, model, optimizer, train_iter, vocab,
-    #                        C.reg_lambda, C.gradient_clip, C.feat.feature_mode)
-    #     log_train(summary_writer, e, train_loss,
-    #               get_lr(optimizer), C.reg_lambda)
+        """ Train """
+        print("\n")
+        train_loss = train(e, model, optimizer, train_iter, vocab,
+                           C.reg_lambda, C.gradient_clip, C.feat.feature_mode)
+        log_train(summary_writer, e, train_loss,
+                  get_lr(optimizer), C.reg_lambda)
 
-    #     """ Validation """
-    #     val_loss = test(model, val_iter, vocab,
-    #                     C.reg_lambda, C.feat.feature_mode)
-    #     r2l_val_scores, l2r_val_scores = evaluate(val_iter, model, vocab, C.beam_size, C.loader.max_caption_len,
-    #                                               C.feat.feature_mode)
-    #     log_val(summary_writer, e, val_loss, C.reg_lambda,
-    #             r2l_val_scores, l2r_val_scores)
+        """ Validation """
+        val_loss = test(model, val_iter, vocab,
+                        C.reg_lambda, C.feat.feature_mode)
+        r2l_val_scores, l2r_val_scores = evaluate(val_iter, model, vocab, C.beam_size, C.loader.max_caption_len,
+                                                  C.feat.feature_mode)
+        log_val(summary_writer, e, val_loss, C.reg_lambda,
+                r2l_val_scores, l2r_val_scores)
 
-    #     summary_writer.add_scalars("compare_loss/total_loss", {'train_total_loss': train_loss['total'],
-    #                                                            'val_total_loss': val_loss['total']}, e)
-    #     summary_writer.add_scalars("compare_loss/l2r_loss", {'train_l2r_loss': train_loss['l2r_loss'],
-    #                                                          'val_l2r_loss': val_loss['l2r_loss']}, e)
-    #     summary_writer.add_scalars("compare_loss/r2l_loss", {'train_r2l_loss': train_loss['r2l_loss'],
-    #                                                          'val_r2l_loss': val_loss['r2l_loss']}, e)
+        summary_writer.add_scalars("compare_loss/total_loss", {'train_total_loss': train_loss['total'],
+                                                               'val_total_loss': val_loss['total']}, e)
+        summary_writer.add_scalars("compare_loss/l2r_loss", {'train_l2r_loss': train_loss['l2r_loss'],
+                                                             'val_l2r_loss': val_loss['l2r_loss']}, e)
+        summary_writer.add_scalars("compare_loss/r2l_loss", {'train_r2l_loss': train_loss['r2l_loss'],
+                                                             'val_r2l_loss': val_loss['r2l_loss']}, e)
 
-    #     if e >= C.save_from and e % C.save_every == 0:
-    #         print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
-    #         save_checkpoint(e, model, ckpt_fpath, C)
+        if e >= C.save_from and e % C.save_every == 0:
+            print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
+            save_checkpoint(e, model, ckpt_fpath, C)
 
-    #     if e >= C.lr_decay_start_from:
-    #         lr_scheduler.step(val_loss['total'])
-    #     if l2r_val_scores['CIDEr'] > best_val_CIDEr:
-    #         best_epoch = e
-    #         best_val_CIDEr = l2r_val_scores['CIDEr']
-    #         best_ckpt_fpath = ckpt_fpath
+        if e >= C.lr_decay_start_from:
+            lr_scheduler.step(val_loss['total'])
+        if l2r_val_scores['CIDEr'] > best_val_CIDEr:
+            best_epoch = e
+            best_val_CIDEr = l2r_val_scores['CIDEr']
+            best_ckpt_fpath = ckpt_fpath
 
     """ Test with Best Model """
     gc.collect()
@@ -176,8 +176,7 @@ def main():
         torch.cuda.empty_cache()
     
     print("\n\n\n[BEST: {} SEED: {}]".format(best_epoch, seed))
-    # best_model = load_checkpoint(model, best_ckpt_fpath)
-    best_model = load_checkpoint(model, "/checkpoints/checkpoints_MSVD_InceptionResNetV2/2025-05-15 11:33:17 | Transformer | MSVD | FEAT MSVD_InceptionResNetV2 fsl-50 mcl-10 | EMB 512 | Transformer d-640-N-4-h-10-h_big-128-dp-0.1-sn-0 | OPTIM Adam lr-0.0001-dc-12-0.5-5-wd-5e-06-rg-0.6 | bs-32 gc-5.0/best.ckpt")
+    best_model = load_checkpoint(model, best_ckpt_fpath)
     r2l_best_scores, l2r_best_scores = evaluate(test_iter, best_model, vocab, C.beam_size, C.loader.max_caption_len,
                                                 C.feat.feature_mode)
     print("r2l scores: {}".format(r2l_best_scores))

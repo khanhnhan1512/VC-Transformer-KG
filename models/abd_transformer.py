@@ -55,7 +55,7 @@ def apply_rotary_emb(x: torch.Tensor, freqs_cis_slice: torch.Tensor) -> torch.Te
     freqs_cis_reshaped = freqs_cis_slice.unsqueeze(0).unsqueeze(0)
 
     # Reshape x to [bsz, n_heads, seqlen, head_dim // 2, 2] to view as complex
-    x_ = x.float().reshape(*x.shape[:-1], -1, 2)
+    x_ = x.float().reshape(*x.shape[:-1], -1, 2).contiguous()
     x_complex = torch.view_as_complex(x_) # [bsz, n_heads, seqlen, head_dim // 2]
 
     # Apply rotation: element-wise multiplication with complex numbers
@@ -384,7 +384,11 @@ class Encoder(nn.Module):
 
     def forward(self, x, freqs_cis, src_mask): # Added freqs_cis
         for layer in self.encoder_layer:
-            x = layer(x, freqs_cis, src_mask) # Pass freqs_cis
+            # Check if the layer is EncoderLayerNoAttention (by class name or isinstance)
+            if isinstance(layer, EncoderLayerNoAttention):
+                x = layer(x, src_mask)
+            else:
+                x = layer(x, freqs_cis, src_mask)
         return x
 
 
@@ -656,7 +660,7 @@ class ABDTransformer(nn.Module):
             # Pass freqs_cis to encoder_no_attention? It doesn't use attn, so likely not needed.
             # If encoder_no_attention internally uses layers that need it, it must be passed.
             # Assuming EncoderLayerNoAttention doesn't need it.
-            x4 = self.encoder_no_attention(x4, src_mask[3]) # No freqs_cis needed here
+            x4 = self.encoder_no_attention(x4, None, src_mask[3]) # No freqs_cis needed here
             # x4 = self.encoder(x4, self.freqs_cis, src_mask[3]) # Original code used this
             return x1 + x2 + x3 + x4
 

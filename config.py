@@ -145,7 +145,7 @@ class TrainConfig(object):
         'MSR-VTT': 18,
     }[corpus]
 
-    epochs = 1  # ! Only use 1 epochs for debug
+    # epochs = 1  # ! Only use 1 epochs for debug
 
     batch_size = 32
 

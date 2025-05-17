@@ -139,9 +139,9 @@ def main():
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
                                      patience=C.lr_decay_patience, verbose=True)
 
-    best_val_CIDEr = float('-inf')
-    best_epoch = None
-    best_ckpt_fpath = None
+    best_val_CIDEr: float = float('-inf')
+    best_epoch: int = -1
+    best_ckpt_fpath: str = ""
     for e in range(1, C.epochs + 1):
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 
@@ -167,9 +167,10 @@ def main():
         summary_writer.add_scalars("compare_loss/r2l_loss", {'train_r2l_loss': train_loss['r2l_loss'],
                                                              'val_r2l_loss': val_loss['r2l_loss']}, e)
 
-        if e >= C.save_from and e % C.save_every == 0:
-            print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
-            save_checkpoint(e, model, ckpt_fpath, C)
+        # # ! Not need to save checkpoint every epoch
+        # if e >= C.save_from and e % C.save_every == 0:
+        #     print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
+        #     save_checkpoint(e, model, ckpt_fpath, C)
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
@@ -177,6 +178,17 @@ def main():
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
+
+            print(
+                f"✅ New best model at epoch {e} with CIDEr: {best_val_CIDEr}")
+            save_checkpoint(e, model, ckpt_fpath, C)
+
+        # Stop training if the model is not improving after 10 epochs
+        if e > best_epoch + 10:
+            print("Early stopping at epoch {}".format(e))
+            break
+
+    del train_loss
 
     """ Test with Best Model """
     gc.collect()
@@ -212,7 +224,6 @@ def main():
     f.write(os.linesep)
     summary_writer.close()
     del train_iter, val_iter, test_iter, vocab, best_model, model, parameter_number, optimizer, lr_scheduler
-    del train_loss
     gc.collect()
 
     if torch.cuda.is_available():

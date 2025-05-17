@@ -41,7 +41,7 @@ def build_model(vocab):
                                C.feat.feature_mode,
                                n_heads_big=C.transformer.n_heads_big)
 
-    model = convert_ln_to_dyt(model)
+    # model = convert_ln_to_dyt(model)
 
     # Initialize model with Xavier
     for p in model.parameters():

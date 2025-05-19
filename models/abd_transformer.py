@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import namedtuple
 from torch.autograd import Variable
+from torchtune.modules import RotaryPositionalEmbeddings
 
 Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 
@@ -140,7 +141,9 @@ class MultiHeadAttention(nn.Module):
             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
         value = self.linear_value(value).view(
             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-
+        print(query.size(), key.size(), value.size())
+        query = RotaryPositionalEmbeddings(self.d_k)(query)
+        key = RotaryPositionalEmbeddings(self.d_k)(key)
         x, self.attn = self_attention(
             query, key, value, dropout=self.dropout, mask=mask)
         # 变为三维， 或者说是concat head
@@ -364,7 +367,7 @@ class ABDTransformer(nn.Module):
             self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
             self.rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(d_model, dropout)
+        # self.pos_embed = PositionalEncoding(d_model, dropout)
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
@@ -389,50 +392,50 @@ class ABDTransformer(nn.Module):
     def encode(self, src, src_mask, feature_mode_two=False):
         if self.feature_mode == 'two':
             x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             x1 = self.encoder_big(x1, src_mask[0])
             x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
             return x1 + x2
         if feature_mode_two:
             x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             x1 = self.encoder_big(x1, src_mask[0])
             x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
             return x1 + x2
         if self.feature_mode == 'one':
             x = self.src_embed(src)
-            x = self.pos_embed(x)
+            # x = self.pos_embed(x)
             return self.encoder(x, src_mask)
         elif self.feature_mode == 'two':
             x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             x1 = self.encoder_big(x1, src_mask[0])
             x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
             return x1 + x2
         elif self.feature_mode == 'three':
             x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             x1 = self.encoder(x1, src_mask[0])
             x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             x2 = self.encoder(x2, src_mask[1])
             x3 = self.object_src_embed(src[2])
-            x3 = self.pos_embed(x3)
+            # x3 = self.pos_embed(x3)
             x3 = self.encoder(x3, src_mask[2])
             return x1 + x2 + x3
         elif self.feature_mode == 'four':
             x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             x1 = self.encoder(x1, src_mask[0])
 
             x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             x2 = self.encoder(x2, src_mask[1])
 
             x3 = self.object_src_embed(src[2])
@@ -450,12 +453,12 @@ class ABDTransformer(nn.Module):
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)
-        x = self.pos_embed(x)
+        # x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.trg_embed(trg)
-        x = self.pos_embed(x)
+        # x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
     def forward(self, src, r2l_trg, trg, mask):

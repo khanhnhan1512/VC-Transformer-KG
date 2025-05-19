@@ -1,14 +1,14 @@
 import os
 import time
-
+import regex as re
 
 class FeatureConfig(object):
-    model = "MSVD_InceptionResNetV2"
+    # model = "MSVD_InceptionResNetV2"
     # model = "MSVD_ResNet152"
     # model = "MSVD_I3D"
     # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
-    # model = "MSVD_ResNet152+I3D+OFeat+rel"
+    model = "MSVD_ResNet152+I3D+OFeat+rel"
 
 
     # model = "MSVD_InceptionResNetV2+I3D"
@@ -110,13 +110,13 @@ class MSRVTTLoaderConfig(object):
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 60
 
-    num_workers = 6
+    num_workers = 0
 
 
 class TransformerConfig(object):
     d_model = 640
     d_ff = 2048
-    n_heads_big = 128
+    n_heads_big = 160 #128
     n_heads = 10
     n_layers = 4
     dropout = 0.1
@@ -189,7 +189,7 @@ class TrainConfig(object):
     timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time()))
     model_id = " | ".join(
         [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
-
+    model_id = re.sub(r'[\/:*?"<>|]', '_', model_id)
     """ Log """
     log_dpath = "./logs/logs_{}/{}".format(feat.model, model_id)
     ckpt_dpath = os.path.join("./checkpoints/checkpoints_{}".format(feat.model), model_id)

@@ -126,7 +126,7 @@ def main():
     optimizer = torch.optim.Adam(
         model.parameters(), lr=C.lr, weight_decay=C.weight_decay, amsgrad=True)
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
-                                     patience=C.lr_decay_patience, verbose=True)
+                                     patience=C.lr_decay_patience)
 
     best_val_CIDEr = 0.
     best_epoch = None

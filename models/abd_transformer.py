@@ -117,6 +117,7 @@ class MultiHeadAttention(nn.Module):
         self.linear_out = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
+        self.rope = RotaryPositionalEmbeddings(self.d_k)
 
     def forward(self, query, key, value, mask=None):
         if mask is not None:
@@ -141,9 +142,8 @@ class MultiHeadAttention(nn.Module):
             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
         value = self.linear_value(value).view(
             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        print(query.size(), key.size(), value.size())
-        query = RotaryPositionalEmbeddings(self.d_k)(query)
-        key = RotaryPositionalEmbeddings(self.d_k)(key)
+        query = self.rope(query)
+        key = self.rope(key)
         x, self.attn = self_attention(
             query, key, value, dropout=self.dropout, mask=mask)
         # 变为三维， 或者说是concat head

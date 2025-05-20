@@ -89,7 +89,7 @@ class MSVDLoaderConfig(object):
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 50
 
-    num_workers = 6
+    num_workers = 4
 
 
 class MSRVTTLoaderConfig(object):
@@ -116,7 +116,7 @@ class MSRVTTLoaderConfig(object):
 class TransformerConfig(object):
     d_model = 640
     d_ff = 2048
-    n_heads_big = 160 #128
+    n_heads_big = 128 #128
     n_heads = 10
     n_layers = 4
     dropout = 0.1

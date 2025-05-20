@@ -166,6 +166,13 @@ def main():
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
+            print("New best checkpoint at epoch={} to {}".format(
+                e, best_ckpt_fpath))
+            
+        # Stop early if the model is not improving after 5 epochs
+        if e > C.lr_decay_start_from and e - best_epoch > C.lr_decay_patience:
+            print("Early stopping at epoch {}".format(e))
+            break
 
     """ Test with Best Model """
     gc.collect()

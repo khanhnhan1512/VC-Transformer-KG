@@ -117,7 +117,10 @@ class MultiHeadAttention(nn.Module):
         self.linear_out = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
-        self.rope = RotaryPositionalEmbeddings(self.d_k)
+        if self.d_k % 2 != 0:
+            self.rope = RotaryPositionalEmbeddings(self.d_k-1)
+        else:
+            self.rope = RotaryPositionalEmbeddings(self.d_k)
 
     def forward(self, query, key, value, mask=None):
         if mask is not None:

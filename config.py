@@ -87,7 +87,7 @@ class MSVDLoaderConfig(object):
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 50
 
-    num_workers = 6
+    num_workers = 4 # Kaggle: suggested max number of worker in current system is 4
 
 
 class MSRVTTLoaderConfig(object):
@@ -108,7 +108,7 @@ class MSRVTTLoaderConfig(object):
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 60
 
-    num_workers = 6
+    num_workers = 4 # Kaggle: suggested max number of worker in current system is 4
 
 
 class TransformerConfig(object):    

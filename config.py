@@ -127,8 +127,8 @@ class EvalConfig(object):
 
 
 class TrainConfig(object):
-    # corpus = 'MSVD'
-    corpus = 'MSR-VTT'
+    corpus = 'MSVD'
+    # corpus = 'MSR-VTT'
     msrvtt_dim = 1028
     rel_dim = 300
     feat = FeatureConfig

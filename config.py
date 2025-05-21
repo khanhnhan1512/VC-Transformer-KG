@@ -1,6 +1,7 @@
 import os
 import time
 import regex as re
+import torch
 
 class FeatureConfig(object):
     # model = "MSVD_InceptionResNetV2"
@@ -8,13 +9,13 @@ class FeatureConfig(object):
     # model = "MSVD_I3D"
     # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
-    model = "MSVD_ResNet152+I3D+OFeat+rel"
+    # model = "MSVD_ResNet152+I3D+OFeat+rel"
 
 
     # model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
 
-    # model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
+    model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
 
     # model = "MSR-VTT_InceptionResNetV2"
     # model = "MSR-VTT_ResNet152"
@@ -88,8 +89,11 @@ class MSVDLoaderConfig(object):
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 50
-
-    num_workers = 4
+    # check cuda
+    if torch.cuda.is_available():
+        num_workers = 4
+    else:
+        num_workers = 0
 
 
 class MSRVTTLoaderConfig(object):
@@ -114,10 +118,10 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig(object):
-    d_model = 640
+    d_model = 768 #640
     d_ff = 2048
     n_heads_big = 128 #128
-    n_heads = 10
+    n_heads = 12 #10
     n_layers = 4
     dropout = 0.1
     select_num = 0  # if sn==0, automatic select num

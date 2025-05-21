@@ -13,6 +13,7 @@ from tensorboardX import SummaryWriter
 from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils import evaluate, get_lr, load_checkpoint, save_checkpoint, test, train
+from models.dynamic_tanh import convert_ln_to_dyt
 
 
 def build_loaders():
@@ -42,7 +43,7 @@ def build_model(vocab):
     if torch.cuda.is_available():
         model.cuda()
     
-    return model
+    return convert_ln_to_dyt(model)
 
 
 def log_train(summary_writer, e, loss, lr, reg_lambda, scores=None):
@@ -173,7 +174,8 @@ def main():
         if e > C.lr_decay_start_from and e - best_epoch > C.lr_decay_patience:
             print("Early stopping at epoch {}".format(e))
             break
-
+        if not torch.cuda.is_available():
+            break
     """ Test with Best Model """
     gc.collect()
     

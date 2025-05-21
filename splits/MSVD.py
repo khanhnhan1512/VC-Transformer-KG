@@ -31,8 +31,7 @@ def load_split():
 
 def sava_metadata(fpath, vids, metadata_df):
     # 1.获取视频编号索引
-    vid_indices = [i for i, r in metadata_df.iterrows(
-    ) if "{}_{}_{}".format(r[0], r[1], r[2]) in vids]
+    vid_indices = [i for i, r in metadata_df.iterrows() if "{}_{}_{}".format(r[0], r[1], r[2]) in vids]
     # 2.根据索引获取数据
     df = metadata_df.iloc[vid_indices]
     # 3.生成csv文件

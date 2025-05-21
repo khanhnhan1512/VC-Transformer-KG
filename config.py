@@ -3,17 +3,17 @@ import time
 
 
 class FeatureConfig(object):
-    model = "MSVD_InceptionResNetV2"
-    model = "MSVD_ResNet152"
-    model = "MSVD_I3D"
+    # model = "MSVD_InceptionResNetV2"
+    # model = "MSVD_ResNet152"
+    # model = "MSVD_I3D"
+    # model = "MSVD_ResNet152+I3D"
+    # model = "MSVD_ResNet152+I3D+OFeat"
+    # model = "MSVD_ResNet152+I3D+OFeat+rel"
 
-    model = "MSVD_ResNet152+I3D"
-    model = "MSVD_ResNet152+I3D+OFeat"
-    model = "MSVD_ResNet152+I3D+OFeat+rel"
-    model = "MSVD_InceptionResNetV2+I3D"
-    model = "MSVD_InceptionResNetV2+I3D+OFeat"
+
+    # model = "MSVD_InceptionResNetV2+I3D"
+    # model = "MSVD_InceptionResNetV2+I3D+OFeat"
     model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
-
 
     # model = "MSR-VTT_InceptionResNetV2"
     # model = "MSR-VTT_ResNet152"
@@ -127,8 +127,8 @@ class EvalConfig(object):
 
 
 class TrainConfig(object):
-    corpus = 'MSVD'
-    # corpus = 'MSR-VTT'
+    # corpus = 'MSVD'
+    corpus = 'MSR-VTT'
     msrvtt_dim = 1028
     rel_dim = 300
     feat = FeatureConfig
@@ -144,8 +144,6 @@ class TrainConfig(object):
         'MSVD': 25,
         'MSR-VTT': 18,
     }[corpus]
-
-    # epochs = 1  # ! Only use 1 epochs for debug
 
     batch_size = 32
 
@@ -173,8 +171,7 @@ class TrainConfig(object):
 
     """ ID """
     exp_id = "Transformer"
-    feat_id = "FEAT {} fsl-{} mcl-{}".format(
-        feat.model, loader.frame_sample_len, loader.max_caption_len)
+    feat_id = "FEAT {} fsl-{} mcl-{}".format(feat.model, loader.frame_sample_len, loader.max_caption_len)
     embedding_id = "EMB {}".format(vocab.embedding_size)
     transformer_id = "Transformer d-{}-N-{}-h-{}-h_big-{}-dp-{}-sn-{}".format(transformer.d_model, transformer.n_layers,
                                                                               transformer.n_heads,
@@ -187,19 +184,14 @@ class TrainConfig(object):
     if gradient_clip is not None:
         hyperparams_id += " gc-{}".format(gradient_clip)
 
-    timestamp = time.strftime(
-        "%Y-%m-%d %X", time.localtime(time.time())).replace(":", "_")
-    # model_id = " _ ".join(
-    #     [timestamp, exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
-    model_id = " _ ".join(  # Remove timestamp
+    timestamp = time.strftime("%Y-%m-%d %X", time.localtime(time.time()))
+    model_id = " = ".join(
         [exp_id, corpus, feat_id, embedding_id, transformer_id, optimizer_id, hyperparams_id])
 
     """ Log """
     log_dpath = "./logs/logs_{}/{}".format(feat.model, model_id)
-    ckpt_dpath = os.path.join(
-        "./checkpoints/checkpoints_{}".format(feat.model), model_id)
-    captioning_dpath = os.path.join(
-        "./captioning/captioning_{}".format(feat.model), model_id)
+    ckpt_dpath = os.path.join("./checkpoints/checkpoints_{}".format(feat.model), model_id)
+    captioning_dpath = os.path.join("./captioning/captioning_{}".format(feat.model), model_id)
     ckpt_fpath_tpl = os.path.join(ckpt_dpath, "{}.ckpt")
     captioning_fpath_tpl = os.path.join(captioning_dpath, "{}.csv")
 
@@ -218,32 +210,17 @@ class TrainConfig(object):
 
 class MSVDSplitConfig(object):
     model = "MSVD_rel"
-    data_folder: str = "../data/MSVD"
-    feature_folder: str = os.path.join(data_folder, "features")
-    metadata_folder: str = os.path.join(data_folder, "metadata")
 
-    # video_fpath = "../data/MSVD/features/{}.hdf5".format(model)
-    video_fpath = os.path.join(feature_folder, "{}.hdf5".format(model))
-    # caption_fpath = "../data/MSVD/metadata/MSR Video Description Corpus.csv"
-    caption_fpath = os.path.join(
-        metadata_folder, "MSR Video Description Corpus.csv")
+    video_fpath = "../data/MSVD/features/{}.hdf5".format(model)
+    caption_fpath = "../data/MSVD/metadata/MSR Video Description Corpus.csv"
 
-    # train_video_fpath = "../data/MSVD/features/{}_train.hdf5".format(model)
-    # val_video_fpath = "../data/MSVD/features/{}_val.hdf5".format(model)
-    # test_video_fpath = "../data/MSVD/features/{}_test.hdf5".format(model)
-    train_video_fpath = os.path.join(
-        feature_folder, "{}_train.hdf5".format(model))
-    val_video_fpath = os.path.join(
-        feature_folder, "{}_val.hdf5".format(model))
-    test_video_fpath = os.path.join(
-        feature_folder, "{}_test.hdf5".format(model))
+    train_video_fpath = "../data/MSVD/features/{}_train.hdf5".format(model)
+    val_video_fpath = "../data/MSVD/features/{}_val.hdf5".format(model)
+    test_video_fpath = "../data/MSVD/features/{}_test.hdf5".format(model)
 
-    # train_metadata_fpath = "../data/MSVD/metadata/train.csv"
-    # val_metadata_fpath = "../data/MSVD/metadata/val.csv"
-    # test_metadata_fpath = "../data/MSVD/metadata/test.csv"
-    train_metadata_fpath = os.path.join(metadata_folder, "train.csv")
-    val_metadata_fpath = os.path.join(metadata_folder, "val.csv")
-    test_metadata_fpath = os.path.join(metadata_folder, "test.csv")
+    train_metadata_fpath = "../data/MSVD/metadata/train.csv"
+    val_metadata_fpath = "../data/MSVD/metadata/val.csv"
+    test_metadata_fpath = "../data/MSVD/metadata/test.csv"
 
 
 class MSRVTTSplitConfig(object):

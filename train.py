@@ -116,9 +116,9 @@ def main():
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
                                      patience=C.lr_decay_patience, verbose=True)
 
-    best_val_CIDEr = 0.
-    best_epoch = None
-    best_ckpt_fpath = None
+    best_val_CIDEr: float = float("-inf")
+    best_epoch: int = -1
+    best_ckpt_fpath: str = ""
     for e in range(1, C.epochs + 1):
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 

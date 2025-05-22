@@ -189,14 +189,14 @@ def main():
     print(ckpt_list)
     print('Build data_loader according to ' + ckpt_list[0])
     test_iter, vocab, l2r_test_vid2GTs = build_loader(file + '/' + ckpt_list[0])
-    for i in range(len(ckpt_list) - 1):  # because have a best.ckpt
-        print("Now is test in the " + file + '/' + str(i) + '.ckpt')
-        if i + 1 <= 3:
-            continue
-        ckpt_fpath = file + '/' + str(i + 1) + '.ckpt'
-        print('Finish build data_loader.')
-        captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
-        run(ckpt_fpath, test_iter, vocab, str(i + 1) + '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
+    # for i in range(len(ckpt_list) - 1):  # because have a best.ckpt
+    #     print("Now is test in the " + file + '/' + str(i) + '.ckpt')
+    #     if i + 1 <= 3:
+    #         continue
+    #     ckpt_fpath = file + '/' + str(i + 1) + '.ckpt'
+    #     print('Finish build data_loader.')
+    #     captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
+    #     run(ckpt_fpath, test_iter, vocab, str(i + 1) + '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
     f.close()
 
 

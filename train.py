@@ -147,7 +147,7 @@ def main():
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
-        if l2r_val_scores['CIDEr'] > best_val_CIDEr:
+        if l2r_val_scores['CIDEr'] > best_val_CIDEr and e >= 10:
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
@@ -197,6 +197,11 @@ def main():
     #     print('Finish build data_loader.')
     #     captioning_fpath = C.captioning_fpath_tpl.format(str(i + 1))
     #     run(ckpt_fpath, test_iter, vocab, str(i + 1) + '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
+    print("Now is test in the " + file + '/' + 'best' + '.ckpt')
+    ckpt_fpath = file + '/' + 'best' + '.ckpt'
+    print('Finish build data_loader.')
+    captioning_fpath = C.captioning_fpath_tpl.format('best')
+    run(ckpt_fpath, test_iter, vocab, 'best' + '.ckpt', l2r_test_vid2GTs, f, captioning_fpath)
     f.close()
 
 

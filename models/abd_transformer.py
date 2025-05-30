@@ -313,7 +313,7 @@ class FeatureFusion(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(d_ff, d_model)
         )
-        self.layer_norm = LayerNorm(d_model)
+        # self.layer_norm = LayerNorm(d_model)
         
     def forward(self, features_list):          
         # Concat tất cả đặc trưng
@@ -322,7 +322,8 @@ class FeatureFusion(nn.Module):
         # Dùng mạng để kết hợp đặc trưng và trả về kích thước d_model
         fused_features = self.fusion_network(concat_features)
         
-        return self.layer_norm(fused_features)
+        # return self.layer_norm(fused_features)
+        return fused_features
 
 
 class ABDTransformer(nn.Module):

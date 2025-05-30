@@ -116,7 +116,7 @@ class TransformerConfig(object):
     d_ff = 2048 # 2048 hidden dimensions
     n_heads_big = 64 # attended and multi-head attention layer in STE, we set the number of heads to 128
     n_heads = 8 # 10 attention heads
-    n_layers = 4 # 4 layers
+    n_layers = 2 # 4 layers
     dropout = 0.1 # dropout rate is 0.1
     select_num = 0  # if sn==0, automatic select num
 
@@ -141,7 +141,7 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 30, # epochs of training are 30 for MSVD
+        'MSVD': 25, # epochs of training are 30 for MSVD
         'MSR-VTT': 18,
     }[corpus]
 
@@ -153,12 +153,12 @@ class TrainConfig(object):
         'MSVD': 1e-4, # learning rate of 1e-4 for MSVD
         'MSR-VTT': 3e-5,
     }[corpus]
-    lr_decay_start_from = 12
+    lr_decay_start_from = 10 # 12
     lr_decay_gamma = 0.5
     lr_decay_patience = 5
-    weight_decay = 0.5e-5
+    weight_decay = 1e-5 # 0.5e-5
 
-    reg_lambda = 0.6  # weights of r2l: 0.6
+    reg_lambda = 0.6  # weights of l2r: 0.6
 
     beam_size = 5 # beam search with a size of 5
     label_smoothing = 0.15

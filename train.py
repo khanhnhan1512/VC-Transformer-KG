@@ -104,7 +104,9 @@ def main():
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        
     train_iter, val_iter, test_iter, vocab = build_loaders()
 
     model = build_model(vocab)
@@ -147,7 +149,7 @@ def main():
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
-        if l2r_val_scores['CIDEr'] > best_val_CIDEr and e >= 4:
+        if l2r_val_scores['CIDEr'] > best_val_CIDEr:# and e >= 4
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath

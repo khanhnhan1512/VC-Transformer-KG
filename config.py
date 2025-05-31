@@ -112,11 +112,11 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig(object):    
-    d_model = 512 # 512 model dimensions
-    d_ff = 2048 # 2048 hidden dimensions
-    n_heads_big = 64 # attended and multi-head attention layer in STE, we set the number of heads to 128
-    n_heads = 8 # 10 attention heads
-    n_layers = 6 # 4 layers
+    d_model = 128 # 512 # 512 model dimensions
+    d_ff = 256 # 2048 # 2048 hidden dimensions
+    n_heads_big = 4 # 64 # attended and multi-head attention layer in STE, we set the number of heads to 128
+    n_heads = 2 # 8 # 10 attention heads
+    n_layers = 1 # 4 layers
     dropout = 0.1 # dropout rate is 0.1
     select_num = 0  # if sn==0, automatic select num
 
@@ -141,7 +141,7 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 25, # epochs of training are 30 for MSVD
+        'MSVD': 3,# 25 # epochs of training are 30 for MSVD
         'MSR-VTT': 18,
     }[corpus]
 

@@ -12,6 +12,11 @@ from loader.transform import UniformSample, RandomSample, ToTensor, TrimExceptAs
     RemovePunctuation, SplitWithWhiteSpace, Truncate, PadFirst, PadLast, PadToLength, \
     ToIndex
 
+import random
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 class CustomVocab(object):
     def __init__(self, caption_fpath, init_word2idx, min_count=1, transform=str.split):
@@ -224,11 +229,16 @@ class Corpus(object):
         return vids, video_feats_list, r2l_captions, l2r_captions
     
     def build_data_loader(self, dataset):
+        g = torch.Generator()
+        g.manual_seed(0)
         data_loader = DataLoader(
             dataset,
             batch_size=self.C.batch_size,
             shuffle=False,  # If sampler is specified, shuffle must be False.
             sampler=RandomSampler(dataset, replacement=False),
             num_workers=self.C.loader.num_workers,
-            collate_fn=self.collate_fn)
+            collate_fn=self.collate_fn,
+            worker_init_fn=seed_worker,
+            generator=g,
+        )
         return data_loader

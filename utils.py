@@ -121,6 +121,9 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip, fea
         t.set_description("[Epoch #{0}] loss: {3:.3f} = (reg: {1:.3f} * r2l_loss: {4:.3f} + "
                           "(1 - reg): {2:.3f} * l2r_loss: {5:.3f})"
                           .format(e, 1 - reg_lambda, reg_lambda, *loss_checker.mean(last=10)))
+        
+        break
+    
     total_loss, r2l_loss, l2r_loss = loss_checker.mean()
     loss = {
         'total': total_loss,

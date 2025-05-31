@@ -664,6 +664,11 @@ class ABDTransformer(nn.Module):
                     (one string is one word token). The second entry is "score" and it is the log-prob score for this translated sentence.
                 Note: Below I note "4 bt", "5 beam_size" as the shapes of objects. 4, 5 are default values. Actual values may differ.
                 """
+        
+        print("Beam search decoding...")
+        print(self.vocab.word2idx)
+        raise NotImplementedError("Beam search decoding is not implemented for this model.")
+                
         # 1. Setup
         start_symbol = self.vocab.word2idx['<S>']
         end_symbol = self.vocab.word2idx['<S>']

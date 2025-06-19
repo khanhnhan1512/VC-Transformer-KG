@@ -9,8 +9,6 @@ class FeatureConfig(object):
     # model = "MSVD_ResNet152+I3D"
     # model = "MSVD_ResNet152+I3D+OFeat"
     # model = "MSVD_ResNet152+I3D+OFeat+rel"
-
-
     # model = "MSVD_InceptionResNetV2+I3D"
     # model = "MSVD_InceptionResNetV2+I3D+OFeat"
     model = "MSVD_InceptionResNetV2+I3D+OFeat+rel"
@@ -65,7 +63,7 @@ class FeatureConfig(object):
 
 class VocabConfig(object):
     init_word2idx = {'<PAD>': 0, '<S>': 1}
-    embedding_size = 640 # 640 word embedding dimensions
+    embedding_size = 512
 
 
 class MSVDLoaderConfig(object):
@@ -111,13 +109,13 @@ class MSRVTTLoaderConfig(object):
     num_workers = 4 # Kaggle: suggested max number of worker in current system is 4
 
 
-class TransformerConfig(object):    
-    d_model = 128 # 512 # 512 model dimensions
-    d_ff = 256 # 2048 # 2048 hidden dimensions
-    n_heads_big = 4 # 64 # attended and multi-head attention layer in STE, we set the number of heads to 128
-    n_heads = 2 # 8 # 10 attention heads
-    n_layers = 1 # 4 layers
-    dropout = 0.1 # dropout rate is 0.1
+class TransformerConfig(object):
+    d_model = 512
+    d_ff = 2048
+    n_heads_big = 128
+    n_heads = 8
+    n_layers = 4
+    dropout = 0.1
     select_num = 0  # if sn==0, automatic select num
 
 
@@ -130,7 +128,7 @@ class TrainConfig(object):
     corpus = 'MSVD'
     # corpus = 'MSR-VTT'
     msrvtt_dim = 1028
-    rel_dim = 300 # 300-dimensional GLOVE vectors to represent the relationships
+    rel_dim = 300
     feat = FeatureConfig
     vocab = VocabConfig
     loader = {
@@ -141,26 +139,26 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 3,# 25 # epochs of training are 30 for MSVD
+        'MSVD': 5,
         'MSR-VTT': 18,
     }[corpus]
 
-    batch_size = 32 # batch size of 32
+    batch_size = 32
 
-    optimizer = "Adam" # Adam optimizer
+    optimizer = "Adam"
     gradient_clip = 5.0  # None if not used
     lr = {
-        'MSVD': 1e-4, # learning rate of 1e-4 for MSVD
+        'MSVD': 1e-4,
         'MSR-VTT': 3e-5,
     }[corpus]
-    lr_decay_start_from = 10 # 12
+    lr_decay_start_from = 12
     lr_decay_gamma = 0.5
     lr_decay_patience = 5
-    weight_decay = 1e-5 # 0.5e-5
+    weight_decay = 0.5e-5
 
-    reg_lambda = 0.6  # weights of l2r: 0.6
+    reg_lambda = 0.6  # weights of r2l
 
-    beam_size = 5 # beam search with a size of 5
+    beam_size = 5
     label_smoothing = 0.15
 
     """ Pretrained Model """

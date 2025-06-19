@@ -90,15 +90,7 @@ def main():
     print("MODEL ID: {}".format(C.model_id))
 
     summary_writer = SummaryWriter(C.log_dpath)
-    # seed = 2
-    # seed = 16
-    # seed = 8
-    # seed = 10
-    # seed = 100
-    # seed = 44
-    # seed = 444  # for ResNet152 seems good
-    seed = 904666
-    # seed = 7242
+    seed = 0
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -149,7 +141,7 @@ def main():
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
-        if l2r_val_scores['CIDEr'] > best_val_CIDEr:# and e >= 4
+        if l2r_val_scores['CIDEr'] > best_val_CIDEr:
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath

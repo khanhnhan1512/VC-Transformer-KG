@@ -299,33 +299,6 @@ class Generator(nn.Module):
         return F.log_softmax(self.linear(x), dim=-1)
 
 
-class FeatureFusion(nn.Module):
-    """
-    Module đặc biệt để kết hợp nhiều đặc trưng khác nhau thành một vector biểu diễn thống nhất
-    """
-    def __init__(self, d_model, num_features, d_ff, dropout=0.1):
-        super(FeatureFusion, self).__init__()
-        # Concat tất cả features (kích thước num_features * d_model) và dùng mạng tuyến tính để giảm chiều
-        self.fusion_network = nn.Sequential(
-            LayerNorm(num_features * d_model),
-            nn.Linear(num_features * d_model, d_ff),
-            nn.ReLU(),
-            nn.Dropout(dropout),
-            nn.Linear(d_ff, d_model)
-        )
-        # self.layer_norm = LayerNorm(d_model)
-        
-    def forward(self, features_list):          
-        # Concat tất cả đặc trưng
-        concat_features = torch.cat(features_list, dim=-1)
-        
-        # Dùng mạng để kết hợp đặc trưng và trả về kích thước d_model
-        fused_features = self.fusion_network(concat_features)
-        
-        # return self.layer_norm(fused_features)
-        return fused_features
-
-
 class ABDTransformer(nn.Module):
 
     def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_layers, dropout, feature_mode,
@@ -361,15 +334,6 @@ class ABDTransformer(nn.Module):
             self.motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
             self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
             self.rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
-
-        # Thêm feature fusion module cho các chế độ có nhiều đặc trưng
-        if feature_mode in ['two', 'three', 'four']:
-            num_features = {
-                'two': 2, 'three': 3, 'four': 4
-            }[feature_mode]
-            self.feature_fusion = FeatureFusion(
-                d_model, num_features, d_ff, dropout)
-
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.pos_embed = PositionalEncoding(d_model, dropout)
 
@@ -451,8 +415,7 @@ class ABDTransformer(nn.Module):
             # heads(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.encoder(x4, src_mask[3])
-            # return x1 + x2 + x3 + x4
-            return self.feature_fusion([x1, x2, x3, x4])
+            return x1 + x2 + x3 + x4
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

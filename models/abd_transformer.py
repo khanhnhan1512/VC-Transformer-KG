@@ -162,7 +162,8 @@ class SublayerConnection(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
-        return self.dropout(self.layer_norm(x + sublayer(x)))
+        # return self.dropout(self.layer_norm(x + sublayer(x))) # Post-LN
+        return self.dropout(x + sublayer(self.layer_norm(x))) # Pre-LN
 
 
 class EncoderLayer(nn.Module):
@@ -211,11 +212,13 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
+        self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
         for layer in self.encoder_layer:
             x = layer(x, src_mask)
-        return x
+        # return x # Post-LN
+        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
 
 
 class R2L_Decoder(nn.Module):
@@ -223,11 +226,13 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
+        self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         for layer in self.decoder_layer:
             x = layer(x, memory, src_mask, r2l_trg_mask)
-        return x
+        # return x # Post-LN
+        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
 
 
 class L2R_Decoder(nn.Module):
@@ -235,11 +240,13 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
+        self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         for layer in self.decoder_layer:
             x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
-        return x
+        # return x # Post-LN
+        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

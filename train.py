@@ -141,7 +141,7 @@ def main():
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
-        if l2r_val_scores['CIDEr'] > best_val_CIDEr:
+        if l2r_val_scores['CIDEr'] > best_val_CIDEr and e >= 10:
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath

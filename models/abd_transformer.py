@@ -87,74 +87,170 @@ class PositionalEncoding(nn.Module):
         return emb
 
 
-def self_attention(query, key, value, dropout=None, mask=None):
+# def self_attention(query, key, value, dropout=None, mask=None):
+#     d_k = query.size(-1)
+#     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
+#     # The mask operation is after QK and before softmax
+#     if mask is not None:
+
+#         if torch.cuda.is_available():
+#             mask.cuda()
+
+#         scores = scores.masked_fill(mask == 0, -1e9)
+#     self_attn = F.softmax(scores, dim=-1)
+#     if dropout is not None:
+#         self_attn = dropout(self_attn)
+#     return torch.matmul(self_attn, value), self_attn
+
+
+# class MultiHeadAttention(nn.Module):
+
+#     def __init__(self, head, d_model, dropout=0.1):
+#         super(MultiHeadAttention, self).__init__()
+#         assert (d_model % head == 0)
+#         self.d_k = d_model // head
+#         self.head = head
+#         self.d_model = d_model
+#         self.linear_query = nn.Linear(d_model, d_model)
+#         self.linear_key = nn.Linear(d_model, d_model)
+#         self.linear_value = nn.Linear(d_model, d_model)
+#         self.linear_out = nn.Linear(d_model, d_model)
+#         self.dropout = nn.Dropout(p=dropout)
+#         self.attn = None
+#         if self.d_k % 2 != 0:
+#             self.rope = RotaryPositionalEmbeddings(self.d_k-1)
+#         else:
+#             self.rope = RotaryPositionalEmbeddings(self.d_k)
+
+#     def forward(self, query, key, value, mask=None):
+#         if mask is not None:
+#             # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
+#             # 再1，2维交换变成[batch, head, -1, d_k], 所以mask要在第一维添加一维，与后面的self attention计算维度一样
+#             mask = mask.unsqueeze(1)
+#         n_batch = query.size(0)
+#         # if self.head == 1:
+#         #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
+#         # else:
+#         #     query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
+#         #     key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+#         #     value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+#         #
+#         #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
+#         #     # 变为三维， 或者说是concat head
+#         #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
+
+#         query = self.linear_query(query).view(
+#             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
+#         key = self.linear_key(key).view(
+#             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+#         value = self.linear_value(value).view(
+#             n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+#         query = self.rope(query)
+#         key = self.rope(key)
+#         x, self.attn = self_attention(
+#             query, key, value, dropout=self.dropout, mask=mask)
+#         # 变为三维， 或者说是concat head
+#         x = x.transpose(1, 2).contiguous().view(
+#             n_batch, -1, self.head * self.d_k)
+
+#         return self.linear_out(x)
+
+def multi_latent_self_attention(query, key, value, dropout=None, mask=None):
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
-    # The mask operation is after QK and before softmax
+
     if mask is not None:
-
         if torch.cuda.is_available():
-            mask.cuda()
-
+            mask = mask.cuda()
+        # Expand mask for latent dimension if needed
+        if len(mask.shape) == 3 and len(scores.shape) == 5: # [batch, 1, seq_len, seq_len] -> [batch, latents, heads, seq_len, seq_len]
+            mask = mask.unsqueeze(1)
         scores = scores.masked_fill(mask == 0, -1e9)
+
     self_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
         self_attn = dropout(self_attn)
     return torch.matmul(self_attn, value), self_attn
 
+class MultiLatentAttention(nn.Module):
+    def __init__(self, num_latents, head_per_latent, d_model, dropout=0.1):
+        super(MultiLatentAttention, self).__init__()
 
-class MultiHeadAttention(nn.Module):
+        self.num_latents = num_latents
+        self.head_per_latent = head_per_latent
+        self.total_heads = num_latents * head_per_latent
 
-    def __init__(self, head, d_model, dropout=0.1):
-        super(MultiHeadAttention, self).__init__()
-        assert (d_model % head == 0)
-        self.d_k = d_model // head
-        self.head = head
+        assert (d_model % self.total_heads == 0)
+        self.d_k = d_model // self.total_heads
+        self.d_latent = self.head_per_latent * self.d_k
         self.d_model = d_model
-        self.linear_query = nn.Linear(d_model, d_model)
-        self.linear_key = nn.Linear(d_model, d_model)
-        self.linear_value = nn.Linear(d_model, d_model)
+
+        # Linear projections per latent stream
+        self.linear_query = nn.ModuleList([nn.Linear(d_model, self.d_latent) for _ in range(num_latents)])
+        self.linear_key = nn.ModuleList([nn.Linear(d_model, self.d_latent) for _ in range(num_latents)])
+        self.linear_value = nn.ModuleList([nn.Linear(d_model, self.d_latent) for _ in range(num_latents)])
         self.linear_out = nn.Linear(d_model, d_model)
+
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
-        if self.d_k % 2 != 0:
-            self.rope = RotaryPositionalEmbeddings(self.d_k-1)
-        else:
-            self.rope = RotaryPositionalEmbeddings(self.d_k)
+
+        # Rotary positional embeddings for each latent stream
+        self.ropes = nn.ModuleList()
+        for _ in range(num_latents):
+            # Make d_k even for RoPE by adjusting dimensions if needed
+            rope_dim = self.d_k - (self.d_k % 2)
+            # Ensure we have at least dimension 2 for RoPE
+            if rope_dim < 2:
+                rope_dim = 2
+            self.ropes.append(RotaryPositionalEmbeddings(rope_dim))
 
     def forward(self, query, key, value, mask=None):
         if mask is not None:
-            # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
-            # 再1，2维交换变成[batch, head, -1, d_k], 所以mask要在第一维添加一维，与后面的self attention计算维度一样
-            mask = mask.unsqueeze(1)
+            mask = mask.unsqueeze(1) # Add head dimension
+
         n_batch = query.size(0)
-        # if self.head == 1:
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        # else:
-        #     query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        #     key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #     value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        #     # 变为三维， 或者说是concat head
-        #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
+        latent_outputs = []
+        latent_attns = []
 
-        query = self.linear_query(query).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        key = self.linear_key(key).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        value = self.linear_value(value).view(
-            n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        query = self.rope(query)
-        key = self.rope(key)
-        x, self.attn = self_attention(
-            query, key, value, dropout=self.dropout, mask=mask)
-        # 变为三维， 或者说是concat head
-        x = x.transpose(1, 2).contiguous().view(
-            n_batch, -1, self.head * self.d_k)
+        # Process each latent stream separately
+        for i in range(self.num_latents):
+            # Project inputs for this latent stream
+            q = self.linear_query[i](query).view(
+                n_batch, -1, self.head_per_latent, self.d_k).transpose(1, 2) # [b, head_per_latent, seq_len, d_k]
+            k = self.linear_key[i](key).view(
+                n_batch, -1, self.head_per_latent, self.d_k).transpose(1, 2)
+            v = self.linear_value[i](value).view(
+                n_batch, -1, self.head_per_latent, self.d_k).transpose(1, 2)
 
-        return self.linear_out(x)
+            # Apply rotary positional embeddings
+            rope_dim = self.d_k - (self.d_k % 2)
+            if rope_dim >= 2:  # Only apply RoPE if we have enough dimensions
+                # For even d_k, apply to all dimensions
+                if self.d_k % 2 == 0:
+                    q = self.ropes[i](q)
+                    k = self.ropes[i](k)
+                # For odd d_k, apply to all but the last dimension
+                else:
+                    q_rope = self.ropes[i](q[..., :rope_dim])
+                    k_rope = self.ropes[i](k[..., :rope_dim])
+                    q = torch.cat([q_rope, q[..., rope_dim:]], dim=-1)
+                    k = torch.cat([k_rope, k[..., rope_dim:]], dim=-1)
 
+            # Compute attention
+            x, attn = multi_latent_self_attention(q, k, v, dropout=self.dropout, mask=mask)
+
+            # Reshape: [b, heads_per_latent, seq_len, d_k] -> [b, seq_len, heads_per_latent * d_k]
+            x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head_per_latent * self.d_k)
+
+            latent_outputs.append(x)
+            latent_attns.append(attn)
+
+        # Concatenate outputs from all latent streams
+        combined_output = torch.cat(latent_outputs, dim=-1)
+        self.attn = latent_attns
+
+        # Final projection
+        return self.linear_out(combined_output)
 
 class PositionWiseFeedForward(nn.Module):
 
@@ -347,9 +443,11 @@ class ABDTransformer(nn.Module):
 
         # attn_no_heads = MultiHeadAttention(1, d_model, dropout)
 
-        attn = MultiHeadAttention(n_heads, d_model, dropout)
+        # attn = MultiHeadAttention(n_heads, d_model, dropout)
+        attn = MultiLatentAttention(n_heads, 8, d_model, dropout)
 
-        attn_big = MultiHeadAttention(n_heads_big, d_model, dropout)
+        # attn_big = MultiHeadAttention(n_heads_big, d_model, dropout)
+        attn_big = MultiLatentAttention(n_heads_big, 8, d_model, dropout)
 
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 

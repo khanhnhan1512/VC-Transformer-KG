@@ -175,9 +175,11 @@ class SublayerConnection(nn.Module):
         self.layer_norm = DyT(size)  # Dynamic Tanh
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, x, sublayer):
-        # return self.dropout(self.layer_norm(x + sublayer(x))) # Post-LN
-        return self.dropout(x + sublayer(self.layer_norm(x))) # Pre-LN
+    def forward(self, x_left, x_right, sublayer):
+        inter = sublayer(x_left)
+        a_left = self.dropout(self.layer_norm(x_left + inter))
+        a_right = x_right + inter
+        return a_left, a_right
 
 
 class EncoderLayer(nn.Module):
@@ -187,9 +189,9 @@ class EncoderLayer(nn.Module):
         self.feed_forward = feed_forward
         self.sublayer_connection = clones(SublayerConnection(size, dropout), 2)
 
-    def forward(self, x, mask):
-        x = self.sublayer_connection[0](x, lambda x: self.attn(x, x, x, mask))
-        return self.sublayer_connection[1](x, self.feed_forward)
+    def forward(self, x_left, x_right, mask):
+        x_left, x_right = self.sublayer_connection[0](x_left, x_right, lambda x: self.attn(x, x, x, mask))
+        return self.sublayer_connection[1](x_left, x_right, self.feed_forward)
 
 
 class EncoderLayerNoAttention(nn.Module):
@@ -199,8 +201,8 @@ class EncoderLayerNoAttention(nn.Module):
         self.feed_forward = feed_forward
         self.sublayer_connection = clones(SublayerConnection(size, dropout), 2)
 
-    def forward(self, x, mask):
-        return self.sublayer_connection[1](x, self.feed_forward)
+    def forward(self, x_left, x_right, mask):
+        return self.sublayer_connection[1](x_left, x_right, self.feed_forward)
 
 
 class DecoderLayer(nn.Module):
@@ -211,14 +213,14 @@ class DecoderLayer(nn.Module):
         self.feed_forward = feed_forward
         self.sublayer_connection = clones(SublayerConnection(size, dropout), sublayer_num)
 
-    def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
-        x = self.sublayer_connection[0](x, lambda x: self.attn(x, x, x, trg_mask))
-        x = self.sublayer_connection[1](x, lambda x: self.attn(x, memory, memory, src_mask))
+    def forward(self, x_left, x_right, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
+        x_left, x_right = self.sublayer_connection[0](x_left, x_right, lambda x: self.attn(x, x, x, trg_mask))
+        x_left, x_right = self.sublayer_connection[1](x_left, x_right, lambda x: self.attn(x, memory, memory, src_mask))
 
         if r2l_memory is not None:
-            x = self.sublayer_connection[-2](x, lambda x: self.attn(x, r2l_memory, r2l_memory, r2l_trg_mask))
+            x_left, x_right = self.sublayer_connection[-2](x_left, x_right, lambda x: self.attn(x, r2l_memory, r2l_memory, r2l_trg_mask))
 
-        return self.sublayer_connection[-1](x, self.feed_forward)
+        return self.sublayer_connection[-1](x_left, x_right, self.feed_forward)
 
 
 class Encoder(nn.Module):
@@ -229,10 +231,13 @@ class Encoder(nn.Module):
         self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
+        x_left = x
+        x_right = x
         for layer in self.encoder_layer:
-            x = layer(x, src_mask)
+            x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
-        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left + self.layer_norm(x_right)  
 
 
 class R2L_Decoder(nn.Module):
@@ -243,10 +248,13 @@ class R2L_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
+        x_left = x
+        x_right = x
         for layer in self.decoder_layer:
-            x = layer(x, memory, src_mask, r2l_trg_mask)
+            x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
-        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left + self.layer_norm(x_right)  
 
 
 class L2R_Decoder(nn.Module):
@@ -257,10 +265,13 @@ class L2R_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512, eps=1e-6)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        x_left = x
+        x_right = x
         for layer in self.decoder_layer:
-            x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
+            x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
         # return x # Post-LN
-        return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left + self.layer_norm(x_right)
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

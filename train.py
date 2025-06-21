@@ -145,6 +145,7 @@ def main():
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
+        print("Best epoch: {} with CIDEr: {}".format(best_epoch, best_val_CIDEr))
 
     """ Test with Best Model """
     gc.collect()

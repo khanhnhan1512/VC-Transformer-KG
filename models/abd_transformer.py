@@ -14,6 +14,18 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
+class DyT(nn.Module):
+    def __init__(self, num_features, alpha_init_value=0.5):
+        super().__init__()
+        self.alpha = nn.Parameter(torch.ones(1) * alpha_init_value)
+        self.weight = nn.Parameter(torch.ones(num_features))
+        self.bias = nn.Parameter(torch.zeros(num_features))
+    
+    def forward(self, x):
+        x = torch.tanh(self.alpha * x)
+        return x * self.weight + self.bias
+
+
 class LayerNorm(nn.Module):
 
     def __init__(self, feature, eps=1e-6):
@@ -158,7 +170,8 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.layer_norm = LayerNorm(size)
+        # self.layer_norm = LayerNorm(size) # LayerNorm
+        self.layer_norm = DyT(size)  # Dynamic Tanh
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):

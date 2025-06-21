@@ -237,7 +237,7 @@ class Encoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)  
+        return x_left + self.layer_norm(x_right)
 
 
 class R2L_Decoder(nn.Module):
@@ -254,7 +254,7 @@ class R2L_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)  
+        return x_left + self.layer_norm(x_right)
 
 
 class L2R_Decoder(nn.Module):

@@ -38,7 +38,13 @@ def build_model(vocab):
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
                                n_heads_big=C.transformer.n_heads_big)
-
+    # Initialize the model
+    for p in model.parameters():
+        if p.dim() > 1:
+            torch.nn.init.xavier_uniform_(p)
+        else:
+            torch.nn.init.constant_(p, 0)
+    
     model.cuda()
     return model
 

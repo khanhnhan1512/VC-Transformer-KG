@@ -90,7 +90,7 @@ def main():
     print("MODEL ID: {}".format(C.model_id))
 
     summary_writer = SummaryWriter(C.log_dpath)
-    seed = 0
+    seed: int = 42
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

@@ -228,7 +228,7 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
         x_left = x
@@ -245,7 +245,7 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x_left = x
@@ -262,7 +262,7 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x_left = x

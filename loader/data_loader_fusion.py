@@ -679,7 +679,6 @@ class Corpus(object):
             batch_size = self.C.batch_size
         
         g = torch.Generator()
-        g.manual_seed(0)
         data_loader = DataLoader(
             dataset,
             batch_size=batch_size,

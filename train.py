@@ -13,6 +13,7 @@ from tensorboardX import SummaryWriter
 from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils import evaluate, get_lr, load_checkpoint, save_checkpoint, test, train
+import time
 
 
 def build_loaders():
@@ -108,12 +109,13 @@ def main():
 
     optimizer = torch.optim.Adam(model.parameters(), lr=C.lr, weight_decay=C.weight_decay, amsgrad=True)
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
-                                     patience=C.lr_decay_patience, verbose=True)
+                                     patience=C.lr_decay_patience)
 
     best_val_CIDEr: float = float("-inf")
     best_epoch: int = -1
     best_ckpt_fpath: str = ""
     for e in range(1, C.epochs + 1):
+        start_time = time.time()
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 
         """ Train """
@@ -146,6 +148,7 @@ def main():
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
         print("Best epoch: {} with CIDEr: {}".format(best_epoch, best_val_CIDEr))
+        print("Epoch {} finished in {:.2f} seconds.".format(e, time.time() - start_time))
 
     """ Test with Best Model """
     gc.collect()

@@ -14,7 +14,6 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
-
 class FourFeatureFusion(nn.Module):
     def __init__(self):
         super().__init__()
@@ -26,7 +25,8 @@ class FourFeatureFusion(nn.Module):
         """
         assert len(xs) == 4, "Input must be a list of 4 tensors."
         weighted_sum = sum(w * x for w, x in zip(self.weights, xs))
-        return weighted_sum / self.weights.sum()
+        return weighted_sum
+
 
 class DyT(nn.Module):
     def __init__(self, num_features, alpha_init_value=0.5):
@@ -171,7 +171,7 @@ class PositionWiseFeedForward(nn.Module):
         self.w_2 = nn.Linear(d_ff, d_model)
         self.dropout_1 = nn.Dropout(dropout)
         self.dropout_2 = nn.Dropout(dropout)
-        self.act = nn.GELU()
+        self.act = nn.ReLU()
 
     def forward(self, x):
         inter = self.dropout_1(self.act(self.w_1(x)))

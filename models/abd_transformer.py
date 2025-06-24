@@ -93,6 +93,51 @@ class PositionalEncoding(nn.Module):
         return emb
 
 
+class RotaryPositionalEmbeddings(nn.Module):
+    def __init__(self, dim: int, dropout: float, base: int = 10_000):
+        """
+        * `d` is the number of features $d$
+        * `base` is the constant used for calculating $\Theta$
+        """
+        super().__init__()
+
+        self.base = base
+        self.d = dim
+        self.cos_cached = None
+        self.sin_cached = None
+
+    def _build_cache(self, x: torch.Tensor):
+        """
+        Cache $\cos$ and $\sin$ values
+        """
+        if self.cos_cached is not None and x.shape[0] <= self.cos_cached.shape[0]:
+            return
+        seq_len = x.shape[0]
+        theta = 1. / (self.base ** (torch.arange(0, self.d, 2).float() / self.d)).to(x.device)
+        seq_idx = torch.arange(seq_len, device=x.device).float().to(x.device)
+        idx_theta = torch.einsum('n,d->nd', seq_idx, theta)
+        idx_theta2 = torch.cat([idx_theta, idx_theta], dim=1)
+
+        # Cache them
+        self.cos_cached = idx_theta2.cos()[:, None, None, :]
+        self.sin_cached = idx_theta2.sin()[:, None, None, :]
+
+    def _neg_half(self, x: torch.Tensor):
+        d_2 = self.d // 2
+        return torch.cat([-x[:, :, :, d_2:], x[:, :, :, :d_2]], dim=-1)
+
+    def forward(self, x: torch.Tensor):
+        """
+        * `x` is the Tensor at the head of a key or a query with shape `[seq_len, batch_size, n_heads, d]`
+        """
+        self._build_cache(x)
+        x_rope, x_pass = x[..., :self.d], x[..., self.d:]
+        neg_half_x = self._neg_half(x_rope)
+        x_rope = (x_rope * self.cos_cached[:x.shape[0]]) + (neg_half_x * self.sin_cached[:x.shape[0]])
+
+        return torch.cat((x_rope, x_pass), dim=-1)
+    
+
 def self_attention(query, key, value, dropout=None, mask=None):
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
@@ -156,11 +201,11 @@ class PositionWiseFeedForward(nn.Module):
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
         self.dropout_1 = nn.Dropout(dropout)
-        self.relu = nn.ReLU()
         self.dropout_2 = nn.Dropout(dropout)
+        self.act = nn.GELU()
 
     def forward(self, x):
-        inter = self.dropout_1(self.relu(self.w_1(x)))
+        inter = self.dropout_1(self.act(self.w_1(x)))
         output = self.dropout_2(self.w_2(inter))
         return output
 
@@ -234,7 +279,7 @@ class Encoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return self.layer_norm(x_left + x_right)
+        return x_left + self.layer_norm(x_right)
 
 
 class R2L_Decoder(nn.Module):
@@ -251,7 +296,7 @@ class R2L_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return self.layer_norm(x_left + x_right)
+        return x_left + self.layer_norm(x_right)
 
 
 class L2R_Decoder(nn.Module):
@@ -268,7 +313,7 @@ class L2R_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return self.layer_norm(x_left + x_right)
+        return x_left + self.layer_norm(x_right)
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):
@@ -364,7 +409,8 @@ class ABDTransformer(nn.Module):
             self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
             self.rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(d_model, dropout)
+        # self.pos_embed = PositionalEncoding(d_model, dropout)
+        self.pos_embed = RotaryPositionalEmbeddings(d_model, dropout)
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 

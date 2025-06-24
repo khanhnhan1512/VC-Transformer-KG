@@ -14,6 +14,20 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
+
+class FourFeatureFusion(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.weights = nn.Parameter(torch.ones(4))
+        
+    def forward(self, xs):
+        """
+        xs: List of 4 tensors, 
+        """
+        assert len(xs) == 4, "Input must be a list of 4 tensors."
+        weighted_sum = sum(w * x for w, x in zip(self.weights, xs))
+        return weighted_sum / self.weights.sum()
+
 class DyT(nn.Module):
     def __init__(self, num_features, alpha_init_value=0.5):
         super().__init__()
@@ -91,51 +105,6 @@ class PositionalEncoding(nn.Module):
             emb = emb + self.pe[step]
         emb = self.drop_out(emb)
         return emb
-
-
-class RotaryPositionalEmbeddings(nn.Module):
-    def __init__(self, dim: int, dropout: float, base: int = 10_000):
-        """
-        * `d` is the number of features $d$
-        * `base` is the constant used for calculating $\Theta$
-        """
-        super().__init__()
-
-        self.base = base
-        self.d = dim
-        self.cos_cached = None
-        self.sin_cached = None
-
-    def _build_cache(self, x: torch.Tensor):
-        """
-        Cache $\cos$ and $\sin$ values
-        """
-        if self.cos_cached is not None and x.shape[0] <= self.cos_cached.shape[0]:
-            return
-        seq_len = x.shape[0]
-        theta = 1. / (self.base ** (torch.arange(0, self.d, 2).float() / self.d)).to(x.device)
-        seq_idx = torch.arange(seq_len, device=x.device).float().to(x.device)
-        idx_theta = torch.einsum('n,d->nd', seq_idx, theta)
-        idx_theta2 = torch.cat([idx_theta, idx_theta], dim=1)
-
-        # Cache them
-        self.cos_cached = idx_theta2.cos()[:, None, None, :]
-        self.sin_cached = idx_theta2.sin()[:, None, None, :]
-
-    def _neg_half(self, x: torch.Tensor):
-        d_2 = self.d // 2
-        return torch.cat([-x[:, :, :, d_2:], x[:, :, :, :d_2]], dim=-1)
-
-    def forward(self, x: torch.Tensor):
-        """
-        * `x` is the Tensor at the head of a key or a query with shape `[seq_len, batch_size, n_heads, d]`
-        """
-        self._build_cache(x)
-        x_rope, x_pass = x[..., :self.d], x[..., self.d:]
-        neg_half_x = self._neg_half(x_rope)
-        x_rope = (x_rope * self.cos_cached[:x.shape[0]]) + (neg_half_x * self.sin_cached[:x.shape[0]])
-
-        return torch.cat((x_rope, x_pass), dim=-1)
     
 
 def self_attention(query, key, value, dropout=None, mask=None):
@@ -409,8 +378,9 @@ class ABDTransformer(nn.Module):
             self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
             self.rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        # self.pos_embed = PositionalEncoding(d_model, dropout)
-        self.pos_embed = RotaryPositionalEmbeddings(d_model, dropout)
+        self.pos_embed = PositionalEncoding(d_model, dropout)
+
+        self.feature_fusion = FourFeatureFusion()
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
@@ -490,7 +460,8 @@ class ABDTransformer(nn.Module):
             # heads(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.encoder(x4, src_mask[3])
-            return x1 + x2 + x3 + x4
+            # return x1 + x2 + x3 + x4
+            return self.feature_fusion([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

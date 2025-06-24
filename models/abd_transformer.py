@@ -335,7 +335,8 @@ class MultiLatentAttention(nn.Module):
         # Attention computation
         scores = torch.matmul(q, k.transpose(-2, -1)) * (1 / math.sqrt(self.d_k))
         if mask is not None:
-            scores += mask.unsqueeze(1)  # Better numerical stability
+            mask = mask.unsqueeze(1)
+            scores = scores.masked_fill(mask == 0, -1e9)
         weights = self.attention_dropout(F.softmax(scores, dim=-1))
         x = torch.matmul(weights, v).transpose(1, 2)
         

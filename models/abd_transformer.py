@@ -155,13 +155,11 @@ class PositionWiseFeedForward(nn.Module):
         super(PositionWiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
-        # self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
         self.dropout_1 = nn.Dropout(dropout)
         self.relu = nn.ReLU()
         self.dropout_2 = nn.Dropout(dropout)
 
     def forward(self, x):
-        # inter = self.dropout_1(self.relu(self.w_1(self.layer_norm(x))))
         inter = self.dropout_1(self.relu(self.w_1(x)))
         output = self.dropout_2(self.w_2(inter))
         return output
@@ -227,7 +225,7 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
+        self.layer_norm = DyT(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
         x_left = x

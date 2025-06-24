@@ -225,7 +225,7 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
         x_left = x
@@ -234,7 +234,7 @@ class Encoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return self.layer_norm(x_left + x_right)
 
 
 class R2L_Decoder(nn.Module):
@@ -242,7 +242,7 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x_left = x
@@ -251,7 +251,7 @@ class R2L_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return self.layer_norm(x_left + x_right)
 
 
 class L2R_Decoder(nn.Module):
@@ -259,7 +259,7 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = DyT(512)  # Assuming d_model is 512
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x_left = x
@@ -268,7 +268,7 @@ class L2R_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return self.layer_norm(x_left + x_right)
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

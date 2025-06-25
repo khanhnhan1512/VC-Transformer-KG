@@ -14,26 +14,19 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
-class FourFeatureFusion(nn.Module):
-    def __init__(self, d_model: int = 512):
-        """
-        d_model: chiều của mỗi embedding (512)
-        seq_len: độ dài sequence (50)
-        Conv1d sẽ hoạt động trên chiều "channels" (4 * d_model), 
-        kernel_size=1 để ghép 4 kênh lại thành d_model.
-        """
+class FeatureFusion(nn.Module):
+    def __init__(self, d_model: int, n_features: int):
         super().__init__()
-        self.d_model = d_model
         self.conv = nn.Conv1d(
-            in_channels=4 * d_model,
+            in_channels=n_features * d_model,
             out_channels=d_model,
             kernel_size=1,
-            bias=True
+            bias=False
         )
 
     def forward(self, xs):
         """
-        xs: list of 4 tensors, mỗi tensor shape (b, seq_len, d_model)
+        xs: list of tensors, mỗi tensor shape (b, seq_len, d_model)
         Trả về tensor shape (b, seq_len, d_model)
         """
         
@@ -404,7 +397,9 @@ class ABDTransformer(nn.Module):
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.pos_embed = PositionalEncoding(d_model, dropout)
 
-        self.feature_fusion = FourFeatureFusion()
+        self.feature_fusion_2 = FeatureFusion(d_model, n_features=2)
+        self.feature_fusion_3 = FeatureFusion(d_model, n_features=3)
+        self.feature_fusion_4 = FeatureFusion(d_model, n_features=4)
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
@@ -432,7 +427,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         if feature_mode_two:
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
@@ -440,7 +436,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         if self.feature_mode == 'one':
             x = self.src_embed(src)
             x = self.pos_embed(x)
@@ -452,7 +449,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         elif self.feature_mode == 'three':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
@@ -463,7 +461,8 @@ class ABDTransformer(nn.Module):
             x3 = self.object_src_embed(src[2])
             x3 = self.pos_embed(x3)
             x3 = self.encoder(x3, src_mask[2])
-            return x1 + x2 + x3
+            # return x1 + x2 + x3
+            return self.feature_fusion_3([x1, x2, x3])
         elif self.feature_mode == 'four':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
@@ -485,7 +484,7 @@ class ABDTransformer(nn.Module):
             x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.encoder(x4, src_mask[3])
             # return x1 + x2 + x3 + x4
-            return self.feature_fusion([x1, x2, x3, x4])
+            return self.feature_fusion_4([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

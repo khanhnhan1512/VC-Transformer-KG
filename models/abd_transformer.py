@@ -17,37 +17,38 @@ def clones(module, n):
 class FourFeatureFusion(nn.Module):
     def __init__(self, d_model: int = 512):
         """
-        d_model: chiều của mỗi embedding
+        d_model: chiều của mỗi embedding (512)
+        seq_len: độ dài sequence (50)
+        Conv1d sẽ hoạt động trên chiều "channels" (4 * d_model), 
+        kernel_size=1 để ghép 4 kênh lại thành d_model.
         """
         super().__init__()
-        # Conv1d sẽ trượt trên chiều "sequence" (4 features),
-        # với in_channels = d_model (kênh), out_channels = d_model (kết quả)
-        # kernel_size = 4 để lấy toàn bộ 4 feature cùng lúc
+        self.d_model = d_model
         self.conv = nn.Conv1d(
-            in_channels=d_model,
+            in_channels=4 * d_model,
             out_channels=d_model,
-            kernel_size=4,
+            kernel_size=1,
             bias=True
         )
 
-    def forward(self, xs: list[torch.Tensor]) -> torch.Tensor:
+    def forward(self, xs):
         """
-        xs: List[4] của các tensor shape (b, d_model)
-        Trả về tensor shape (b, d_model)
+        xs: list of 4 tensors, mỗi tensor shape (b, seq_len, d_model)
+        Trả về tensor shape (b, seq_len, d_model)
         """
-        assert isinstance(xs, (list, tuple)) and len(xs) == 4, \
-            "Input must be a list or tuple of 4 tensors."
-
-        # 1) Stack lại thành (b, d_model, 4)
-        #    torch.stack với dim=-1 sẽ tạo thêm một chiều length=4
-        x = torch.stack(xs, dim=-1)  # shape: (batch, d_model, 4)
-
-        # 2) Conv1d trên chiều thứ 2 (d_model là in_channels, 4 là độ dài sequence)
-        x = self.conv(x)             # shape: (batch, d_model, 1)
-
-        # 3) Bỏ dim cuối để có (batch, d_model)
-        x = x.squeeze(-1)
-
+        
+        # 1) Concatenate trên chiều last: (b, seq_len, 4*d_model)
+        x = torch.cat(xs, dim=-1)
+        
+        # 2) Chuyển về (b, channels, seq_len) để conv1d
+        x = x.permute(0, 2, 1)  # (b, 4*d_model, seq_len)
+        
+        # 3) Áp dụng Conv1d kernel_size=1
+        x = self.conv(x)        # (b, d_model, seq_len)
+        
+        # 4) Đổi về (b, seq_len, d_model)
+        x = x.permute(0, 2, 1)  # (b, seq_len, d_model)
+        
         return x
 
 

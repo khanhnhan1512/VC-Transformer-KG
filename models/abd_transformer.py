@@ -24,15 +24,12 @@ class FourFeatureFusion(nn.Module):
         xs: List of 4 tensors, 
         """
         assert len(xs) == 4, "Input must be a list of 4 tensors."
-        # Normalize weights to sum to 1
-        normalized_weights = F.softmax(self.weights, dim=0)
-        # Compute weighted sum
-        weighted_sum = sum(w * x for w, x in zip(normalized_weights, xs))
+        weighted_sum = sum(w * x for w, x in zip(self.weights, xs))
         return weighted_sum
 
 
 class DyT(nn.Module):
-    def __init__(self, num_features, alpha_init_value=0.1):
+    def __init__(self, num_features, alpha_init_value=0.5):
         super().__init__()
         self.alpha = nn.Parameter(torch.ones(1) * alpha_init_value)
         self.weight = nn.Parameter(torch.ones(num_features))
@@ -186,7 +183,7 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.layer_norm = LayerNorm(size)
+        self.layer_norm = DyT(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x_left, x_right, sublayer):

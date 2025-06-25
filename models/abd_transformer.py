@@ -15,17 +15,40 @@ def clones(module, n):
 
 
 class FourFeatureFusion(nn.Module):
-    def __init__(self):
+    def __init__(self, d_model: int = 512):
+        """
+        d_model: chiều của mỗi embedding
+        """
         super().__init__()
-        self.weights = nn.Parameter(torch.ones(4))
-        
-    def forward(self, xs):
+        # Conv1d sẽ trượt trên chiều "sequence" (4 features),
+        # với in_channels = d_model (kênh), out_channels = d_model (kết quả)
+        # kernel_size = 4 để lấy toàn bộ 4 feature cùng lúc
+        self.conv = nn.Conv1d(
+            in_channels=d_model,
+            out_channels=d_model,
+            kernel_size=4,
+            bias=True
+        )
+
+    def forward(self, xs: list[torch.Tensor]) -> torch.Tensor:
         """
-        xs: List of 4 tensors, 
+        xs: List[4] của các tensor shape (b, d_model)
+        Trả về tensor shape (b, d_model)
         """
-        assert len(xs) == 4, "Input must be a list of 4 tensors."
-        weighted_sum = sum(w * x for w, x in zip(self.weights, xs))
-        return weighted_sum
+        assert isinstance(xs, (list, tuple)) and len(xs) == 4, \
+            "Input must be a list or tuple of 4 tensors."
+
+        # 1) Stack lại thành (b, d_model, 4)
+        #    torch.stack với dim=-1 sẽ tạo thêm một chiều length=4
+        x = torch.stack(xs, dim=-1)  # shape: (batch, d_model, 4)
+
+        # 2) Conv1d trên chiều thứ 2 (d_model là in_channels, 4 là độ dài sequence)
+        x = self.conv(x)             # shape: (batch, d_model, 1)
+
+        # 3) Bỏ dim cuối để có (batch, d_model)
+        x = x.squeeze(-1)
+
+        return x
 
 
 class DyT(nn.Module):

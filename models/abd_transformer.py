@@ -24,7 +24,10 @@ class FourFeatureFusion(nn.Module):
         xs: List of 4 tensors, 
         """
         assert len(xs) == 4, "Input must be a list of 4 tensors."
-        weighted_sum = sum(w * x for w, x in zip(self.weights, xs))
+        # Normalize weights to sum to 1
+        normalized_weights = F.softmax(self.weights, dim=0)
+        # Compute weighted sum
+        weighted_sum = sum(w * x for w, x in zip(normalized_weights, xs))
         return weighted_sum
 
 

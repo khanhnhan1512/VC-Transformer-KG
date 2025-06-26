@@ -204,9 +204,10 @@ class SublayerConnection(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x_left, x_right, sublayer):
-        inter = sublayer(x_left)
-        a_left = self.dropout(self.layer_norm(x_left + inter))
-        a_right = x_right + inter
+        inter = sublayer(self.layer_norm(x_left))
+        # a_left = self.dropout(self.layer_norm(x_left + inter)) # Post-LN
+        a_left = x_left + self.dropout(inter) # Post-LN
+        a_right = x_right #+ inter
         return a_left, a_right
 
 
@@ -282,7 +283,7 @@ class R2L_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return x_left #+ self.layer_norm(x_right)
 
 
 class L2R_Decoder(nn.Module):
@@ -299,7 +300,7 @@ class L2R_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return x_left #+ self.layer_norm(x_right)
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

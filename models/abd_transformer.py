@@ -260,7 +260,7 @@ class Encoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
-        x_left = x
+        x_left = self.layer_norm(x)
         x_right = x
         for layer in self.encoder_layer:
             x_left, x_right = layer(x_left, x_right, src_mask)
@@ -277,7 +277,7 @@ class R2L_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
-        x_left = x
+        x_left = self.layer_norm(x)
         x_right = x
         for layer in self.decoder_layer:
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
@@ -294,7 +294,7 @@ class L2R_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-        x_left = x
+        x_left = self.layer_norm(x)
         x_right = x
         for layer in self.decoder_layer:
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)

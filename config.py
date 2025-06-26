@@ -123,7 +123,7 @@ class TransformerConfig(object):
     n_heads_big = 64 #128
     n_heads = 8 #10
     n_layers = 4
-    dropout = 0.3 # 0.1
+    dropout = 0.1 # 0.1
     select_num = 0  # if sn==0, automatic select num
 
 
@@ -154,7 +154,7 @@ class TrainConfig(object):
     batch_size = 32
 
     optimizer = "Adam"
-    gradient_clip = 1.0 # 5.0  # None if not used
+    gradient_clip = 5.0 # 5.0  # None if not used
     lr = {
         'MSVD': 1e-4,
         'MSR-VTT': 3e-5,
@@ -162,12 +162,12 @@ class TrainConfig(object):
     lr_decay_start_from = 12
     lr_decay_gamma = 0.5
     lr_decay_patience = 5
-    weight_decay = 1e-4 # 0.5e-5
+    weight_decay = 0.5e-5 # 0.5e-5
 
     reg_lambda = 0.6  # weights of r2l
 
     beam_size = 5
-    label_smoothing = 0.2 # 0.15
+    label_smoothing = 0.15 # 0.15
 
     """ Pretrained Model """
     pretrained_decoder_fpath = None

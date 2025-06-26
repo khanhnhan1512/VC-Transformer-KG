@@ -368,7 +368,8 @@ class SublayerConnection(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
-        return self.dropout(self.layer_norm(x + sublayer(x)))
+        # return self.dropout(self.layer_norm(x + sublayer(x))) # Post-LayerNorm
+        return x + self.dropout(sublayer(self.layer_norm(x))) # Pre-LayerNorm
 
 
 class EncoderLayer(nn.Module):

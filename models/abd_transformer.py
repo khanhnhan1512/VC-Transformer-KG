@@ -200,14 +200,15 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.layer_norm = DyT(size)
+        self.layer_norm = LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
+        # α khởi tạo = 0, sẽ được học dần
+        self.alpha = nn.Parameter(torch.zeros(1))
 
     def forward(self, x_left, x_right, sublayer):
-        inter = sublayer(self.layer_norm(x_left))
-        # a_left = self.dropout(self.layer_norm(x_left + inter)) # Post-LN
-        a_left = x_left + self.dropout(inter) # Post-LN
-        a_right = x_right #+ inter
+        inter = sublayer(x_left) * self.alpha
+        a_left = self.dropout(self.layer_norm(x_left + inter))
+        a_right = x_right + inter
         return a_left, a_right
 
 
@@ -260,13 +261,13 @@ class Encoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
-        x_left = self.layer_norm(x)
+        x_left = x
         x_right = x
         for layer in self.encoder_layer:
             x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left #+ self.layer_norm(x_right)
+        return x_left + self.layer_norm(x_right)
 
 
 class R2L_Decoder(nn.Module):
@@ -277,7 +278,7 @@ class R2L_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
-        x_left = self.layer_norm(x)
+        x_left = x
         x_right = x
         for layer in self.decoder_layer:
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
@@ -294,7 +295,7 @@ class L2R_Decoder(nn.Module):
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-        x_left = self.layer_norm(x)
+        x_left = x
         x_right = x
         for layer in self.decoder_layer:
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)

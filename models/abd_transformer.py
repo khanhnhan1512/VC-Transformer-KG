@@ -15,6 +15,49 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
+class FeatureFusion(nn.Module):
+    def __init__(self, d_model: int, n_features: int):
+        super().__init__()
+        self.conv = nn.Conv1d(
+            in_channels=n_features * d_model,
+            out_channels=d_model,
+            kernel_size=1,
+            bias=False
+        )
+
+    def forward(self, xs):
+        """
+        xs: list of tensors, mỗi tensor shape (b, seq_len, d_model)
+        Trả về tensor shape (b, seq_len, d_model)
+        """
+        
+        # 1) Concatenate trên chiều last: (b, seq_len, 4*d_model)
+        x = torch.cat(xs, dim=-1)
+        
+        # 2) Chuyển về (b, channels, seq_len) để conv1d
+        x = x.permute(0, 2, 1)  # (b, 4*d_model, seq_len)
+        
+        # 3) Áp dụng Conv1d kernel_size=1
+        x = self.conv(x)        # (b, d_model, seq_len)
+        
+        # 4) Đổi về (b, seq_len, d_model)
+        x = x.permute(0, 2, 1)  # (b, seq_len, d_model)
+        
+        return x
+
+
+class DyT(nn.Module):
+    def __init__(self, num_features, alpha_init_value=0.5):
+        super().__init__()
+        self.alpha = nn.Parameter(torch.ones(1) * alpha_init_value)
+        self.weight = nn.Parameter(torch.ones(num_features))
+        self.bias = nn.Parameter(torch.zeros(num_features))
+    
+    def forward(self, x):
+        x = torch.tanh(self.alpha * x)
+        return x * self.weight + self.bias
+
+
 class LayerNorm(nn.Module):
 
     def __init__(self, feature, eps=1e-6):
@@ -26,11 +69,6 @@ class LayerNorm(nn.Module):
     def forward(self, x):
         mean = x.mean(-1, keepdim=True)
         std = x.std(-1, keepdim=True)
-
-        # Ensure that a_2 and b_2 are properly shaped for broadcasting
-        if x.size(-1) != self.a_2.size(0):
-            return x  # Return input unchanged if dimensions don't match
-
         return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
 
 
@@ -349,13 +387,12 @@ class PositionWiseFeedForward(nn.Module):
         super(PositionWiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
         self.dropout_1 = nn.Dropout(dropout)
-        self.relu = nn.ReLU()
         self.dropout_2 = nn.Dropout(dropout)
+        self.act = nn.ReLU()
 
     def forward(self, x):
-        inter = self.dropout_1(self.relu(self.w_1(self.layer_norm(x))))
+        inter = self.dropout_1(self.act(self.w_1(x)))
         output = self.dropout_2(self.w_2(inter))
         return output
 
@@ -367,9 +404,11 @@ class SublayerConnection(nn.Module):
         self.layer_norm = LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
-    def forward(self, x, sublayer):
-        # return self.dropout(self.layer_norm(x + sublayer(x))) # Post-LayerNorm
-        return x + self.dropout(sublayer(self.layer_norm(x))) # Pre-LayerNorm
+    def forward(self, x_left, x_right, sublayer):
+        inter = sublayer(x_left)
+        a_left = self.dropout(self.layer_norm(x_left + inter))
+        a_right = x_right + inter
+        return a_left, a_right
 
 
 class EncoderLayer(nn.Module):
@@ -379,9 +418,9 @@ class EncoderLayer(nn.Module):
         self.feed_forward = feed_forward
         self.sublayer_connection = clones(SublayerConnection(size, dropout), 2)
 
-    def forward(self, x, mask):
-        x = self.sublayer_connection[0](x, lambda x: self.attn(x, x, x, mask))
-        return self.sublayer_connection[1](x, self.feed_forward)
+    def forward(self, x_left, x_right, mask):
+        x_left, x_right = self.sublayer_connection[0](x_left, x_right, lambda x: self.attn(x, x, x, mask))
+        return self.sublayer_connection[1](x_left, x_right, self.feed_forward)
 
 
 class EncoderLayerNoAttention(nn.Module):
@@ -391,8 +430,8 @@ class EncoderLayerNoAttention(nn.Module):
         self.feed_forward = feed_forward
         self.sublayer_connection = clones(SublayerConnection(size, dropout), 2)
 
-    def forward(self, x, mask):
-        return self.sublayer_connection[1](x, self.feed_forward)
+    def forward(self, x_left, x_right, mask):
+        return self.sublayer_connection[1](x_left, x_right, self.feed_forward)
 
 
 class DecoderLayer(nn.Module):
@@ -404,17 +443,14 @@ class DecoderLayer(nn.Module):
         self.sublayer_connection = clones(
             SublayerConnection(size, dropout), sublayer_num)
 
-    def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
-        x = self.sublayer_connection[0](
-            x, lambda x: self.attn(x, x, x, trg_mask))
-        x = self.sublayer_connection[1](
-            x, lambda x: self.attn(x, memory, memory, src_mask))
+    def forward(self, x_left, x_right, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
+        x_left, x_right = self.sublayer_connection[0](x_left, x_right, lambda x: self.attn(x, x, x, trg_mask))
+        x_left, x_right = self.sublayer_connection[1](x_left, x_right, lambda x: self.attn(x, memory, memory, src_mask))
 
         if r2l_memory is not None:
-            x = self.sublayer_connection[-2](x, lambda x: self.attn(
-                x, r2l_memory, r2l_memory, r2l_trg_mask))
+            x_left, x_right = self.sublayer_connection[-2](x_left, x_right, lambda x: self.attn(x, r2l_memory, r2l_memory, r2l_trg_mask))
 
-        return self.sublayer_connection[-1](x, self.feed_forward)
+        return self.sublayer_connection[-1](x_left, x_right, self.feed_forward)
 
 
 class Encoder(nn.Module):
@@ -422,11 +458,16 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, src_mask):
+        x_left = x
+        x_right = x
         for layer in self.encoder_layer:
-            x = layer(x, src_mask)
-        return x
+            x_left, x_right = layer(x_left, x_right, src_mask)
+        # return x # Post-LN
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left #+ self.layer_norm(x_right)
 
 
 class R2L_Decoder(nn.Module):
@@ -434,11 +475,16 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
+        x_left = x
+        x_right = x
         for layer in self.decoder_layer:
-            x = layer(x, memory, src_mask, r2l_trg_mask)
-        return x
+            x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
+        # return x # Post-LN
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left + self.layer_norm(x_right)
 
 
 class L2R_Decoder(nn.Module):
@@ -446,11 +492,16 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
+        self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        x_left = x
+        x_right = x
         for layer in self.decoder_layer:
-            x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
-        return x
+            x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
+        # return x # Post-LN
+        # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
+        return x_left + self.layer_norm(x_right)
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):
@@ -564,7 +615,11 @@ class ABDTransformer(nn.Module):
             self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
             self.rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        # self.pos_embed = PositionalEncoding(d_model, dropout)
+        self.pos_embed = PositionalEncoding(d_model, dropout)
+
+        self.feature_fusion_2 = FeatureFusion(d_model, n_features=2)
+        self.feature_fusion_3 = FeatureFusion(d_model, n_features=3)
+        self.feature_fusion_4 = FeatureFusion(d_model, n_features=4)
 
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
@@ -594,7 +649,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         if feature_mode_two:
             x1 = self.image_src_embed(src[0])
             # x1 = self.pos_embed(x1)
@@ -602,7 +658,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         if self.feature_mode == 'one':
             x = self.src_embed(src)
             # x = self.pos_embed(x)
@@ -614,7 +671,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             # x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.feature_fusion_2([x1, x2])
         elif self.feature_mode == 'three':
             x1 = self.image_src_embed(src[0])
             # x1 = self.pos_embed(x1)
@@ -646,7 +704,8 @@ class ABDTransformer(nn.Module):
             # heads(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.encoder(x4, src_mask[3])
-            return x1 + x2 + x3 + x4
+            # return x1 + x2 + x3 + x4
+            return self.feature_fusion_4([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

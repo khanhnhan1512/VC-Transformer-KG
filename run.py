@@ -46,11 +46,15 @@ def run(ckpt_fpath, test_iter, vocab, ckpt, l2r_test_vid2GTs, f, captioning_fpat
         model = ABDTransformer(vocab, config.feat.size, config.transformer.d_model, config.transformer.d_ff,
                                config.transformer.n_heads, config.transformer.n_layers, config.transformer.dropout,
                                config.feat.feature_mode, n_heads_big=config.transformer.n_heads_big,
-                               select_num=config.transformer.select_num)
+                               select_num=config.transformer.select_num, device='cuda',
+                               q_lora_rank=config.transformer.q_lora_rank, kv_lora_rank=config.transformer.kv_lora_rank,
+                               qk_rope_dim=config.transformer.qk_rope_dim)
     except:
         model = ABDTransformer(vocab, config.feat.size, config.transformer.d_model, config.transformer.d_ff,
                                config.transformer.n_heads, config.transformer.n_layers, config.transformer.dropout,
-                               config.feat.feature_mode, n_heads_big=config.transformer.n_heads_big)
+                               config.feat.feature_mode, n_heads_big=config.transformer.n_heads_big,
+                               device='cuda', q_lora_rank=config.transformer.q_lora_rank, kv_lora_rank=config.transformer.kv_lora_rank,
+                               qk_rope_dim=config.transformer.qk_rope_dim)
     
     model = convert_ln_to_dyt(model)
     model.load_state_dict(checkpoint['abd_transformer'])

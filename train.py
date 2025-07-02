@@ -33,13 +33,17 @@ def build_model(vocab):
         model = ABDTransformer(vocab, C.feat.size, C.transformer.d_model, C.transformer.d_ff,
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
-                               n_heads_big=C.transformer.n_heads_big, select_num=C.transformer.select_num)
+                               n_heads_big=C.transformer.n_heads_big, select_num=C.transformer.select_num,
+                               device='cuda', q_lora_rank=C.transformer.q_lora_rank,
+                               kv_lora_rank=C.transformer.kv_lora_rank, qk_rope_dim=C.transformer.qk_rope_dim)
     except:
         model = ABDTransformer(vocab, C.feat.size, C.transformer.d_model, C.transformer.d_ff,
                                C.transformer.n_heads, C.transformer.n_layers, C.transformer.dropout,
                                C.feat.feature_mode,
-                               n_heads_big=C.transformer.n_heads_big)
-    
+                               n_heads_big=C.transformer.n_heads_big, device='cuda',
+                               q_lora_rank=C.transformer.q_lora_rank, kv_lora_rank=C.transformer.kv_lora_rank,
+                               qk_rope_dim=C.transformer.qk_rope_dim)
+
     if torch.cuda.is_available():
         model.cuda()
     

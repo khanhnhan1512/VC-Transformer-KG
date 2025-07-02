@@ -125,6 +125,9 @@ class TransformerConfig(object):
     n_layers = 4
     dropout = 0.1 # 0.1
     select_num = 0  # if sn==0, automatic select num
+    q_lora_rank = 0
+    kv_lora_rank = 512
+    qk_rope_dim = 64
 
 
 class EvalConfig(object):

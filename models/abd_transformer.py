@@ -576,25 +576,25 @@ class Generator(nn.Module):
 class ABDTransformer(nn.Module):
 
     def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_layers, dropout, feature_mode,
-                 device='cuda', n_heads_big=128, mla_rope_dim=64):
+                 device, n_heads_big, q_lora_rank, kv_lora_rank, qk_rope_dim):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
         self.device = device
         self.feature_mode = feature_mode
-        self.mla_rope_dim = mla_rope_dim  # Dimensionality for RoPE in MLA
+        self.qk_rope_dim = qk_rope_dim  # Dimensionality for RoPE in MLA
 
         c = copy.deepcopy
 
         # attn_no_heads = MultiHeadAttention(1, d_model, dropout)
 
         # attn = MultiHeadAttention(n_heads, d_model, dropout)
-        attn = MultiLatentAttention(n_heads, d_model, dropout, qk_rope_dim=self.mla_rope_dim)
+        attn = MultiLatentAttention(n_heads, d_model, dropout, qk_rope_dim=self.qk_rope_dim, q_lora_rank=q_lora_rank, kv_lora_rank=kv_lora_rank)
 
         # attn_big = MultiHeadAttention(n_heads_big, d_model, dropout)
         head_dim_big = d_model // n_heads_big
-        rope_dim_big = min(head_dim_big, mla_rope_dim)  # Ensure valid dims
-        attn_big = MultiLatentAttention(n_heads_big, d_model, dropout, 
-                                        qk_rope_dim=rope_dim_big)
+        rope_dim_big = min(head_dim_big, qk_rope_dim)  # Ensure valid dims
+        attn_big = MultiLatentAttention(n_heads_big, d_model, dropout,
+                                        qk_rope_dim=rope_dim_big, q_lora_rank=q_lora_rank, kv_lora_rank=kv_lora_rank)
 
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 

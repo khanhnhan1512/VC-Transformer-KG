@@ -446,7 +446,7 @@ class Corpus(object):
         if self.C.corpus == 'MSR-VTT':
             self.get_category()
             self.get_category_glove()
-        # self.build_data_loaders()
+        self.build_data_loaders()
 
     def build_vocab(self):
         self.vocab = self.CustomVocab(

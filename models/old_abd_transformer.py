@@ -129,7 +129,7 @@ def self_attention(query, key, value, dropout=None, mask=None):
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
     # mask的操作在QK之后，softmax之前
     if mask is not None:
-        mask#.cuda()
+        # mask.cuda()
         scores = scores.masked_fill(mask == 0, -1e9)
     self_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
@@ -202,11 +202,9 @@ class SublayerConnection(nn.Module):
         super(SublayerConnection, self).__init__()
         self.layer_norm = LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
-        # α khởi tạo = 0, sẽ được học dần
-        self.alpha = nn.Parameter(torch.zeros(1))
 
     def forward(self, x_left, x_right, sublayer):
-        inter = sublayer(x_left) * self.alpha
+        inter = sublayer(x_left)
         a_left = self.dropout(self.layer_norm(x_left + inter))
         a_right = x_right + inter
         return a_left, a_right
@@ -259,6 +257,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
+        self.alpha = nn.Parameter(torch.zeros(1))
 
     def forward(self, x, src_mask):
         x_left = x
@@ -267,7 +266,7 @@ class Encoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, src_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left + self.layer_norm(x_right)
+        return x_left + self.layer_norm(x_right) * self.alpha
 
 
 class R2L_Decoder(nn.Module):
@@ -276,6 +275,7 @@ class R2L_Decoder(nn.Module):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
+        self.alpha = nn.Parameter(torch.zeros(1))
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x_left = x
@@ -284,7 +284,7 @@ class R2L_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left #+ self.layer_norm(x_right)
+        return x_left #+ self.layer_norm(x_right) * self.alpha
 
 
 class L2R_Decoder(nn.Module):
@@ -293,6 +293,7 @@ class L2R_Decoder(nn.Module):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
         self.layer_norm = LayerNorm(512)  # Assuming d_model is 512
+        self.alpha = nn.Parameter(torch.zeros(1)) 
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x_left = x
@@ -301,7 +302,7 @@ class L2R_Decoder(nn.Module):
             x_left, x_right = layer(x_left, x_right, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
         # return x # Post-LN
         # return self.layer_norm(x)  # Pre-LN, apply layer normalization at the end
-        return x_left #+ self.layer_norm(x_right)
+        return x_left #+ self.layer_norm(x_right) * self.alpha
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

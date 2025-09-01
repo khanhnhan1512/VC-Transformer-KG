@@ -71,15 +71,27 @@ class MSVDLoaderConfig(object):
     n_val = 100
     n_test = 670
 
-    total_caption_fpath = "./data/MSVD/metadata/MSR Video Description Corpus.csv"
-    train_caption_fpath = "./data/MSVD/metadata/train.csv"
-    val_caption_fpath = "./data/MSVD/metadata/val.csv"
-    test_caption_fpath = "./data/MSVD/metadata/test.csv"
+    # Flexible to change the path to data folder when run on Kaggle
+    DATA_FOLDER_PATH = "./data"
+    if not os.path.exists(DATA_FOLDER_PATH):
+        DATA_FOLDER_PATH = "/kaggle/input/btkg-msvd-dataset"
+    
+    # total_caption_fpath = "./data/MSVD/metadata/MSR Video Description Corpus.csv"
+    # train_caption_fpath = "./data/MSVD/metadata/train.csv"
+    # val_caption_fpath = "./data/MSVD/metadata/val.csv"
+    # test_caption_fpath = "./data/MSVD/metadata/test.csv"
+    total_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/MSR Video Description Corpus.csv")
+    train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
+    val_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/val.csv")
+    test_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/test.csv")
+    
     min_count = 3
     max_caption_len = 10
 
-    total_video_feat_fpath_tpl = "./data/{}/features/{}.hdf5"
-    phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
+    # total_video_feat_fpath_tpl = "./data/{}/features/{}.hdf5"
+    # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
+    total_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}.hdf5"
+    phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']

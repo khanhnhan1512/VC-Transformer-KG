@@ -176,6 +176,10 @@ def main():
     del train_iter, val_iter, test_iter, vocab, best_model, model, parameter_number, optimizer, lr_scheduler
     del train_loss
     
+    f.close()
+    print(">> Close log file and finish training.")
+    return
+
     """ Test with all models """
     print("\n\n\n[TEST ALL MODELS]")
     gc.collect()

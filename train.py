@@ -160,7 +160,10 @@ def main():
     for metric in C.metrics:
         summary_writer.add_scalar("BEST L2R SCORE/{}".format(metric), l2r_best_scores[metric], best_epoch)
     save_checkpoint(best_epoch, best_model, C.ckpt_fpath_tpl.format("best"), C)
-    f = open("./result/{}.txt".format(C.model_id), 'w')
+    if os.path.exists("./result"):
+        f = open("./result/{}.txt".format(C.model_id), 'w')
+    else:
+        f = open("/kaggle/working/VC-Transformer-KG/result/{}.txt".format(C.model_id), 'w')
     f.write('#vocabs: {} ({}), #words: {} ({}). Trim words which appear less than {} times.'.format(
         vocab.n_vocabs, vocab.n_vocabs_untrimmed, vocab.n_words, vocab.n_words_untrimmed, C.loader.min_count))
     f.write(os.linesep)

@@ -139,7 +139,7 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 20,
+        'MSVD': 1,
         'MSR-VTT': 18,
     }[corpus]
 

@@ -14,26 +14,12 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
-class LayerNorm(nn.Module):
-
-    def __init__(self, feature, eps=1e-6):
-        super(LayerNorm, self).__init__()
-        self.a_2 = nn.Parameter(torch.ones(feature))
-        self.b_2 = nn.Parameter(torch.zeros(feature))
-        self.eps = eps
-
-    def forward(self, x):
-        mean = x.mean(-1, keepdim=True)
-        std = x.std(-1, keepdim=True)
-        return self.a_2 * (x - mean) / (std + self.eps) + self.b_2
-
-
 class FeatEmbedding(nn.Module):
 
     def __init__(self, d_feat, d_model, dropout):
         super(FeatEmbedding, self).__init__()
         self.video_embeddings = nn.Sequential(
-            LayerNorm(d_feat),
+            nn.LayerNorm(d_feat),
             nn.Dropout(dropout),
             nn.Linear(d_feat, d_model))
 
@@ -143,14 +129,12 @@ class PositionWiseFeedForward(nn.Module):
         super(PositionWiseFeedForward, self).__init__()
         self.w_1 = nn.Linear(d_model, d_ff)
         self.w_2 = nn.Linear(d_ff, d_model)
-        self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
-        self.dropout_1 = nn.Dropout(dropout)
         self.relu = nn.ReLU()
-        self.dropout_2 = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
-        inter = self.dropout_1(self.relu(self.w_1(self.layer_norm(x))))
-        output = self.dropout_2(self.w_2(inter))
+        inter = self.dropout(self.relu(self.w_1(x)))
+        output = self.w_2(inter)
         return output
 
 
@@ -158,7 +142,7 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.layer_norm = LayerNorm(size)
+        self.layer_norm = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
@@ -356,14 +340,7 @@ class ABDTransformer(nn.Module):
         self.generator = Generator(d_model, vocab.n_vocabs)
 
     def encode(self, src, src_mask, feature_mode_two=False):
-        if self.feature_mode == 'two':
-            x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
-            x1 = self.encoder_big(x1, src_mask[0])
-            x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+        # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
@@ -372,11 +349,15 @@ class ABDTransformer(nn.Module):
             x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
             return x1 + x2
+        
+        # ============== Object-Relation Encoding ==============
         if self.feature_mode == 'one':
+            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'one' is not supported for encoding.")
             x = self.src_embed(src)
             x = self.pos_embed(x)
             return self.encoder(x, src_mask)
         elif self.feature_mode == 'two':
+            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'two' is not supported for encoding.")
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
             x1 = self.encoder_big(x1, src_mask[0])
@@ -385,6 +366,7 @@ class ABDTransformer(nn.Module):
             x2 = self.encoder_big(x2, src_mask[1])
             return x1 + x2
         elif self.feature_mode == 'three':
+            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'three' is not supported for encoding.")
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
             x1 = self.encoder(x1, src_mask[0])
@@ -411,10 +393,9 @@ class ABDTransformer(nn.Module):
 
             x4 = self.rel_src_embed(src[3])
             # x4 = self.pos_embed(x4)
-            # x4 = self.encoder_no_
-            # heads(x4, src_mask[3])
-            x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.encoder(x4, src_mask[3])
+            x4 = self.encoder_no_attention(x4, src_mask[3])
+            
             return x1 + x2 + x3 + x4
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):

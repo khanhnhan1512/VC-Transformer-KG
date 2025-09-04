@@ -108,7 +108,7 @@ def main():
 
     optimizer = torch.optim.Adam(model.parameters(), lr=C.lr, weight_decay=C.weight_decay, amsgrad=True)
     lr_scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=C.lr_decay_gamma,
-                                     patience=C.lr_decay_patience, verbose=True)
+                                     patience=C.lr_decay_patience)
 
     best_val_CIDEr: float = float("-inf")
     best_epoch: int = -1
@@ -135,9 +135,9 @@ def main():
         summary_writer.add_scalars("compare_loss/r2l_loss", {'train_r2l_loss': train_loss['r2l_loss'],
                                                              'val_r2l_loss': val_loss['r2l_loss']}, e)
 
-        if e >= C.save_from and e % C.save_every == 0:
-            print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
-            save_checkpoint(e, model, ckpt_fpath, C)
+        # if e >= C.save_from and e % C.save_every == 0:
+        #     print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
+        #     save_checkpoint(e, model, ckpt_fpath, C)
 
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
@@ -145,7 +145,11 @@ def main():
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']
             best_ckpt_fpath = ckpt_fpath
-
+            
+            print("Saving checkpoint at epoch={} to {}".format(e, ckpt_fpath))
+            save_checkpoint(e, model, ckpt_fpath, C)
+            print(f">> New best model at epoch {e} with CIDEr {best_val_CIDEr}")
+            
     """ Test with Best Model """
     gc.collect()
     torch.cuda.empty_cache()

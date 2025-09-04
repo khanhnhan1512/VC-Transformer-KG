@@ -122,10 +122,10 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig(object):
-    d_model = 512
-    d_ff = 2048
-    n_heads_big = 128
-    n_heads = 8
+    d_model = 640
+    d_ff = 2560         # d_ff / d_model = 4
+    n_heads_big = 128   # d_model / n_heads_big = 5
+    n_heads = 10        # d_model / n_heads = 64
     n_layers = 4
     dropout = 0.1
     select_num = 0  # if sn==0, automatic select num
@@ -151,7 +151,7 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 1,
+        'MSVD': 20,
         'MSR-VTT': 18,
     }[corpus]
 

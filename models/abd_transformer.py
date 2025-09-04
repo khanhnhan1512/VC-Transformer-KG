@@ -142,12 +142,13 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.layer_norm = nn.LayerNorm(size)
+        self.norm_1 = nn.LayerNorm(size)
+        self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
         # return self.dropout(self.layer_norm(x + sublayer(x)))
-        return x + self.dropout(sublayer(self.layer_norm(x)))
+        return x + self.dropout(self.norm_2(sublayer(self.norm_1(x))))
 
 
 class EncoderLayer(nn.Module):
@@ -196,13 +197,15 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.layer_norm = nn.LayerNorm(640)
+        self.norm_1 = nn.LayerNorm(640)
+        self.norm_2 = nn.LayerNorm(640)
 
     def forward(self, x, src_mask):
+        x = self.norm_1(x)
         for layer in self.encoder_layer:
             x = layer(x, src_mask)
-        # return x
-        return self.layer_norm(x)
+        x = self.norm_2(x)
+        return x
 
 
 class R2L_Decoder(nn.Module):
@@ -210,13 +213,15 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = nn.LayerNorm(640)
+        self.norm_1 = nn.LayerNorm(640)
+        self.norm_2 = nn.LayerNorm(640)
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
+        x = self.norm_1(x)
         for layer in self.decoder_layer:
             x = layer(x, memory, src_mask, r2l_trg_mask)
-        # return x
-        return self.layer_norm(x)
+        x = self.norm_2(x)
+        return x
 
 
 class L2R_Decoder(nn.Module):
@@ -224,13 +229,15 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.layer_norm = nn.LayerNorm(640)
+        self.norm_1 = nn.LayerNorm(640)
+        self.norm_2 = nn.LayerNorm(640)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        x = self.norm_1(x)
         for layer in self.decoder_layer:
             x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
-        # return x
-        return self.layer_norm(x)
+        x = self.norm_2(x)
+        return x
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):

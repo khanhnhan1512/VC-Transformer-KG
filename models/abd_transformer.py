@@ -6,12 +6,143 @@ import torch.nn as nn
 import torch.nn.functional as F
 from collections import namedtuple
 from torch.autograd import Variable
+from typing import List, Optional
 
 Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 
 
 def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
+
+
+class FeatureFusion(nn.Module):
+    """
+    Feature fusion module for combining a list of feature tensors with identical shape
+    (batch_size, seq_len, d_model) into a single tensor of shape (batch_size, seq_len, d_model).
+
+    Args:
+        d_model: model dimension (if None, inferred on first forward call for some methods).
+        method: one of {'weighted', 'gated', 'concat_linear', 'self_attn'}.
+        num_heads: used only for 'self_attn'.
+        dropout: dropout applied to output.
+        use_layernorm: apply LayerNorm after fusion.
+        residual: add residual connection from first feature.
+    """
+    def __init__(self,
+                 d_model: Optional[int] = None,
+                 method: str = "gated",
+                 num_heads: int = 8,
+                 dropout: float = 0.1,
+                 use_layernorm: bool = True,
+                 residual: bool = True):
+        super().__init__()
+        assert method in {"weighted", "gated", "concat_linear", "self_attn"}
+        self.method = method
+        self._d_model = d_model
+        self.num_heads = num_heads
+        self.dropout = nn.Dropout(dropout)
+        self.use_layernorm = use_layernorm
+        self.residual = residual
+
+        # lazy init components that depend on d_model / num_features
+        # for 'weighted' we'll create weight logits when we know num_features
+        # for 'gated' we create per-feature gating linear layers lazily
+        self._initialized = False
+        self._num_features = None
+
+        self._weight_logits = None        # Parameter (n_features,) for 'weighted'
+        self._gates = nn.ModuleList()     # list of Linear(d_model, d_model) for 'gated'
+        self._concat_proj = None          # Linear(n_features * d_model -> d_model)
+        self._attn = None                 # MultiheadAttention for 'self_attn'
+        self.out_proj = None              # optional final projection (keeps d_model stable)
+        self.ln = None
+
+    def _lazy_init(self, sample_tensor: torch.Tensor, num_features: int):
+        d_model = self._d_model or sample_tensor.size(-1)
+        self._d_model = d_model
+        self._num_features = num_features
+
+        if self.method == "weighted":
+            self._weight_logits = nn.Parameter(torch.zeros(num_features))  # learnable logits
+        elif self.method == "gated":
+            # per-feature gating linear (maps d_model -> d_model) so gate is elementwise sigmoid
+            self._gates = nn.ModuleList([nn.Linear(d_model, d_model) for _ in range(num_features)])
+        elif self.method == "concat_linear":
+            self._concat_proj = nn.Linear(num_features * d_model, d_model)
+        elif self.method == "self_attn":
+            # We'll concatenate features along sequence dim and run multihead self-attention
+            self._attn = nn.MultiheadAttention(embed_dim=d_model, num_heads=self.num_heads, batch_first=True)
+            # no extra params besides attn
+        # final projection to stabilize representation (identity if not needed)
+        self.out_proj = nn.Linear(d_model, d_model)
+        if self.use_layernorm:
+            self.ln = nn.LayerNorm(d_model)
+
+        # Move newly-created parameters/modules to the same device as sample_tensor
+        device = sample_tensor.device
+        self.to(device)
+
+        self._initialized = True
+        print(f">> FeatureFusion initialized: method={self.method}, d_model={d_model}, num_features={num_features}")
+
+    def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Args:
+            features: list of tensors, each shape (B, S, D) and same D.
+        Returns:
+            fused tensor shape (B, S, D)
+        """
+        if not isinstance(features, (list, tuple)):
+            raise ValueError("features must be a list/tuple of tensors")
+        if len(features) == 0:
+            raise ValueError("features list is empty")
+        n = len(features)
+
+        # basic shape checks
+        B, S, D = features[0].shape
+        for t in features:
+            if t.shape != (B, S, D):
+                raise ValueError("All feature tensors must have identical shape (B, S, D)")
+
+        if not self._initialized:
+            self._lazy_init(features[0], n)
+
+        if self.method == "weighted":
+            # scalar weight per feature (softmax over features)
+            logits = self._weight_logits  # (n,)
+            weights = F.softmax(logits, dim=0)  # (n,)
+            # apply broadcasting: fused = sum_i w_i * feature_i
+            fused = sum(w * f for w, f in zip(weights, features))
+        elif self.method == "gated":
+            # elementwise gates per feature: gate = sigmoid(Linear(feature))
+            gated = []
+            for lin, f in zip(self._gates, features):
+                g = torch.sigmoid(lin(f))   # (B, S, D)
+                gated.append(g * f)
+            fused = sum(gated)
+        elif self.method == "concat_linear":
+            concat = torch.cat(features, dim=-1)  # (B, S, n*D)
+            fused = self._concat_proj(concat)
+        elif self.method == "self_attn":
+            # 1) concat along sequence dimension: (B, S*n, D)
+            cat_seq = torch.cat(features, dim=1)
+            attn_out, _ = self._attn(cat_seq, cat_seq, cat_seq)  # (B, S*n, D)
+            # reshape to (B, n, S, D)
+            attn_out = attn_out.view(B, n, S, D)
+            # average across features dimension -> (B, S, D)
+            fused = attn_out.mean(dim=1)
+        else:
+            raise RuntimeError("Unsupported method")
+
+        # optional final projection, dropout, layernorm and residual
+        fused = self.out_proj(fused)
+        fused = self.dropout(fused)
+        if self.use_layernorm:
+            fused = self.ln(fused)
+        if self.residual:
+            # add first feature as residual (requires same shape)
+            fused = fused + features[0]
+        return fused
 
 
 class FeatEmbedding(nn.Module):
@@ -335,6 +466,13 @@ class ABDTransformer(nn.Module):
         self.trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.pos_embed = PositionalEncoding(d_model, dropout)
 
+        # Feature fusion module
+        # choose from {"weighted", "gated", "concat_linear", "self_attn"}
+        feat_fusion_method = "self_attn"
+        self.feat_fusion = FeatureFusion(d_model=d_model, method=feat_fusion_method,
+                                         num_heads=n_heads, dropout=dropout,
+                                         use_layernorm=False, residual=False)
+        
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
         self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout))
@@ -410,7 +548,8 @@ class ABDTransformer(nn.Module):
             # x4 = self.encoder(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             
-            return x1 + x2 + x3 + x4
+            # return x1 + x2 + x3 + x4
+            return self.feat_fusion([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

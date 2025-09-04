@@ -147,7 +147,7 @@ class SublayerConnection(nn.Module):
 
     def forward(self, x, sublayer):
         # return self.dropout(self.layer_norm(x + sublayer(x)))
-        return self.layer_norm(x + self.dropout(sublayer(x)))
+        return x + self.dropout(sublayer(self.layer_norm(x)))
 
 
 class EncoderLayer(nn.Module):

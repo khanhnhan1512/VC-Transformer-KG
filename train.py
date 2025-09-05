@@ -153,7 +153,7 @@ def main():
     """ Test with Best Model """
     gc.collect()
     torch.cuda.empty_cache()
-    print("\n\n\n[BEST: {} SEED: {}]".format(best_epoch, seed))
+    print(f"\n\n\n[BEST: {best_epoch} | SEED: {seed} | VAL-CIDEr: {best_val_CIDEr}]")
     best_model = load_checkpoint(model, best_ckpt_fpath)
     r2l_best_scores, l2r_best_scores = evaluate(test_iter, best_model, vocab, C.beam_size, C.loader.max_caption_len,
                                                 C.feat.feature_mode)

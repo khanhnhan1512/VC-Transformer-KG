@@ -15,6 +15,18 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
+class DyT(nn.Module):
+    def __init__(self, num_features, alpha_init_value=0.5):
+        super().__init__()
+        self.alpha = nn.Parameter(torch.ones(1) * alpha_init_value)
+        self.weight = nn.Parameter(torch.ones(num_features))
+        self.bias = nn.Parameter(torch.zeros(num_features))
+    
+    def forward(self, x):
+        x = torch.tanh(self.alpha * x)
+        return x * self.weight + self.bias
+
+
 class FeatureFusion(nn.Module):
     """
     Feature fusion module for combining a list of feature tensors with identical shape
@@ -273,7 +285,7 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.norm_1 = nn.LayerNorm(size)
+        self.norm_1 = DyT(size)
         self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
@@ -325,11 +337,11 @@ class DecoderLayer(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, n, encoder_layer):
+    def __init__(self, n, encoder_layer, d_model):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.norm_1 = nn.LayerNorm(512)
-        self.norm_2 = nn.LayerNorm(512)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
         x = self.norm_1(x)
@@ -341,11 +353,11 @@ class Encoder(nn.Module):
 
 class R2L_Decoder(nn.Module):
 
-    def __init__(self, n, decoder_layer):
+    def __init__(self, n, decoder_layer, d_model):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.norm_1 = nn.LayerNorm(512)
-        self.norm_2 = nn.LayerNorm(512)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x = self.norm_1(x)
@@ -357,11 +369,11 @@ class R2L_Decoder(nn.Module):
 
 class L2R_Decoder(nn.Module):
 
-    def __init__(self, n, decoder_layer):
+    def __init__(self, n, decoder_layer, d_model):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.norm_1 = nn.LayerNorm(512)
-        self.norm_2 = nn.LayerNorm(512)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.norm_1(x)
@@ -475,19 +487,24 @@ class ABDTransformer(nn.Module):
         
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
-        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout))
+        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout),
+                               d_model)
 
-        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout))
+        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), 
+                                   d_model)
 
         # self.encoder_big2 = Encoder(n_layers, EncoderLayer(d_model, c(attn_big2), c(feed_forward), dropout))
 
         self.encoder_no_attention = Encoder(n_layers,
-                                            EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout))
+                                            EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout),
+                                            d_model)
 
-        self.r2l_decoder = R2L_Decoder(n_layers, DecoderLayer(d_model, c(attn), c(feed_forward),
-                                                              sublayer_num=3, dropout=dropout))
-        self.l2r_decoder = L2R_Decoder(n_layers, DecoderLayer(d_model, c(attn), c(feed_forward),
-                                                              sublayer_num=4, dropout=dropout))
+        self.r2l_decoder = R2L_Decoder(n_layers, 
+                                       DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=3, dropout=dropout),
+                                       d_model)
+        self.l2r_decoder = L2R_Decoder(n_layers, 
+                                       DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=4, dropout=dropout),
+                                       d_model)
 
         self.generator = Generator(d_model, vocab.n_vocabs)
 
@@ -548,8 +565,8 @@ class ABDTransformer(nn.Module):
             # x4 = self.encoder(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             
-            # return x1 + x2 + x3 + x4
-            return self.feat_fusion([x1, x2, x3, x4])
+            return x1 + x2 + x3 + x4
+            # return self.feat_fusion([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

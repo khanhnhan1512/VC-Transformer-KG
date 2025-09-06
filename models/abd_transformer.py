@@ -157,6 +157,44 @@ class FeatureFusion(nn.Module):
         return fused
 
 
+class FFNFeatureFusion(nn.Module):
+    def __init__(self, d_model: int, num_features: int, dropout: float = 0.1):
+        super(FFNFeatureFusion, self).__init__()
+        self.d_model = d_model
+        self.num_features = num_features
+        
+        self.w_1 = nn.Linear(num_features * d_model, (num_features * d_model) * 3 // 4)
+        self.act_1 = nn.GELU()
+        self.dropout = nn.Dropout(dropout)
+        self.w_2 = nn.Linear((num_features * d_model) * 3 // 4, d_model)
+            
+    def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Args:
+            features: list of tensors, each shape (B, S, D) and same D.
+        Returns:
+            fused tensor shape (B, S, D)
+        """
+        if not isinstance(features, (list, tuple)):
+            raise ValueError("features must be a list/tuple of tensors")
+        if len(features) == 0:
+            raise ValueError("features list is empty")
+        
+        # Concatenate features along the last dimension
+        concatenated = torch.cat(features, dim=-1) # (B, S, num_features * d_model)
+        
+        # Apply the first linear layer, activation, and dropout
+        x = self.w_1(concatenated)
+        x = self.act_1(x)
+        x = self.dropout(x)
+        
+        # Apply the second linear layer
+        x = self.w_2(x)
+        
+        # Return the fused features
+        return x
+    
+
 class FeatEmbedding(nn.Module):
 
     def __init__(self, d_feat, d_model, dropout):
@@ -479,11 +517,15 @@ class ABDTransformer(nn.Module):
         self.pos_embed = PositionalEncoding(d_model, dropout)
 
         # Feature fusion module
+        """
         # choose from {"weighted", "gated", "concat_linear", "self_attn"}
         feat_fusion_method = "self_attn"
         self.feat_fusion = FeatureFusion(d_model=d_model, method=feat_fusion_method,
                                          num_heads=n_heads, dropout=dropout,
                                          use_layernorm=False, residual=False)
+        """
+        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
+        self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=4, dropout=dropout)
         
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
@@ -517,7 +559,8 @@ class ABDTransformer(nn.Module):
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
             x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
+            # return x1 + x2
+            return self.r2l_feat_fusion([x1, x2])
         
         # ============== Object-Relation Encoding ==============
         if self.feature_mode == 'one':
@@ -565,8 +608,9 @@ class ABDTransformer(nn.Module):
             # x4 = self.encoder(x4, src_mask[3])
             x4 = self.encoder_no_attention(x4, src_mask[3])
             
-            return x1 + x2 + x3 + x4
+            # return x1 + x2 + x3 + x4
             # return self.feat_fusion([x1, x2, x3, x4])
+            return self.l2r_feat_fusion([x1, x2, x3, x4])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.trg_embed(r2l_trg)

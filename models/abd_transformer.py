@@ -286,7 +286,7 @@ class SublayerConnection(nn.Module):
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
         self.norm_1 = nn.LayerNorm(size)
-        self.norm_2 = DyT(size)
+        self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):

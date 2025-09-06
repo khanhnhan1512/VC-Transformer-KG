@@ -285,7 +285,7 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.norm_1 = DyT(size)
+        self.norm_1 = nn.LayerNorm(size)
         self.norm_2 = DyT(size)
         self.dropout = nn.Dropout(p=dropout)
 
@@ -341,7 +341,7 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
         self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = DyT(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
         x = self.norm_1(x)
@@ -357,7 +357,7 @@ class R2L_Decoder(nn.Module):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
         self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = DyT(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x = self.norm_1(x)
@@ -373,7 +373,7 @@ class L2R_Decoder(nn.Module):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
         self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = DyT(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.norm_1(x)

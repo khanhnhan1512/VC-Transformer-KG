@@ -162,13 +162,17 @@ class FFNFeatureFusion(nn.Module):
         super(FFNFeatureFusion, self).__init__()
         self.d_model = d_model
         self.num_features = num_features
+
+        """
         factor = 3 / 4  # factor for intermediate layer size
-        
         self.w_1 = nn.Linear(num_features * d_model, int((num_features * d_model) * factor))
         # tanh activation
         self.act_1 = nn.Tanh()
         self.dropout = nn.Dropout(dropout)
         self.w_2 = nn.Linear(int((num_features * d_model) * factor), d_model)
+        """
+        self.projector = nn.Linear(num_features * d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
             
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
         """
@@ -185,14 +189,13 @@ class FFNFeatureFusion(nn.Module):
         # Concatenate features along the last dimension
         concatenated = torch.cat(features, dim=-1) # (B, S, num_features * d_model)
         
+        """
         # Apply the first linear layer, activation, and dropout
         x = self.w_1(concatenated)
         x = self.act_1(x)
         x = self.dropout(x)
-        
         # Apply the second linear layer
         x = self.w_2(x)
-        
         # Sum the features if residual connection is needed
         if self.num_features == 2:
             x = x + (features[0] + features[1])
@@ -200,6 +203,10 @@ class FFNFeatureFusion(nn.Module):
             x = x + (features[0] + features[1] + features[2] + features[3])
         else:
             raise ValueError(f"[FFNFeatureFusion.forward] Unsupported num_features: {self.num_features}")
+        """
+        
+        x = self.projector(concatenated)  # (B, S, d_model)
+        x = self.dropout(x) # Apply dropout
         
         # Return the fused features
         return x

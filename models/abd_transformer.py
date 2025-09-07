@@ -172,6 +172,7 @@ class FFNFeatureFusion(nn.Module):
         self.w_2 = nn.Linear(int((num_features * d_model) * factor), d_model)
         """
         self.projector = nn.Linear(num_features * d_model, d_model)
+        self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
             
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
@@ -205,7 +206,8 @@ class FFNFeatureFusion(nn.Module):
             raise ValueError(f"[FFNFeatureFusion.forward] Unsupported num_features: {self.num_features}")
         """
         
-        x = self.projector(concatenated)  # (B, S, d_model)
+        x = self.projector(concatenated) # (B, S, d_model)
+        x = self.norm(x)    # Apply LayerNorm
         x = self.dropout(x) # Apply dropout
         
         # Return the fused features

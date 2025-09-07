@@ -596,9 +596,9 @@ class ABDTransformer(nn.Module):
                                        DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=4, dropout=dropout),
                                        d_model)
 
-        # self.generator = Generator(d_model, vocab.n_vocabs)
-        self.r2l_generator = Generator(d_model, vocab.n_vocabs)
-        self.l2r_generator = Generator(d_model, vocab.n_vocabs)
+        self.generator = Generator(d_model, vocab.n_vocabs)
+        # self.r2l_generator = Generator(d_model, vocab.n_vocabs)
+        # self.l2r_generator = Generator(d_model, vocab.n_vocabs)
 
     def encode(self, src, src_mask, feature_mode_two=False):
         # ============== Spatial-Temporal Encoding ==============
@@ -700,10 +700,10 @@ class ABDTransformer(nn.Module):
         else:
             raise "没有输出"
 
-        # r2l_pred = self.generator(r2l_outputs)
-        # l2r_pred = self.generator(l2r_outputs)
-        r2l_pred = self.r2l_generator(r2l_outputs)
-        l2r_pred = self.l2r_generator(l2r_outputs)
+        r2l_pred = self.generator(r2l_outputs)
+        l2r_pred = self.generator(l2r_outputs)
+        # r2l_pred = self.r2l_generator(r2l_outputs)
+        # l2r_pred = self.l2r_generator(l2r_outputs)
         
         return r2l_pred, l2r_pred
 

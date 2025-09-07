@@ -162,11 +162,12 @@ class FFNFeatureFusion(nn.Module):
         super(FFNFeatureFusion, self).__init__()
         self.d_model = d_model
         self.num_features = num_features
+        factor = 3 / 4  # factor for intermediate layer size
         
-        self.w_1 = nn.Linear(num_features * d_model, (num_features * d_model) * 3 // 4)
-        self.act_1 = nn.GELU()
+        self.w_1 = nn.Linear(num_features * d_model, int((num_features * d_model) * factor))
+        self.act_1 = nn.ReLU()
         self.dropout = nn.Dropout(dropout)
-        self.w_2 = nn.Linear((num_features * d_model) * 3 // 4, d_model)
+        self.w_2 = nn.Linear(int((num_features * d_model) * factor), d_model)
             
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
         """
@@ -567,24 +568,26 @@ class ABDTransformer(nn.Module):
                                          num_heads=n_heads, dropout=dropout,
                                          use_layernorm=False, residual=False)
         """
-        # self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
-        # self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=4, dropout=dropout)
-        self.r2l_feat_fusion = TransformerFeatureFusion(num_features=2, hidden_size=d_model)
-        self.l2r_feat_fusion = TransformerFeatureFusion(num_features=4, hidden_size=d_model)
+        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
+        self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=4, dropout=dropout)
+        # self.r2l_feat_fusion = TransformerFeatureFusion(num_features=2, hidden_size=d_model)
+        # self.l2r_feat_fusion = TransformerFeatureFusion(num_features=4, hidden_size=d_model)
         
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
-        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout),
-                               d_model)
+        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
+        self.img_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
+        self.mot_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
+        self.obj_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
 
-        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), 
-                                   d_model)
+        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
+        self.img_encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
+        self.mot_encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
 
         # self.encoder_big2 = Encoder(n_layers, EncoderLayer(d_model, c(attn_big2), c(feed_forward), dropout))
 
-        self.encoder_no_attention = Encoder(n_layers,
-                                            EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout),
-                                            d_model)
+        self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
+        self.rel_encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
 
         self.r2l_decoder = R2L_Decoder(n_layers, 
                                        DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=3, dropout=dropout),
@@ -593,17 +596,23 @@ class ABDTransformer(nn.Module):
                                        DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=4, dropout=dropout),
                                        d_model)
 
-        self.generator = Generator(d_model, vocab.n_vocabs)
+        # self.generator = Generator(d_model, vocab.n_vocabs)
+        self.r2l_generator = Generator(d_model, vocab.n_vocabs)
+        self.l2r_generator = Generator(d_model, vocab.n_vocabs)
 
     def encode(self, src, src_mask, feature_mode_two=False):
         # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder_big(x1, src_mask[0])
+            # x1 = self.encoder_big(x1, src_mask[0])
+            x1 = self.img_encoder_big(x1, src_mask[0])
+            
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, src_mask[1])
+            # x2 = self.encoder_big(x2, src_mask[1])
+            x2 = self.mot_encoder_big(x2, src_mask[1])
+            
             # return x1 + x2
             return self.r2l_feat_fusion([x1, x2])
         
@@ -637,21 +646,25 @@ class ABDTransformer(nn.Module):
         elif self.feature_mode == 'four':
             x1 = self.image_src_embed(src[0])
             x1 = self.pos_embed(x1)
-            x1 = self.encoder(x1, src_mask[0])
+            # x1 = self.encoder(x1, src_mask[0])
+            x1 = self.img_encoder(x1, src_mask[0])
 
             x2 = self.motion_src_embed(src[1])
             x2 = self.pos_embed(x2)
-            x2 = self.encoder(x2, src_mask[1])
+            # x2 = self.encoder(x2, src_mask[1])
+            x2 = self.mot_encoder(x2, src_mask[1])
 
             x3 = self.object_src_embed(src[2])
             # x3 = self.pos_embed(x3)
-            x3 = self.encoder(x3, src_mask[2])
+            # x3 = self.encoder(x3, src_mask[2])
+            x3 = self.obj_encoder(x3, src_mask[2])
             # x3 = self.encoder_no_attention(x3, src_mask[2])
 
             x4 = self.rel_src_embed(src[3])
             # x4 = self.pos_embed(x4)
             # x4 = self.encoder(x4, src_mask[3])
-            x4 = self.encoder_no_attention(x4, src_mask[3])
+            # x4 = self.encoder_no_attention(x4, src_mask[3])
+            x4 = self.rel_encoder_no_attention(x4, src_mask[3])
             
             # return x1 + x2 + x3 + x4
             # return self.feat_fusion([x1, x2, x3, x4])
@@ -687,9 +700,11 @@ class ABDTransformer(nn.Module):
         else:
             raise "没有输出"
 
-        r2l_pred = self.generator(r2l_outputs)
-        l2r_pred = self.generator(l2r_outputs)
-
+        # r2l_pred = self.generator(r2l_outputs)
+        # l2r_pred = self.generator(l2r_outputs)
+        r2l_pred = self.r2l_generator(r2l_outputs)
+        l2r_pred = self.l2r_generator(l2r_outputs)
+        
         return r2l_pred, l2r_pred
 
     def greedy_decode(self, batch_size, src_mask, memory, max_len):

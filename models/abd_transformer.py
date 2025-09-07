@@ -165,7 +165,8 @@ class FFNFeatureFusion(nn.Module):
         factor = 3 / 4  # factor for intermediate layer size
         
         self.w_1 = nn.Linear(num_features * d_model, int((num_features * d_model) * factor))
-        self.act_1 = nn.ReLU()
+        # tanh activation
+        self.act_1 = nn.Tanh()
         self.dropout = nn.Dropout(dropout)
         self.w_2 = nn.Linear(int((num_features * d_model) * factor), d_model)
             
@@ -191,6 +192,14 @@ class FFNFeatureFusion(nn.Module):
         
         # Apply the second linear layer
         x = self.w_2(x)
+        
+        # Sum the features if residual connection is needed
+        if self.num_features == 2:
+            x = x + (features[0] + features[1])
+        elif self.num_features == 4:
+            x = x + (features[0] + features[1] + features[2] + features[3])
+        else:
+            raise ValueError(f"[FFNFeatureFusion.forward] Unsupported num_features: {self.num_features}")
         
         # Return the fused features
         return x

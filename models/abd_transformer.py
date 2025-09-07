@@ -575,18 +575,18 @@ class ABDTransformer(nn.Module):
         
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 
-        self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
+        # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.img_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.mot_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.obj_encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
 
-        self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
+        # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
         self.img_encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
         self.mot_encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
 
         # self.encoder_big2 = Encoder(n_layers, EncoderLayer(d_model, c(attn_big2), c(feed_forward), dropout))
 
-        self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
+        # self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.rel_encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
 
         self.r2l_decoder = R2L_Decoder(n_layers, 
@@ -596,9 +596,9 @@ class ABDTransformer(nn.Module):
                                        DecoderLayer(d_model, c(attn), c(feed_forward), sublayer_num=4, dropout=dropout),
                                        d_model)
 
-        self.generator = Generator(d_model, vocab.n_vocabs)
-        # self.r2l_generator = Generator(d_model, vocab.n_vocabs)
-        # self.l2r_generator = Generator(d_model, vocab.n_vocabs)
+        # self.generator = Generator(d_model, vocab.n_vocabs)
+        self.r2l_generator = Generator(d_model, vocab.n_vocabs)
+        self.l2r_generator = Generator(d_model, vocab.n_vocabs)
 
     def encode(self, src, src_mask, feature_mode_two=False):
         # ============== Spatial-Temporal Encoding ==============
@@ -700,15 +700,15 @@ class ABDTransformer(nn.Module):
         else:
             raise "没有输出"
 
-        r2l_pred = self.generator(r2l_outputs)
-        l2r_pred = self.generator(l2r_outputs)
-        # r2l_pred = self.r2l_generator(r2l_outputs)
-        # l2r_pred = self.l2r_generator(l2r_outputs)
+        # r2l_pred = self.generator(r2l_outputs)
+        # l2r_pred = self.generator(l2r_outputs)
+        r2l_pred = self.r2l_generator(r2l_outputs)
+        l2r_pred = self.l2r_generator(l2r_outputs)
         
         return r2l_pred, l2r_pred
 
     def greedy_decode(self, batch_size, src_mask, memory, max_len):
-
+        raise NotImplementedError(f"[ABDTransformer.greedy_decode] Method not implemented. Use beam search instead.")
         eos_idx = self.vocab.word2idx['<S>']
         r2l_hidden = None
         with torch.no_grad():
@@ -782,7 +782,8 @@ class ABDTransformer(nn.Module):
             r2l_outputs = out
 
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
-            log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
+            # log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
+            log_prob = self.r2l_generator(out[:, -1, :]).unsqueeze(1)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
             _, decoded_len, vocab_sz = log_prob.shape
             # log_prob = log_prob.reshape(batch_size, cur_beam_size, decoded_len, vocab_sz)
@@ -968,7 +969,8 @@ class ABDTransformer(nn.Module):
                                       Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
                                       r2l_memory_cur, r2l_trg_mask=None)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
-            log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
+            # log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
+            log_prob = self.l2r_generator(out[:, -1, :]).unsqueeze(1)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
             _, decoded_len, vocab_sz = log_prob.shape
             # log_prob = log_prob.reshape(batch_size, cur_beam_size, decoded_len, vocab_sz)

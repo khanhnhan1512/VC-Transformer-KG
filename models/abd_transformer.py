@@ -381,6 +381,26 @@ class PositionWiseFeedForward(nn.Module):
         return output
 
 
+class SwiGLU(nn.Module):
+    """
+    A standard SwiGLU FFN implementation.
+    Reference: Noam Shazeer's "GLU Variants Improve Transformer"
+    (https://arxiv.org/abs/2002.05202)
+    """
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
+        super(SwiGLU, self).__init__()
+        # Adjust hidden_dim to be a multiple of multiple_of
+        hidden_dim = multiple_of * ((2 * d_ff // 3 + multiple_of - 1) // multiple_of)
+        self.w1 = nn.Linear(d_model, hidden_dim)
+        self.w2 = nn.Linear(d_model, hidden_dim)
+        self.w3 = nn.Linear(hidden_dim, d_model)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        # Forward pass using Swish activation and dropout
+        return self.dropout(self.w3(F.silu(self.w1(x)) * self.w2(x)))
+
+
 class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
@@ -559,7 +579,8 @@ class ABDTransformer(nn.Module):
 
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 
-        feed_forward = PositionWiseFeedForward(d_model, d_ff)
+        # feed_forward = PositionWiseFeedForward(d_model, d_ff)
+        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=256, dropout=dropout)
 
         if feature_mode == 'one':
             self.src_embed = FeatEmbedding(d_feat, d_model, dropout)

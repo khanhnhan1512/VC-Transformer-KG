@@ -643,13 +643,13 @@ class ABDTransformer(nn.Module):
         # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
             # x1 = self.image_src_embed(src[0])
-            x1 = self.image_src_embed(src[0][:, ::-1, :])  # reverse the image feature sequence for R2L
+            x1 = self.image_src_embed(torch.flip(src[0], dims=[1]))
             x1 = self.pos_embed(x1)
             # x1 = self.encoder_big(x1, src_mask[0])
             x1 = self.img_encoder_big(x1, src_mask[0])
             
             # x2 = self.motion_src_embed(src[1])
-            x2 = self.motion_src_embed(src[1][:, ::-1, :])  # reverse the motion feature sequence for R2L
+            x2 = self.motion_src_embed(torch.flip(src[1], dims=[1]))
             x2 = self.pos_embed(x2)
             # x2 = self.encoder_big(x2, src_mask[1])
             x2 = self.mot_encoder_big(x2, src_mask[1])

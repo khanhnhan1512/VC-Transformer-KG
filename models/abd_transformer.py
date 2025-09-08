@@ -394,12 +394,11 @@ class SwiGLU(nn.Module):
         self.w1 = nn.Linear(d_model, hidden_dim)
         self.w2 = nn.Linear(d_model, hidden_dim)
         self.w3 = nn.Linear(hidden_dim, d_model)
-        # self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
-        # return self.dropout(self.w3(F.silu(self.w1(x)) * self.w2(x)))
-        return self.w3(F.silu(self.w1(x)) * self.w2(x))
+        return self.w3(self.dropout(F.silu(self.w1(x)) * self.w2(x)))
 
 
 class SublayerConnection(nn.Module):
@@ -581,7 +580,7 @@ class ABDTransformer(nn.Module):
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 
         # feed_forward = PositionWiseFeedForward(d_model, d_ff)
-        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=256, dropout=dropout)
+        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=128, dropout=dropout)
 
         if feature_mode == 'one':
             self.src_embed = FeatEmbedding(d_feat, d_model, dropout)

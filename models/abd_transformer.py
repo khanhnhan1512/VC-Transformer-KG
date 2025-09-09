@@ -580,7 +580,7 @@ class ABDTransformer(nn.Module):
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 
         # feed_forward = PositionWiseFeedForward(d_model, d_ff)
-        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=128, dropout=dropout)
+        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=256, dropout=dropout)
 
         if feature_mode == 'one':
             self.src_embed = FeatEmbedding(d_feat, d_model, dropout)

@@ -122,11 +122,11 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig(object):
-    d_model = 384
-    d_ff = 1536         # d_ff / d_model = 4
-    n_heads_big = 96    # d_model / n_heads_big = 4
-    n_heads = 6         # d_model / n_heads = 64
-    n_layers = 6
+    d_model = 512
+    d_ff = 2048         # d_ff / d_model = 4
+    n_heads_big = 128   # d_model / n_heads_big = 4
+    n_heads = 8         # d_model / n_heads = 64
+    n_layers = 4
     dropout = 0.1
     select_num = 0  # if sn==0, automatic select num
 

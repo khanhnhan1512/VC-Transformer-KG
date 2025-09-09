@@ -398,7 +398,7 @@ class SwiGLU(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
-        return self.w3(self.dropout(F.silu(self.w1(x)) * self.w2(x)))
+        return self.w3(self.dropout(F.tanh(self.w1(x)) * self.w2(x)))
 
 
 class SublayerConnection(nn.Module):

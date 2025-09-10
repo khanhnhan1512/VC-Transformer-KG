@@ -214,49 +214,6 @@ class FFNFeatureFusion(nn.Module):
         return x
 
 
-class TransformerFeatureFusion(nn.Module):
-    """
-    Feature fusion giống ý tưởng FaceXFormer, nhưng cho đặc trưng dạng (B, S, D).
-    
-    Input: list n tensors, mỗi tensor có shape (B, S, D)
-    Output: fused tensor (B, S, D)
-    """
-    def __init__(self, num_features: int, hidden_size: int):
-        super().__init__()
-        self.num_features = num_features
-        self.hidden_size = hidden_size
-
-        # 1x1 convolution để trộn chiều num_features
-        self.linear_fuse = nn.Conv2d(
-            in_channels=num_features,
-            out_channels=1,
-            kernel_size=1,
-            bias=False,
-        )
-
-    def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
-        """
-        features: list gồm num_features tensor, mỗi tensor (B, S, D)
-        return: fused tensor (B, S, D)
-        """
-        if len(features) != self.num_features:
-            raise ValueError(f"Expected {self.num_features} features, got {len(features)}")
-
-        B, S, D = features[0].shape
-        for f in features:
-            if f.shape != (B, S, D):
-                raise ValueError("All features must share shape (B, S, D)")
-
-        # stack -> (B, n, S, D)
-        x = torch.stack(features, dim=1)
-
-        # conv2d expects (B, C, H, W), ta coi H=S, W=D
-        out = self.linear_fuse(x)  # (B, 1, S, D)
-        out = out.squeeze(1)       # (B, S, D)
-
-        return out
-
-
 class FeatEmbedding(nn.Module):
 
     def __init__(self, d_feat, d_model, dropout):
@@ -381,25 +338,46 @@ class PositionWiseFeedForward(nn.Module):
         return output
 
 
-class SwiGLU(nn.Module):
-    """
-    A standard SwiGLU FFN implementation.
-    Reference: Noam Shazeer's "GLU Variants Improve Transformer"
-    (https://arxiv.org/abs/2002.05202)
-    """
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
-        super(SwiGLU, self).__init__()
-        # Adjust hidden_dim to be a multiple of multiple_of
-        hidden_dim = multiple_of * ((2 * d_ff // 3 + multiple_of - 1) // multiple_of)
-        self.w1 = nn.Linear(d_model, hidden_dim)
-        self.w2 = nn.Linear(d_model, hidden_dim)
-        self.w3 = nn.Linear(hidden_dim, d_model)
+# class SwiGLU(nn.Module):
+#     """
+#     A standard SwiGLU FFN implementation.
+#     Reference: Noam Shazeer's "GLU Variants Improve Transformer"
+#     (https://arxiv.org/abs/2002.05202)
+#     """
+#     def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
+#         super(SwiGLU, self).__init__()
+#         # Adjust hidden_dim to be a multiple of multiple_of
+#         hidden_dim = multiple_of * ((2 * d_ff // 3 + multiple_of - 1) // multiple_of)
+#         self.w1 = nn.Linear(d_model, hidden_dim)
+#         self.act1 = nn.Sigmoid()
+#         self.w2 = nn.Linear(d_model, hidden_dim)
+#         self.w3 = nn.Linear(hidden_dim, d_model)
+#         self.dropout = nn.Dropout(dropout)
+
+#     def forward(self, x: torch.Tensor) -> torch.Tensor:
+#         # Forward pass using Swish activation and dropout
+#         # return self.w3(self.dropout(F.tanh(self.w1(x)) * self.w2(x)))
+#         inter1 = self.w1(x)
+#         inter1 = inter1 * self.act1(inter1)  # Swish activation
+#         inter2 = self.w2(x)
+#         output = self.dropout(self.w3(inter1 * inter2))
+#         return output
+
+
+class MySwiGLU(nn.Module):
+    def __init__(self, d_model: int, d_ff: int, dropout: float):
+        super(MySwiGLU, self).__init__()
+        self.w1 = nn.Linear(d_model, d_ff)
+        self.act1 = nn.Sigmoid()
+        self.w2 = nn.Linear(d_ff, d_model)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Forward pass using Swish activation and dropout
-        return self.w3(self.dropout(F.tanh(self.w1(x)) * self.w2(x)))
-
+        inter = self.w1(x)
+        inter = inter * self.act1(inter)  # Swish activation
+        output = self.w2(self.dropout(inter))
+        return output
+    
 
 class SublayerConnection(nn.Module):
 
@@ -580,7 +558,8 @@ class ABDTransformer(nn.Module):
         # attn_big2 = MultiHeadAttention(10, d_model, dropout)
 
         # feed_forward = PositionWiseFeedForward(d_model, d_ff)
-        feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=256, dropout=dropout)
+        # feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=256, dropout=dropout)
+        feed_forward = MySwiGLU(d_model=d_model, d_ff=d_ff, dropout=dropout)
 
         if feature_mode == 'one':
             self.src_embed = FeatEmbedding(d_feat, d_model, dropout)
@@ -609,8 +588,6 @@ class ABDTransformer(nn.Module):
         """
         self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
         self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=4, dropout=dropout)
-        # self.r2l_feat_fusion = TransformerFeatureFusion(num_features=2, hidden_size=d_model)
-        # self.l2r_feat_fusion = TransformerFeatureFusion(num_features=4, hidden_size=d_model)
         
         # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
 

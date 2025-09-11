@@ -368,17 +368,15 @@ class MySwiGLU(nn.Module):
     def __init__(self, d_model: int, d_ff: int, dropout: float):
         super(MySwiGLU, self).__init__()
         self.w1 = nn.Linear(d_model, d_ff)
-        self.act1 = nn.SiLU()  # Swish activation
         self.w2 = nn.Linear(d_model, d_ff)
         self.w3 = nn.Linear(d_ff, d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        inter1 = self.act1(self.w1(x))  # Apply Swish activation
-        inter2 = self.w2(x)  # Linear transformation
-        output = self.dropout1(inter1 * inter2)  # Element-wise multiplication and dropout
-        output = self.dropout2(self.w3(output))  # Final linear transformation and dropout
+        inter1 = self.dropout1(F.silu(self.w1(x)))
+        inter2 = self.dropout2(F.relu(self.w2(x)))
+        output = self.w3(inter1 * inter2)
         return output
     
 

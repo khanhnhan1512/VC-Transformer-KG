@@ -352,7 +352,7 @@ class SwiGLU(nn.Module):
         self.w2 = nn.Linear(d_model, hidden_dim)
         self.w3 = nn.Linear(hidden_dim, d_model)
         self.dropout = nn.Dropout(dropout)
-        self.norm = nn.LayerNorm(hidden_dim)
+        # self.norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
@@ -360,7 +360,7 @@ class SwiGLU(nn.Module):
         
         x1 = F.silu(self.w1(x))
         x2 = self.w2(x)
-        y = self.w3(self.dropout(self.norm(x1 * x2)))
+        y = self.dropout(self.w3(x1 * x2))
         return y
     
 

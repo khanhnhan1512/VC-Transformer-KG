@@ -375,7 +375,7 @@ class MySwiGLU(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         inter1 = self.dropout1(F.silu(self.w1(x)))
-        inter2 = self.dropout2(F.relu(self.w2(x)))
+        inter2 = self.dropout2(self.w2(x))
         output = self.w3(inter1 * inter2)
         return output
     

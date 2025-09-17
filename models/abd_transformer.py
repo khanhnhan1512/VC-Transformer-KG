@@ -294,6 +294,9 @@ class MultiHeadAttention(nn.Module):
         self.linear_out = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
         self.attn = None
+        
+        self.query_norm = nn.RMSNorm(d_model)
+        self.key_norm = nn.RMSNorm(d_model)
 
     def forward(self, query, key, value, mask=None):
         if mask is not None:
@@ -311,6 +314,9 @@ class MultiHeadAttention(nn.Module):
         #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
         #     # 变为三维， 或者说是concat head
         #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
+
+        query = self.query_norm(query)
+        key = self.key_norm(key)
 
         query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
         key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]

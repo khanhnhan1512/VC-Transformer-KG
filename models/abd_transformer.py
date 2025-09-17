@@ -88,7 +88,7 @@ class FeatureFusion(nn.Module):
         # final projection to stabilize representation (identity if not needed)
         self.out_proj = nn.Linear(d_model, d_model)
         if self.use_layernorm:
-            self.ln = nn.RMSNorm(d_model)
+            self.ln = nn.LayerNorm(d_model)
 
         # Move newly-created parameters/modules to the same device as sample_tensor
         device = sample_tensor.device
@@ -172,7 +172,7 @@ class FFNFeatureFusion(nn.Module):
         self.w_2 = nn.Linear(int((num_features * d_model) * factor), d_model)
         """
         self.projector = nn.Linear(num_features * d_model, d_model)
-        self.norm = nn.RMSNorm(d_model)
+        self.norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
             
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
@@ -219,7 +219,7 @@ class FeatEmbedding(nn.Module):
     def __init__(self, d_feat, d_model, dropout):
         super(FeatEmbedding, self).__init__()
         self.video_embeddings = nn.Sequential(
-            nn.RMSNorm(d_feat),
+            nn.LayerNorm(d_feat),
             nn.Dropout(dropout),
             nn.Linear(d_feat, d_model))
 
@@ -353,7 +353,7 @@ class SwiGLU(nn.Module):
         self.w3 = nn.Linear(hidden_dim, d_model)
         self.dropout1 = nn.Dropout(dropout)
         self.dropout2 = nn.Dropout(dropout)
-        # self.norm = nn.RMSNorm(hidden_dim)
+        # self.norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
@@ -369,8 +369,8 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size, dropout=0.1):
         super(SublayerConnection, self).__init__()
-        self.norm_1 = nn.RMSNorm(size)
-        self.norm_2 = nn.RMSNorm(size)
+        self.norm_1 = nn.LayerNorm(size)
+        self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
@@ -424,8 +424,8 @@ class Encoder(nn.Module):
     def __init__(self, n, encoder_layer, d_model):
         super(Encoder, self).__init__()
         self.encoder_layer = clones(encoder_layer, n)
-        self.norm_1 = nn.RMSNorm(d_model)
-        self.norm_2 = nn.RMSNorm(d_model)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
         x = self.norm_1(x)
@@ -440,8 +440,8 @@ class R2L_Decoder(nn.Module):
     def __init__(self, n, decoder_layer, d_model):
         super(R2L_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.norm_1 = nn.RMSNorm(d_model)
-        self.norm_2 = nn.RMSNorm(d_model)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
         x = self.norm_1(x)
@@ -456,8 +456,8 @@ class L2R_Decoder(nn.Module):
     def __init__(self, n, decoder_layer, d_model):
         super(L2R_Decoder, self).__init__()
         self.decoder_layer = clones(decoder_layer, n)
-        self.norm_1 = nn.RMSNorm(d_model)
-        self.norm_2 = nn.RMSNorm(d_model)
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.norm_2 = nn.LayerNorm(d_model)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.norm_1(x)

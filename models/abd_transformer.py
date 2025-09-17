@@ -315,11 +315,8 @@ class MultiHeadAttention(nn.Module):
         #     # 变为三维， 或者说是concat head
         #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
 
-        query = self.query_norm(query)
-        key = self.key_norm(key)
-
-        query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
+        query = self.query_norm(self.linear_query(query)).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
+        key = self.key_norm(self.linear_key(key)).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
         value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
 
         x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)

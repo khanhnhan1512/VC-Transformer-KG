@@ -359,7 +359,9 @@ class SwiGLU(nn.Module):
         # Forward pass using Swish activation and dropout
         # return self.w3(self.dropout(F.silu(self.w1(x))) * self.w2(x))
         x = self.dropout1(x)
-        x1 = F.silu(self.w1(x))
+        # x1 = F.silu(self.w1(x))
+        x1 = self.w1(x)
+        x1 = x1 * torch.tanh(x1)
         x2 = self.w2(x)
         y = self.w3(self.dropout2(x1 * x2))
         return y

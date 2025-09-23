@@ -211,88 +211,96 @@ class TextEmbedding(nn.Module):
 
 
 class PositionalEncoding(nn.Module):
-
-    def __init__(self, dim, dropout, max_len=5000):
-        if dim % 2 != 0:
-            raise ValueError("Cannot use sin/cos positional encoding with "
-                             "odd dim (got dim={:d})".format(dim))
-        pe = torch.zeros(max_len, dim)
-        position = torch.arange(0, max_len).unsqueeze(1)
-        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) *
-                              -(math.log(10000.0) / dim)))
-        pe[:, 0::2] = torch.sin(position.float() * div_term)
-        pe[:, 1::2] = torch.cos(position.float() * div_term)
-        pe = pe.unsqueeze(1)
+    """
+    Positional Encoding cho tensor batch_first: [batch_size, seq_len, d_model].
+    Phù hợp với video captioning (frame features hoặc caption tokens).
+    """
+    def __init__(self, d_model, dropout=0.1, max_len=5000):
         super(PositionalEncoding, self).__init__()
+        if d_model % 2 != 0:
+            raise ValueError(f"Cannot use sin/cos positional encoding with odd d_model (got {d_model})")
+        pe = torch.zeros(1, max_len, d_model)  # Shape: [1, max_len, d_model]
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)  # [max_len, 1]
+        div_term = torch.exp(torch.arange(0, d_model, 2, dtype=torch.float) * -(math.log(10000.0) / d_model))  # [d_model // 2]
+        # Broadcasting: position [max_len, 1] * div_term [1, d_model // 2] -> [max_len, d_model // 2]
+        pe[0, :, 0::2] = torch.sin(position * div_term.unsqueeze(0))  # [max_len, d_model // 2]
+        pe[0, :, 1::2] = torch.cos(position * div_term.unsqueeze(0))
         self.register_buffer('pe', pe)
-        self.drop_out = nn.Dropout(p=dropout)
-        self.dim = dim
+        self.dropout = nn.Dropout(p=dropout)
+        self.d_model = d_model
 
-    def forward(self, emb, step=None):
-
-        emb = emb * math.sqrt(self.dim)
+    def forward(self, x, step=None):
+        """
+        x: [batch_size, seq_len, d_model]
+        step: Nếu cung cấp, x là [batch_size, 1, d_model] (dùng khi decoding từng bước)
+        """
+        x = x * math.sqrt(self.d_model)
         if step is None:
-            emb = emb + self.pe[:emb.size(0)]
+            x = x + self.pe[:, :x.size(1), :]  # Lấy seq_len tương ứng
         else:
-            emb = emb + self.pe[step]
-        emb = self.drop_out(emb)
-        return emb
+            x = x + self.pe[:, step:step + 1, :]  # Lấy vị trí step
+        x = self.dropout(x)
+        return x
 
 
-def self_attention(query, key, value, dropout=None, mask=None):
+def scaled_dot_product_attention(query, key, value, mask=None, dropout=None):
+    """
+    Scaled Dot-Product Attention function.
+    Inputs: query, key, value [batch_size, num_heads, seq_len, d_k]
+    mask: [batch_size, 1, seq_q, seq_k] or broadcastable
+    """
     d_k = query.size(-1)
     scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(d_k)
-    # mask的操作在QK之后，softmax之前
     if mask is not None:
-        mask.cuda()
-        scores = scores.masked_fill(mask == 0, -1e9)
-    self_attn = F.softmax(scores, dim=-1)
+        scores = scores.masked_fill(mask == 0, -1e9)  # Assuming mask is 0/1, 0 to mask out
+    p_attn = F.softmax(scores, dim=-1)
     if dropout is not None:
-        self_attn = dropout(self_attn)
-    return torch.matmul(self_attn, value), self_attn
+        p_attn = dropout(p_attn)
+    return torch.matmul(p_attn, value), p_attn
 
 
 class MultiHeadAttention(nn.Module):
-
-    def __init__(self, head, d_model, dropout=0.1):
+    """
+    Multi-Head Attention for batch_first: [batch_size, seq_len, d_model].
+    Can be used for encoder (self-attn on video features) or decoder (self-attn on captions, cross-attn to video).
+    """
+    def __init__(self, num_heads, d_model, dropout=0.1):
         super(MultiHeadAttention, self).__init__()
-        assert (d_model % head == 0)
-        self.d_k = d_model // head
-        self.head = head
+        if d_model % num_heads != 0:
+            raise ValueError(f"d_model must be divisible by num_heads (got {d_model} % {num_heads} != 0)")
+        self.d_k = d_model // num_heads
+        self.num_heads = num_heads
         self.d_model = d_model
-        self.linear_query = nn.Linear(d_model, d_model)
-        self.linear_key = nn.Linear(d_model, d_model)
-        self.linear_value = nn.Linear(d_model, d_model)
-        self.linear_out = nn.Linear(d_model, d_model)
+        self.query_linear = nn.Linear(d_model, d_model)
+        self.key_linear = nn.Linear(d_model, d_model)
+        self.value_linear = nn.Linear(d_model, d_model)
+        self.output_linear = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
-        self.attn = None
+        self.attn_weights = None  # To store if needed
 
     def forward(self, query, key, value, mask=None):
+        """
+        query, key, value: [batch_size, seq_len, d_model]
+        mask: Optional [batch_size, seq_q, seq_k] with 0/1 (0 to mask)
+        """
+        batch_size = query.size(0)
+        # Project and split heads: [batch_size, seq_len, num_heads, d_k] -> [batch_size, num_heads, seq_len, d_k]
+        query = self.query_linear(query).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        key = self.key_linear(key).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        value = self.value_linear(value).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        
+        # Expand mask if provided: [batch_size, 1, seq_q, seq_k]
         if mask is not None:
-            # 多头注意力机制的线性变换层是4维，是把query[batch, frame_num, d_model]变成[batch, -1, head, d_k]
-            # 再1，2维交换变成[batch, head, -1, d_k], 所以mask要在第一维添加一维，与后面的self attention计算维度一样
-            mask = mask.unsqueeze(1)
-        n_batch = query.size(0)
-        # if self.head == 1:
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        # else:
-        #     query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        #     key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #     value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        #
-        #     x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        #     # 变为三维， 或者说是concat head
-        #     x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
-
-        query = self.linear_query(query).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 32, 64]
-        key = self.linear_key(key).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-        value = self.linear_value(value).view(n_batch, -1, self.head, self.d_k).transpose(1, 2)  # [b, 8, 28, 64]
-
-        x, self.attn = self_attention(query, key, value, dropout=self.dropout, mask=mask)
-        # 变为三维， 或者说是concat head
-        x = x.transpose(1, 2).contiguous().view(n_batch, -1, self.head * self.d_k)
-
-        return self.linear_out(x)
+            mask = mask.unsqueeze(1)  # Add head dim for broadcasting
+            mask = mask.to(query.device)
+        
+        # Attention
+        x, self.attn_weights = scaled_dot_product_attention(query, key, value, mask=mask, dropout=self.dropout)
+        
+        # Concat heads: [batch_size, num_heads, seq_len, d_k] -> [batch_size, seq_len, d_model]
+        x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+        
+        return self.output_linear(x)
 
 
 class PositionWiseFeedForward(nn.Module):
@@ -351,7 +359,7 @@ class EncoderLayer(nn.Module):
     
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float=0.1):
         super(EncoderLayer, self).__init__()
-        self.attn = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
+        self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
@@ -397,8 +405,8 @@ class R2LDecoderLayer(nn.Module):
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float=0.1):
         assert sublayer_num == 3, "[R2LDecoderLayer.__init__] sublayer_num must be 3"
         super(R2LDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_2 = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
@@ -419,9 +427,9 @@ class L2RDecoderLayer(nn.Module):
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float=0.1):
         assert sublayer_num == 4, "[L2RDecoderLayer.__init__] sublayer_num must be 4"
         super(L2RDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_2 = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_3 = MultiHeadAttention(head=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)

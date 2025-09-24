@@ -86,7 +86,7 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip, fea
     model.train()
     loss_checker = LossChecker(3)
     pad_idx = vocab.word2idx['<PAD>']
-    # 定义label smoothing 损失
+    # Define the criterion for label smoothing
     criterion = LabelSmoothing(vocab.n_vocabs, pad_idx, C.label_smoothing)
     t = tqdm(train_iter)
     # t.set_description('Train:')

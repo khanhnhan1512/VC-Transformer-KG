@@ -48,7 +48,7 @@ class MSVDDataset(CustomDataset):
             r2l_caption = " ".join(caption.strip('.').split()[::-1])
             self.l2r_captions[vid].append(caption)
             self.r2l_captions[vid].append(r2l_caption)
-        # 调换r2l_caption的顺序，使得正向标签与反向标签不是同一个
+        # Reverse words in r2l_captions
         for vid, caption in self.r2l_captions.items():
             # self.r2l_captions[vid] = caption[::-1]
             random.shuffle(caption)

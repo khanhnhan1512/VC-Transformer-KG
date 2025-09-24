@@ -48,7 +48,7 @@ def log_train(summary_writer, e, loss, lr, reg_lambda, scores=None):
     summary_writer.add_scalar(C.tx_train_r2l_cross_entropy_loss, loss['r2l_loss'], e)
     summary_writer.add_scalar(C.tx_train_l2r_cross_entropy_loss, loss['l2r_loss'], e)
     summary_writer.add_scalar(C.tx_lr, lr, e)
-    print("loss: {} = (1-reg): {} * r2l_loss: {} + (reg):{} * l2r_loos: {} ".format(
+    print("loss: {} = (1-reg): {} * r2l_loss: {} + (reg):{} * l2r_loss: {} ".format(
         loss['total'], 1 - reg_lambda, loss['r2l_loss'], reg_lambda, loss['l2r_loss']))
 
     if scores is not None:
@@ -61,7 +61,7 @@ def log_val(summary_writer, e, loss, reg_lambda, r2l_scores, l2r_scores):
     summary_writer.add_scalar(C.tx_val_loss, loss['total'], e)
     summary_writer.add_scalar(C.tx_val_r2l_cross_entropy_loss, loss['r2l_loss'], e)
     summary_writer.add_scalar(C.tx_val_l2r_cross_entropy_loss, loss['l2r_loss'], e)
-    print("loss: {} = (1-reg): {} * r2l_loss: {} + (reg):{} * l2r_loos: {} ".format(
+    print("loss: {} = (1-reg): {} * r2l_loss: {} + (reg):{} * l2r_loss: {} ".format(
         loss['total'], 1 - reg_lambda, loss['r2l_loss'], reg_lambda, loss['l2r_loss']))
     for metric in C.metrics:
         summary_writer.add_scalar("VAL R2L SCORE/{}".format(metric), r2l_scores[metric], e)

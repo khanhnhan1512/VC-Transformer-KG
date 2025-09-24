@@ -18,7 +18,7 @@ def build_loader(ckpt_fpath):
     elif config.corpus == "MSR-VTT":
         corpus = MSRVTT(config)
     else:
-        raise "无该数据集"
+        raise ValueError(f"Unsupported corpus: {config.corpus}")
 
     train_iter, val_iter, test_iter, vocab = \
         corpus.train_data_loader, corpus.val_data_loader, corpus.test_data_loader, corpus.vocab

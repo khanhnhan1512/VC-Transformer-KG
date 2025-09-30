@@ -63,7 +63,7 @@ class FeatureConfig(object):
 
 class VocabConfig(object):
     init_word2idx = {'<PAD>': 0, '<S>': 1}
-    embedding_size = 512
+    embedding_size = -1 #300
 
 
 class MSVDLoaderConfig(object):
@@ -86,7 +86,7 @@ class MSVDLoaderConfig(object):
     test_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/test.csv")
     
     min_count = 3
-    max_caption_len = 10
+    max_caption_len = 20
 
     # total_video_feat_fpath_tpl = "./data/{}/features/{}.hdf5"
     # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
@@ -122,13 +122,13 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig(object):
-    d_model = 512
-    d_ff = 2048         # d_ff / d_model = 4
-    n_heads_big = 128   # d_model / n_heads_big = 4
-    n_heads = 8         # d_model / n_heads = 64
-    n_layers = 4
+    d_model = 768
+    d_ff = 3072         # d_ff / d_model = 4
+    n_heads_big = 128   # d_model / n_heads_big = 6
+    n_heads = 12        # d_model / n_heads = 64
+    n_layers = 3
     dropout = 0.1
-    select_num = 0  # if sn==0, automatic select num
+    select_num = -1 #0  # if sn==0, automatic select num
 
 
 class EvalConfig(object):
@@ -155,7 +155,7 @@ class TrainConfig(object):
         'MSR-VTT': 18,
     }[corpus]
 
-    batch_size = 32
+    batch_size = 64
 
     optimizer = "Adam"
     gradient_clip = 5.0  # None if not used
@@ -163,12 +163,12 @@ class TrainConfig(object):
         'MSVD': 1e-4,
         'MSR-VTT': 3e-5,
     }[corpus]
-    lr_decay_start_from = 12
+    lr_decay_start_from = 3
     lr_decay_gamma = 0.5
-    lr_decay_patience = 5
+    lr_decay_patience = 3
     weight_decay = 0.5e-5
 
-    reg_lambda = 0.6  # weights of r2l
+    reg_lambda = 0.5  # weights of r2l
 
     beam_size = 5
     label_smoothing = 0.15

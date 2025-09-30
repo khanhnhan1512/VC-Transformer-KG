@@ -113,6 +113,118 @@ class PositionalEncoding(nn.Module):
         return x
 
 
+def apply_rotary_positional_embedding(
+    x: torch.Tensor, theta_is: torch.Tensor
+) -> torch.Tensor:
+    """
+    Apply rotary positional embedding to input tensor x.
+
+    Args:
+        x : Input tensor of shape (B, T, D).
+        theta_is : Precomputed complex frequencies of shape (T, D//2).
+
+    Returns:
+        torch.Tensor: Tensor with RoPE applied, same shape as input x.
+    """
+
+    # Reshape x to separate real and imaginary parts (pairs of features)
+    # Shape: (B, T, D)    -> (B, T, D//2, 2)
+    x_combined = x.float().reshape(*x.shape[:-1], -1, 2)
+
+    # Convert to complex numbers
+    # Shape: (B, T, D//2)
+    x_complex = torch.view_as_complex(x_combined)
+
+    # Reshape theta_is for broadcasting
+    # Shape: (T, D//2) -> (1, T, D//2)
+    # Add batch dimension (dim=0)
+    theta_is = theta_is.unsqueeze(0)
+
+    # Apply rotation by multiplying complex numbers
+    # Broadcasting works:
+    # (B, T, D//2) * (1, T, D//2) -> (B, T, D//2)
+    x_rotated = x_complex * theta_is.to(x_complex.device)
+
+    # Convert back to real numbers
+    # Shape: (B, T, D//2, 2)
+    x_out = torch.view_as_real(x_rotated)
+
+    # Reshape back to original input shape
+    # Shape: (B, T, D)
+    # Flatten the last two dimensions (D//2, 2) -> D
+    x_out = x_out.flatten(start_dim=-2)
+    return x_out.type_as(x)
+
+
+class RotaryPositionalEmbedding(nn.Module):
+    def __init__(
+        self,
+        n_embd: int,
+        block_size: int,
+        base_frequency: int = 10000,
+        device: Optional[torch.device] = None,
+    ) -> None:
+        """
+        Initializes the Rotary Positional Embedding.
+
+        Args:
+            n_embd : Dimension of the head embeddings. Must be even.
+            block_size : Maximum sequence length.
+            base_frequency : The base_frequency value for frequency calculation (theta_i).
+            device : Device to store the precomputed frequencies.
+        """
+        super(RotaryPositionalEmbedding, self).__init__()
+        if n_embd % 2 != 0:
+            raise ValueError("Dimension must be even for RoPE.")
+
+        self.n_embd = n_embd
+        self.block_size = block_size
+        self.base_frequency = base_frequency
+        self.device = device
+
+        # Precompute theta values for RoPE
+        # For each i in [0, n_embd/ 2 ):
+        #   theta_i = 1 / (base_frequency^(2 * i / n_embd))
+        half_dimension = self.n_embd // 2
+        frequency_range = torch.arange(half_dimension, dtype=torch.float32)
+        exponent = 2 * frequency_range / self.n_embd
+        denominator = torch.pow(self.base_frequency, exponent)
+        # Shape: (n_embd // 2,)
+        theta_is = 1.0 / denominator
+
+        # Calculate frequencies for each position: m * theta
+        # Shape: (block_size, n_embd / 2)
+        position_indices = torch.arange(self.block_size, dtype=torch.float32)
+        frequencies = torch.outer(position_indices, theta_is)
+
+        # Calculate complex numbers in polar form: cos(m*theta) + i*sin(m*theta)
+        # Shape: (block_size, n_embd / 2)
+        self.theta_is = torch.polar(torch.ones_like(frequencies), frequencies)
+
+        if self.device:
+            self.theta_is = self.theta_is.to(self.device)
+
+    def get_theta_is(self, sequence_length: int, device: torch.device) -> torch.Tensor:
+        """
+        Returns the precomputed complex frequencies for a given sequence length.
+
+        Args:
+            sequence_length : The sequence length (T).
+            device : Target device.
+
+        Returns:
+            Complex frequencies of shape (sequence_length, n_embd / 2).
+        """
+        if sequence_length > self.block_size:
+            raise ValueError(
+                f"Sequence length {sequence_length} exceeds maximum precomputed length {self.block_size}"
+            )
+
+        # Return the slice for the current sequence length T
+        self.theta_is = self.theta_is.to(device)
+        return self.theta_is[:sequence_length]
+
+
 def scaled_dot_product_attention(query, key, value, mask=None, dropout=None):
     """
     Scaled Dot-Product Attention function.
@@ -133,17 +245,58 @@ class MultiHeadAttention(nn.Module):
     """
     Multi-Head Attention for batch_first: [batch_size, seq_len, d_model].
     Can be used for encoder (self-attn on video features) or decoder (self-attn on captions, cross-attn to video).
+    
+    Multi-Head Latent Attention (MLA) from DeepSeek-V2, simplified without RoPE.
     """
-    def __init__(self, num_heads, d_model, dropout=0.1):
+    def __init__(self, num_heads: int, d_model: int, dropout: float) -> None:
         super(MultiHeadAttention, self).__init__()
         if d_model % num_heads != 0:
             raise ValueError(f"d_model must be divisible by num_heads (got {d_model} % {num_heads} != 0)")
+        
+        # --- MLA Parameters ---
+        n_embd = d_model
+        head_dim = d_model // num_heads         # d_model = 768, num_heads = 12 -> head_dim = 64
+        kv_compression_dim = 4 * head_dim       # 256
+        q_compression_dim = d_model // 2        # 384
+        self.head_size = n_embd // num_heads
+        self.rotary_embeddings = RotaryPositionalEmbedding(
+            n_embd=n_embd,
+            block_size=1_000, # d_model * 2
+            base_frequency=10_000,
+            device="cuda" if torch.cuda.is_available() else "cpu",
+        )
+        # ----------------------
+        
+        # --- Query Compression Path ---
+        # Down-projection for query
+        self.W_dq = nn.Linear(n_embd, q_compression_dim)
+        # LayerNorm after query down-projection
+        self.q_layer_norm = nn.LayerNorm(q_compression_dim)
+        # Dropout after query down-projection
+        self.q_dropout = nn.Dropout(p=dropout)
+        # Up-projection for query
+        self.W_uq = nn.Linear(q_compression_dim, n_embd)        
+        
+        # --- Key-Value Joint Compression Path ---
+        # Down-projection for key-value
+        self.W_dkv = nn.Linear(n_embd, kv_compression_dim)
+        # LayerNorm after key-value down-projection
+        self.kv_layer_norm = nn.LayerNorm(kv_compression_dim)
+        # Dropout after key-value down-projection
+        self.kv_dropout = nn.Dropout(p=dropout)
+        # Up-projection for key (from compressed KV)
+        self.W_uk = nn.Linear(kv_compression_dim, n_embd)
+        # Up-projection for value (from compressed KV)
+        self.W_uv = nn.Linear(kv_compression_dim, n_embd)
+        
         self.d_k = d_model // num_heads
         self.num_heads = num_heads
         self.d_model = d_model
-        self.query_linear = nn.Linear(d_model, d_model)
-        self.key_linear = nn.Linear(d_model, d_model)
-        self.value_linear = nn.Linear(d_model, d_model)
+        
+        # self.query_linear = nn.Linear(d_model, d_model)
+        # self.key_linear = nn.Linear(d_model, d_model)
+        # self.value_linear = nn.Linear(d_model, d_model)
+        
         self.output_linear = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
         self.attn_weights = None  # To store if needed
@@ -153,22 +306,62 @@ class MultiHeadAttention(nn.Module):
         query, key, value: [batch_size, seq_len, d_model]
         mask: Optional [batch_size, seq_q, seq_k] with 0/1 (0 to mask)
         """
-        batch_size = query.size(0)
-        # Project and split heads: [batch_size, seq_len, num_heads, d_k] -> [batch_size, num_heads, seq_len, d_k]
-        query = self.query_linear(query).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
-        key = self.key_linear(key).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
-        value = self.value_linear(value).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+
+        # Batch size, Sequence length, Embedding dimensionality
+        B, T, C = query.shape
+
+        # 1. Query Path
+        # (B, T, C) -> (B, T, q_compression_dim)
+        compressed_q_latent = self.W_dq(query)
+        compressed_q_latent_norm = self.q_layer_norm(compressed_q_latent)
+        compressed_q_latent_norm = self.q_dropout(compressed_q_latent_norm)
+        # (B, T, q_compression_dim) -> (B, T, C)
+        q_final = self.W_uq(compressed_q_latent_norm)
+
+        # 2. Key-Value Path
+        # (B, T, C) -> (B, T, kv_compression_dim)
+        compressed_kv_latent = self.W_dkv(key)
+        compressed_kv_latent_norm = self.kv_layer_norm(compressed_kv_latent)
+        compressed_kv_latent_norm = self.kv_dropout(compressed_kv_latent_norm)
+        # (B, T, kv_compression_dim) -> (B, T, C)
+        k_final = self.W_uk(compressed_kv_latent_norm)
+        # (B, T, kv_compression_dim) -> (B, T, C)
+        v_final = self.W_uv(compressed_kv_latent_norm)
+
+        # 3. Apply Rotary Positional Embedding to Q, K
+        theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
+        q_rope = apply_rotary_positional_embedding(q_final, theta_is)
+        theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
+        k_rope = apply_rotary_positional_embedding(k_final, theta_is)
+                
+        # 4. Reshape Q, K, V for multi-head attention
+        # (B, T, C) -> (B, T, num_heads, head_size) -> (B, num_heads, T, head_size)
+        q_heads = q_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
+        k_heads = k_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
+        v_heads = v_final.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
+        
+        # batch_size = query.size(0)
+        # # Project and split heads: [batch_size, seq_len, num_heads, d_k] -> [batch_size, num_heads, seq_len, d_k]
+        # query = self.query_linear(query).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        # key = self.key_linear(key).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
+        # value = self.value_linear(value).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
         
         # Expand mask if provided: [batch_size, 1, seq_q, seq_k]
         if mask is not None:
             mask = mask.unsqueeze(1)  # Add head dim for broadcasting
             mask = mask.to(query.device)
         
-        # Attention
-        x, self.attn_weights = scaled_dot_product_attention(query, key, value, mask=mask, dropout=self.dropout)
+        # 5. Scaled Dot-Product Attention
+        x, self.attn_weights = scaled_dot_product_attention(
+            query=q_heads,
+            key=k_heads,
+            value=v_heads,
+            mask=mask, 
+            dropout=self.dropout
+        )
         
-        # Concat heads: [batch_size, num_heads, seq_len, d_k] -> [batch_size, seq_len, d_model]
-        x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+        # 6. Concat heads: [batch_size, num_heads, seq_len, d_k] -> [batch_size, seq_len, d_model]
+        x = x.transpose(1, 2).contiguous().view(B, -1, self.d_model)
         
         return self.output_linear(x)
 
@@ -202,7 +395,6 @@ class SwiGLU(nn.Module):
         self.w2 = nn.Linear(d_model, hidden_dim)
         self.w3 = nn.Linear(hidden_dim, d_model)
         self.dropout = nn.Dropout(dropout)
-        # self.norm = nn.LayerNorm(hidden_dim)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
@@ -454,7 +646,7 @@ class ABDTransformer(nn.Module):
         self.vocab = vocab
         self.device = device
         self.feature_mode = feature_mode
-        multiple_of = 256
+        multiple_of = 128
 
         if feature_mode == 'one':
             raise ValueError("[ABDTransformer.__init__] Feature mode 'one' is not supported")
@@ -479,7 +671,7 @@ class ABDTransformer(nn.Module):
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(d_model, dropout)
+        # self.pos_embed = PositionalEncoding(d_model, dropout)
 
         # Feature fusion module
         self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
@@ -511,12 +703,12 @@ class ABDTransformer(nn.Module):
         # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
             x1 = self.r2l_image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             # x1 = self.encoder_big(x1, src_mask[0])
             x1 = self.r2l_img_encoder_big(x1, src_mask[0])
 
             x2 = self.r2l_motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             # x2 = self.encoder_big(x2, src_mask[1])
             x2 = self.r2l_mot_encoder_big(x2, src_mask[1])
 
@@ -552,12 +744,12 @@ class ABDTransformer(nn.Module):
             return x1 + x2 + x3
         elif self.feature_mode == 'four':
             x1 = self.l2r_image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
+            # x1 = self.pos_embed(x1)
             # x1 = self.encoder(x1, src_mask[0])
             x1 = self.l2r_img_encoder(x1, src_mask[0])
 
             x2 = self.l2r_motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
+            # x2 = self.pos_embed(x2)
             # x2 = self.encoder(x2, src_mask[1])
             x2 = self.l2r_mot_encoder(x2, src_mask[1])
 
@@ -579,12 +771,12 @@ class ABDTransformer(nn.Module):
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)
-        x = self.pos_embed(x)
+        # x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.l2r_trg_embed(trg)
-        x = self.pos_embed(x)
+        # x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
     def forward(self, src, r2l_trg, trg, mask):
@@ -605,7 +797,7 @@ class ABDTransformer(nn.Module):
             # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
             # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
         else:
-            raise "没有输出"
+            raise ValueError(f"[ABDTransformer.forward] Unsupport feature mode `{self.feature_mode}`")
 
         # r2l_pred = self.generator(r2l_outputs)
         # l2r_pred = self.generator(l2r_outputs)

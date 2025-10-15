@@ -151,11 +151,11 @@ class TrainConfig(object):
 
     """ Optimization """
     epochs = {
-        'MSVD': 20,
+        'MSVD': 16,
         'MSR-VTT': 18,
     }[corpus]
 
-    batch_size = 64
+    batch_size = 32
 
     optimizer = "Adam"
     gradient_clip = 5.0  # None if not used

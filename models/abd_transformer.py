@@ -15,18 +15,6 @@ def clones(module, n):
     return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
 
 
-class DyT(nn.Module):
-    def __init__(self, num_features, alpha_init_value=0.5):
-        super().__init__()
-        self.alpha = nn.Parameter(torch.ones(1) * alpha_init_value)
-        self.weight = nn.Parameter(torch.ones(num_features))
-        self.bias = nn.Parameter(torch.zeros(num_features))
-    
-    def forward(self, x):
-        x = torch.tanh(self.alpha * x)
-        return x * self.weight + self.bias
-
-
 class FFNFeatureFusion(nn.Module):
     def __init__(self, d_model: int, num_features: int, dropout: float = 0.1):
         super(FFNFeatureFusion, self).__init__()
@@ -50,8 +38,8 @@ class FFNFeatureFusion(nn.Module):
         # Concatenate features along the last dimension
         x = torch.cat(features, dim=-1) # (B, S, num_features * d_model)
         x = self.norm_1(x)      # Apply LayerNorm
-        x = self.dropout(x)     # Apply dropout
         x = self.projector(x)   # (B, S, d_model)
+        x = self.dropout(x)     # Apply dropout
         x = self.norm_2(x)      # Apply LayerNorm
         return x
 
@@ -62,8 +50,9 @@ class FeatEmbedding(nn.Module):
         super(FeatEmbedding, self).__init__()
         self.video_embeddings = nn.Sequential(
             nn.LayerNorm(d_feat),
-            nn.Dropout(dropout),
-            nn.Linear(d_feat, d_model))
+            nn.Linear(d_feat, d_model),
+            nn.Dropout(dropout)
+        )
 
     def forward(self, x):
         return self.video_embeddings(x)
@@ -255,9 +244,9 @@ class MultiHeadAttention(nn.Module):
         
         # --- MLA Parameters ---
         n_embd = d_model
-        head_dim = d_model // num_heads         # d_model = 768, num_heads = 12 -> head_dim = 64
-        kv_compression_dim = 4 * head_dim       # 256
-        q_compression_dim = d_model // 2        # 384
+        head_dim = d_model // num_heads             # 64 = 768 / 21 | 6 = 768 / 128
+        kv_compression_dim = max(256, 4 * head_dim) # 256 > 128     | 128 > 24
+        q_compression_dim = d_model // 2            # 384           | 384
         self.head_size = n_embd // num_heads
         self.rotary_embeddings = RotaryPositionalEmbedding(
             n_embd=n_embd,
@@ -272,8 +261,6 @@ class MultiHeadAttention(nn.Module):
         self.W_dq = nn.Linear(n_embd, q_compression_dim)
         # LayerNorm after query down-projection
         self.q_layer_norm = nn.LayerNorm(q_compression_dim)
-        # Dropout after query down-projection
-        self.q_dropout = nn.Dropout(p=dropout)
         # Up-projection for query
         self.W_uq = nn.Linear(q_compression_dim, n_embd)        
         
@@ -282,8 +269,6 @@ class MultiHeadAttention(nn.Module):
         self.W_dkv = nn.Linear(n_embd, kv_compression_dim)
         # LayerNorm after key-value down-projection
         self.kv_layer_norm = nn.LayerNorm(kv_compression_dim)
-        # Dropout after key-value down-projection
-        self.kv_dropout = nn.Dropout(p=dropout)
         # Up-projection for key (from compressed KV)
         self.W_uk = nn.Linear(kv_compression_dim, n_embd)
         # Up-projection for value (from compressed KV)
@@ -312,21 +297,19 @@ class MultiHeadAttention(nn.Module):
 
         # 1. Query Path
         # (B, T, C) -> (B, T, q_compression_dim)
-        compressed_q_latent = self.W_dq(query)
+        compressed_q_latent = F.relu(self.W_dq(query))
         compressed_q_latent_norm = self.q_layer_norm(compressed_q_latent)
-        compressed_q_latent_norm = self.q_dropout(compressed_q_latent_norm)
         # (B, T, q_compression_dim) -> (B, T, C)
-        q_final = self.W_uq(compressed_q_latent_norm)
+        q_final = F.relu(self.W_uq(compressed_q_latent_norm))
 
         # 2. Key-Value Path
         # (B, T, C) -> (B, T, kv_compression_dim)
-        compressed_kv_latent = self.W_dkv(key)
+        compressed_kv_latent = F.relu(self.W_dkv(key))
         compressed_kv_latent_norm = self.kv_layer_norm(compressed_kv_latent)
-        compressed_kv_latent_norm = self.kv_dropout(compressed_kv_latent_norm)
         # (B, T, kv_compression_dim) -> (B, T, C)
-        k_final = self.W_uk(compressed_kv_latent_norm)
+        k_final = F.relu(self.W_uk(compressed_kv_latent_norm))
         # (B, T, kv_compression_dim) -> (B, T, C)
-        v_final = self.W_uv(compressed_kv_latent_norm)
+        v_final = F.relu(self.W_uv(compressed_kv_latent_norm))
 
         # 3. Apply Rotary Positional Embedding to Q, K
         theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
@@ -402,7 +385,7 @@ class SwiGLU(nn.Module):
         x2 = self.w2(x)
         y = self.w3(self.dropout(x1 * x2))
         return y
-    
+
 
 class SublayerConnection(nn.Module):
 

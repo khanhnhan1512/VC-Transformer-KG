@@ -11,10 +11,6 @@ from typing import List, Optional
 Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 
 
-def clones(module, n):
-    return nn.ModuleList([copy.deepcopy(module) for _ in range(n)])
-
-
 class FFNFeatureFusion(nn.Module):
     def __init__(self, d_model: int, num_features: int, dropout: float = 0.1):
         super(FFNFeatureFusion, self).__init__()
@@ -38,8 +34,8 @@ class FFNFeatureFusion(nn.Module):
         # Concatenate features along the last dimension
         x = torch.cat(features, dim=-1) # (B, S, num_features * d_model)
         x = self.norm_1(x)      # Apply LayerNorm
-        x = self.projector(x)   # (B, S, d_model)
         x = self.dropout(x)     # Apply dropout
+        x = self.projector(x)   # (B, S, d_model)
         x = self.norm_2(x)      # Apply LayerNorm
         return x
 
@@ -50,8 +46,8 @@ class FeatEmbedding(nn.Module):
         super(FeatEmbedding, self).__init__()
         self.video_embeddings = nn.Sequential(
             nn.LayerNorm(d_feat),
-            nn.Linear(d_feat, d_model),
-            nn.Dropout(dropout)
+            nn.Dropout(dropout),
+            nn.Linear(d_feat, d_model)
         )
 
     def forward(self, x):
@@ -262,7 +258,8 @@ class MultiHeadAttention(nn.Module):
         # LayerNorm after query down-projection
         self.q_layer_norm = nn.LayerNorm(q_compression_dim)
         # Up-projection for query
-        self.W_uq = nn.Linear(q_compression_dim, n_embd)        
+        self.W_uq = nn.Linear(q_compression_dim, n_embd)
+        self.q_dropout = nn.Dropout(p=dropout)
         
         # --- Key-Value Joint Compression Path ---
         # Down-projection for key-value
@@ -273,14 +270,11 @@ class MultiHeadAttention(nn.Module):
         self.W_uk = nn.Linear(kv_compression_dim, n_embd)
         # Up-projection for value (from compressed KV)
         self.W_uv = nn.Linear(kv_compression_dim, n_embd)
+        self.k_dropout = nn.Dropout(p=dropout)
         
         self.d_k = d_model // num_heads
         self.num_heads = num_heads
         self.d_model = d_model
-        
-        # self.query_linear = nn.Linear(d_model, d_model)
-        # self.key_linear = nn.Linear(d_model, d_model)
-        # self.value_linear = nn.Linear(d_model, d_model)
         
         self.output_linear = nn.Linear(d_model, d_model)
         self.dropout = nn.Dropout(p=dropout)
@@ -314,8 +308,10 @@ class MultiHeadAttention(nn.Module):
         # 3. Apply Rotary Positional Embedding to Q, K
         theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
         q_rope = apply_rotary_positional_embedding(q_final, theta_is)
+        q_rope = self.q_dropout(q_rope)
         theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
         k_rope = apply_rotary_positional_embedding(k_final, theta_is)
+        k_rope = self.k_dropout(k_rope)
                 
         # 4. Reshape Q, K, V for multi-head attention
         # (B, T, C) -> (B, T, num_heads, head_size) -> (B, num_heads, T, head_size)
@@ -347,21 +343,6 @@ class MultiHeadAttention(nn.Module):
         x = x.transpose(1, 2).contiguous().view(B, -1, self.d_model)
         
         return self.output_linear(x)
-
-
-class PositionWiseFeedForward(nn.Module):
-
-    def __init__(self, d_model, d_ff, dropout=0.1):
-        super(PositionWiseFeedForward, self).__init__()
-        self.w_1 = nn.Linear(d_model, d_ff)
-        self.w_2 = nn.Linear(d_ff, d_model)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(dropout)
-
-    def forward(self, x):
-        inter = self.dropout(self.relu(self.w_1(x)))
-        output = self.w_2(inter)
-        return output
 
 
 class SwiGLU(nn.Module):

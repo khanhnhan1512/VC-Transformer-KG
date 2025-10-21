@@ -14,10 +14,15 @@ Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 class FFNFeatureFusion(nn.Module):
     def __init__(self, d_model: int, num_features: int, dropout: float = 0.1):
         super(FFNFeatureFusion, self).__init__()
-        self.norm_1 = nn.LayerNorm(num_features * d_model)
+        lowrank_dim = max(128, d_model // num_features)
+        self.bottlenecks = nn.ModuleList([nn.Linear(d_model, lowrank_dim) for _ in range(num_features)])
+        self.lns = nn.ModuleList([nn.LayerNorm(lowrank_dim) for _ in range(num_features)])
         self.dropout = nn.Dropout(dropout)
-        self.projector = nn.Linear(num_features * d_model, d_model)
-        self.norm_2 = nn.LayerNorm(d_model)
+        # final projector from concat(lowrank) -> d_model
+        self.final = nn.Linear(num_features * lowrank_dim, d_model)
+        self.out_ln = nn.LayerNorm(d_model)
+        # residual scale (learnable)
+        # self.res_alpha = nn.Parameter(torch.tensor(1.0))
             
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
         """
@@ -31,13 +36,20 @@ class FFNFeatureFusion(nn.Module):
         if len(features) == 0:
             raise ValueError("features list is empty")
         
-        # Concatenate features along the last dimension
-        x = torch.cat(features, dim=-1) # (B, S, num_features * d_model)
-        x = self.norm_1(x)      # Apply LayerNorm
-        x = self.dropout(x)     # Apply dropout
-        x = self.projector(x)   # (B, S, d_model)
-        x = self.norm_2(x)      # Apply LayerNorm
-        return x
+        proj = []
+        for f, proj_layer, ln in zip(features, self.bottlenecks, self.lns):
+            z = proj_layer(f)             # (B,S,bottleneck) linear
+            z = F.relu(z)                 # non-linear (GELU/ReLU)
+            z = ln(z)                     # LayerNorm on last dim
+            z = self.dropout(z)
+            proj.append(z)
+        x = torch.cat(proj, dim=-1)       # (B,S, num*bottleneck)
+        out = self.final(x)               # (B,S,D)
+        out = self.out_ln(out)
+        # residual: mean of inputs as safe default
+        # residual = torch.stack(features, dim=0).mean(dim=0)
+        # out = out + self.res_alpha * residual
+        return out
 
 
 class FeatEmbedding(nn.Module):
@@ -259,7 +271,6 @@ class MultiHeadAttention(nn.Module):
         self.q_layer_norm = nn.LayerNorm(q_compression_dim)
         # Up-projection for query
         self.W_uq = nn.Linear(q_compression_dim, n_embd)
-        self.q_dropout = nn.Dropout(p=dropout)
         
         # --- Key-Value Joint Compression Path ---
         # Down-projection for key-value
@@ -270,7 +281,6 @@ class MultiHeadAttention(nn.Module):
         self.W_uk = nn.Linear(kv_compression_dim, n_embd)
         # Up-projection for value (from compressed KV)
         self.W_uv = nn.Linear(kv_compression_dim, n_embd)
-        self.k_dropout = nn.Dropout(p=dropout)
         
         self.d_k = d_model // num_heads
         self.num_heads = num_heads
@@ -308,10 +318,8 @@ class MultiHeadAttention(nn.Module):
         # 3. Apply Rotary Positional Embedding to Q, K
         theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
         q_rope = apply_rotary_positional_embedding(q_final, theta_is)
-        q_rope = self.q_dropout(q_rope)
         theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
         k_rope = apply_rotary_positional_embedding(k_final, theta_is)
-        k_rope = self.k_dropout(k_rope)
                 
         # 4. Reshape Q, K, V for multi-head attention
         # (B, T, C) -> (B, T, num_heads, head_size) -> (B, num_heads, T, head_size)
@@ -477,16 +485,18 @@ class Encoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float=0.1):
         super(Encoder, self).__init__()
-        self.norm = nn.LayerNorm(d_model)
+        self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout)
             for _ in range(num_layers)
         ])
+        self.out_norm = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
-        x = self.norm(x)
+        x = self.in_norm(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
+        x = self.out_norm(x)
         return x
 
 
@@ -494,16 +504,18 @@ class EncoderNoAttention(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_layers: int, dropout: float=0.1):
         super(EncoderNoAttention, self).__init__()
-        self.norm = nn.LayerNorm(d_model)
+        self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayerNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
             for _ in range(num_layers)
         ])
+        self.out_norm = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
-        x = self.norm(x)
+        x = self.in_norm(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
+        x = self.out_norm(x)
         return x
 
 
@@ -604,34 +616,20 @@ class Generator(nn.Module):
 
 class ABDTransformer(nn.Module):
 
-    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_layers, dropout, feature_mode,
-                 device='cuda', n_heads_big=128):
+    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_layers, dropout,
+                 n_heads_big, device='cuda'):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
         self.device = device
-        self.feature_mode = feature_mode
         multiple_of = 128
 
-        if feature_mode == 'one':
-            raise ValueError("[ABDTransformer.__init__] Feature mode 'one' is not supported")
-            self.src_embed = FeatEmbedding(d_feat, d_model, dropout)
-        elif feature_mode == 'two':
-            raise ValueError("[ABDTransformer.__init__] Feature mode 'two' is not supported")
-            self.image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
-            self.motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-        elif feature_mode == 'three':
-            raise ValueError("[ABDTransformer.__init__] Feature mode 'three' is not supported")
-            self.image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
-            self.motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-            self.object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
-        elif feature_mode == 'four':
-            self.r2l_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
-            self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-            
-            self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
-            self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-            self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
-            self.l2r_rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
+        self.r2l_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
+        self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
+        
+        self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
+        self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
+        self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
+        self.l2r_rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -680,33 +678,7 @@ class ABDTransformer(nn.Module):
             return self.r2l_feat_fusion([x1, x2])
         
         # ============== Object-Relation Encoding ==============
-        if self.feature_mode == 'one':
-            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'one' is not supported for encoding.")
-            x = self.src_embed(src)
-            x = self.pos_embed(x)
-            return self.encoder(x, src_mask)
-        elif self.feature_mode == 'two':
-            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'two' is not supported for encoding.")
-            x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
-            x1 = self.encoder_big(x1, src_mask[0])
-            x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
-            x2 = self.encoder_big(x2, src_mask[1])
-            return x1 + x2
-        elif self.feature_mode == 'three':
-            raise NotImplementedError("[ABDTransformer.encode] Feature mode 'three' is not supported for encoding.")
-            x1 = self.image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
-            x1 = self.encoder(x1, src_mask[0])
-            x2 = self.motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
-            x2 = self.encoder(x2, src_mask[1])
-            x3 = self.object_src_embed(src[2])
-            x3 = self.pos_embed(x3)
-            x3 = self.encoder(x3, src_mask[2])
-            return x1 + x2 + x3
-        elif self.feature_mode == 'four':
+        else:
             x1 = self.l2r_image_src_embed(src[0])
             # x1 = self.pos_embed(x1)
             # x1 = self.encoder(x1, src_mask[0])
@@ -745,23 +717,17 @@ class ABDTransformer(nn.Module):
 
     def forward(self, src, r2l_trg, trg, mask):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
-        if self.feature_mode == 'one':
-            encoding_outputs = self.encode(src, src_mask)
-            r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, src_mask, r2l_trg_mask)
-            l2r_outputs = self.l2r_decode(trg, encoding_outputs, src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
+        
+        enc_src_mask, dec_src_mask = src_mask
+        r2l_encoding_outputs = self.encode(src, enc_src_mask, feature_mode_two=True)
+        encoding_outputs = self.encode(src, enc_src_mask)
 
-        elif self.feature_mode == 'two' or 'three' or 'four':
-            enc_src_mask, dec_src_mask = src_mask
-            r2l_encoding_outputs = self.encode(src, enc_src_mask, feature_mode_two=True)
-            encoding_outputs = self.encode(src, enc_src_mask)
+        r2l_outputs = self.r2l_decode(r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
+        l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
 
-            r2l_outputs = self.r2l_decode(r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
-            l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
+        # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
+        # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
 
-            # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
-            # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
-        else:
-            raise ValueError(f"[ABDTransformer.forward] Unsupport feature mode `{self.feature_mode}`")
 
         # r2l_pred = self.generator(r2l_outputs)
         # l2r_pred = self.generator(l2r_outputs)
@@ -770,20 +736,6 @@ class ABDTransformer(nn.Module):
         
         return r2l_pred, l2r_pred
 
-    def greedy_decode(self, batch_size, src_mask, memory, max_len):
-        raise NotImplementedError(f"[ABDTransformer.greedy_decode] Method not implemented. Use beam search instead.")
-        eos_idx = self.vocab.word2idx['<S>']
-        r2l_hidden = None
-        with torch.no_grad():
-            output = torch.ones(batch_size, 1).fill_(eos_idx).long().cuda()
-            for i in range(max_len + 2 - 1):
-                trg_mask = subsequent_mask(output.size(1))
-                dec_out = self.r2l_decode(output, memory, src_mask, trg_mask)  # batch, len, d_model
-                r2l_hidden = dec_out
-                pred = self.generator(dec_out)  # batch, len, n_vocabs
-                next_word = pred[:, -1].max(dim=-1)[1].unsqueeze(1)  # pred[:, -1]([batch, n_vocabs])
-                output = torch.cat([output, next_word], dim=-1)
-        return r2l_hidden, output
 
     def r2l_beam_search_decode(self, batch_size, src, src_mask, model_encodings, beam_size, max_len):
         end_symbol = self.vocab.word2idx['<S>']
@@ -836,12 +788,8 @@ class ABDTransformer(nn.Module):
             src_mask_cur = torch.cat(src_mask_l, dim=0)
             y_tm1 = torch.cat(last_tokens, dim=0)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
-            if self.feature_mode == 'one':
-                out = self.r2l_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src.data)).to(self.device))
-            elif self.feature_mode == 'two' or 'three' or 'four':
-                out = self.r2l_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device))
+            out = self.r2l_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
+                                    Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device))
             r2l_outputs = out
 
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
@@ -956,23 +904,17 @@ class ABDTransformer(nn.Module):
         # src_mask = (src[:, :, 0] != self.vocab.word2idx['<PAD>']).unsqueeze(-2)  # TODO Untested
         src_mask = pad_mask(src, r2l_trg=None, trg=None, pad_idx=self.vocab.word2idx['<PAD>'])
         "model_encodings has shape (batch_size, sentence_len, d_model)"
-        if self.feature_mode == 'one':
-            batch_size = src.shape[0]
-            model_encodings = self.encode(src, src_mask)
-            r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, src_mask,
-                                                                               model_encodings=model_encodings,
-                                                                               beam_size=beam_size, max_len=max_len)
-        elif self.feature_mode == 'two' or 'three' or 'four':
-            batch_size = src[0].shape[0]
-            enc_src_mask = src_mask[0]
-            dec_src_mask = src_mask[1]
-            r2l_model_encodings = self.encode(src, enc_src_mask, feature_mode_two=True)
-            # model_encodings = r2l_model_encodings
-            model_encodings = self.encode(src, enc_src_mask)
+        
+        batch_size = src[0].shape[0]
+        enc_src_mask = src_mask[0]
+        dec_src_mask = src_mask[1]
+        r2l_model_encodings = self.encode(src, enc_src_mask, feature_mode_two=True)
+        # model_encodings = r2l_model_encodings
+        model_encodings = self.encode(src, enc_src_mask)
 
-            r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, dec_src_mask,
-                                                                               model_encodings=r2l_model_encodings,
-                                                                               beam_size=beam_size, max_len=max_len)
+        r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, dec_src_mask,
+                                                                            model_encodings=r2l_model_encodings,
+                                                                            beam_size=beam_size, max_len=max_len)
 
         # 1.2 Setup r2l target output
         # r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, src_mask,
@@ -1012,10 +954,7 @@ class ABDTransformer(nn.Module):
                 cur_beam_sizes += [cur_beam_size]
                 last_tokens += [hypotheses[i]]
                 model_encodings_l += [model_encodings[i:i + 1]] * cur_beam_size
-                if self.feature_mode == 'one':
-                    src_mask_l += [src_mask[i:i + 1]] * cur_beam_size
-                elif self.feature_mode == 'two' or 'three' or 'four':
-                    src_mask_l += [dec_src_mask[i:i + 1]] * cur_beam_size
+                src_mask_l += [dec_src_mask[i:i + 1]] * cur_beam_size
                 r2l_memory_l += [r2l_memory[i: i + 1]] * cur_beam_size
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
             model_encodings_cur = torch.cat(model_encodings_l, dim=0)
@@ -1023,14 +962,9 @@ class ABDTransformer(nn.Module):
             y_tm1 = torch.cat(last_tokens, dim=0)
             r2l_memory_cur = torch.cat(r2l_memory_l, dim=0)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
-            if self.feature_mode == 'one':
-                out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src.data)).to(self.device),
-                                      r2l_memory_cur, r2l_trg_mask=None)
-            elif self.feature_mode == 'two' or 'three' or 'four':
-                out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                      Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
-                                      r2l_memory_cur, r2l_trg_mask=None)
+            out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
+                                    Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
+                                    r2l_memory_cur, r2l_trg_mask=None)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
             # log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
             log_prob = self.l2r_generator(out[:, -1, :]).unsqueeze(1)

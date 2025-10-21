@@ -25,7 +25,8 @@ class MSVDVocab(CustomVocab):
         self.n_vocabs_untrimmed = len(self.word_freq_dict)
         self.n_words_untrimmed = sum(list(self.word_freq_dict.values()))
 
-        keep_words = [ word for word, freq in self.word_freq_dict.items() if freq >= self.min_count ]
+        keep_words = [word for word, freq in self.word_freq_dict.items()
+                      if freq >= self.min_count]
 
         for idx, word in enumerate(keep_words, len(self.word2idx)):
             self.word2idx[word] = idx
@@ -40,7 +41,7 @@ class MSVDDataset(CustomDataset):
     def load_captions(self):
         df = pd.read_csv(self.caption_fpath)
         df = df[df['Language'] == 'English']
-        df = df[[ 'VideoID', 'Start', 'End', 'Description' ]]
+        df = df[['VideoID', 'Start', 'End', 'Description']]
         df = df[pd.notnull(df['Description'])]
 
         for video_id, start, end, caption in df.values:
@@ -48,15 +49,13 @@ class MSVDDataset(CustomDataset):
             r2l_caption = " ".join(caption.strip('.').split()[::-1])
             self.l2r_captions[vid].append(caption)
             self.r2l_captions[vid].append(r2l_caption)
-        # Reverse words in r2l_captions
         for vid, caption in self.r2l_captions.items():
             # self.r2l_captions[vid] = caption[::-1]
             random.shuffle(caption)
-        
+
 
 class MSVD(Corpus):
     """ MSVD Corpus """
 
     def __init__(self, C):
         super(MSVD, self).__init__(C, MSVDVocab, MSVDDataset)
-

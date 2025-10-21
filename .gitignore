@@ -179,3 +179,4 @@ LICENSE
 .vector_cache/*
 # Exclude development files
 development/*
+_old_source/*

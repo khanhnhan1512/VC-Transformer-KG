@@ -78,22 +78,13 @@ class NLTKWordpunctTokenizer:
 
 
 class TrimExceptAscii:
-    def __init__(self, corpus):
-        self.corpus = corpus
 
     def __call__(self, sentence):
-        if self.corpus == "MSVD":
-            if isinstance(sentence, list):
-                return sentence
-            else:
-                # s = sentence.encode('ascii', 'ignore').encode('ascii')
-                s = sentence.encode('ascii', 'ignore')
-        elif self.corpus == "MSR-VTT":
-            if isinstance(sentence, list):
-                return sentence
-            else:
-                s = sentence.encode('ascii', 'ignore')
-                # s = sentence
+
+        if isinstance(sentence, list):
+            return sentence
+        else:
+            s = sentence.encode('ascii', 'ignore')
         return s
 
 

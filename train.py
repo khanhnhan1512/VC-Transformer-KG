@@ -7,7 +7,7 @@ import numpy as np
 from loader.MSVD import MSVD
 from config import TrainConfig as C
 from models.abd_transformer import ABDTransformer
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
 from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
@@ -85,7 +85,14 @@ def main():
         weight_decay=C.weight_decay,
         amsgrad=True
     )
-    lr_scheduler = ReduceLROnPlateau(
+    # warmup scheduler (LinearLR): linearly increase from start_factor*lr -> lr in warmup_epochs steps
+    warmup_sched = LinearLR(
+        optimizer,
+        end_factor=1.0,
+        total_iters=C.warmup_epochs,
+    )
+    # ReduceLROnPlateau for after warmup
+    plateau_sched = ReduceLROnPlateau(
         optimizer,
         mode='min',
         factor=C.lr_decay_gamma,
@@ -129,8 +136,16 @@ def main():
                 r2l_scores=r2l_val_scores, l2r_scores=l2r_val_scores)
 
         """ Learning Rate Decay & Checkpointing """
+        if e <= C.warmup_epochs:
+            # print(f">> Epoch {e} in warmup phase, applying warmup scheduler.")
+            warmup_sched.step()
+        else:
+            # print(f">> Epoch {e} in normal phase, applying plateau scheduler.")
+            plateau_sched.step(val_loss['total'])
+        """
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
+        """;
         if l2r_val_scores['CIDEr'] > best_val_CIDEr:
             best_epoch = e
             best_val_CIDEr = l2r_val_scores['CIDEr']

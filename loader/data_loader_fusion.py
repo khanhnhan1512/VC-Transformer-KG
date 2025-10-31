@@ -85,6 +85,8 @@ class CustomDataset(Dataset):
 
     # It's too complex so write another function
     def load_object_feats(self, frames, fin_o, fin_b, vid):
+        raise NotImplementedError("[CustomDataset.load_object_feats] You should implement this function.")
+        """
         # vid = 'video122'
         # assert vid == vid1, "video id of OFeat and BFeat is not align"
         feats_b = fin_b[vid][()]
@@ -107,6 +109,7 @@ class CustomDataset(Dataset):
         feats = feats[sampled_idxs]
         assert len(feats) == frames
         return feats
+        """;
 
     def load_four_video_feats(self):
         models = self.C.feat.model.split('+')
@@ -119,16 +122,10 @@ class CustomDataset(Dataset):
             #     frames = self.C.feat.num_boxes
             # if i == 3:
             #     frames = self.C.feat.three_turple
-            fpath = self.C.loader.phase_video_feat_fpath_tpl.format("MSVD",
-                                                                    "MSVD" +
-                                                                    '_' +
-                                                                    models[i],
-                                                                    self.phase)
-            fpath_b = self.C.loader.phase_video_feat_fpath_tpl.format("MSVD",
-                                                                      "MSVD" +
-                                                                      '_' +
-                                                                      'BFeat',
-                                                                      self.phase)  # load two feats at the sames
+            fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
+                "MSVD", "MSVD" + '_' + models[i], self.phase)
+            fpath_b = self.C.loader.phase_video_feat_fpath_tpl.format(
+                "MSVD", "MSVD" + '_' + 'BFeat', self.phase)  # load two feats at the sames
             # time, there are some problems in efficiency
             fin = h5py.File(fpath, 'r')
             fin_b = h5py.File(fpath_b, 'r')
@@ -137,6 +134,7 @@ class CustomDataset(Dataset):
                 # vid = 'video122'
                 feats = fin[vid][()]
                 if len(feats) < frames:
+                    """
                     if i == 2:
                         # fin_o = h5py.File(fpath, 'r')
 
@@ -144,11 +142,15 @@ class CustomDataset(Dataset):
                             frames=frames, fin_o=fin, fin_b=fin_b, vid=vid)
                         self.object_video_feats[vid].append(feats)
                         continue
+                    """;
                     num_paddings = frames - len(feats)
                     if feats.size == 0:
+                        raise ValueError("[CustomDataset.load_four_video_feats] Feature size is zero!")
+                        """
                         # for _ in range(num_paddings):
                         # now just object feat may appear the feature is empty
                         feats = np.zeros((frames, 1024))
+                        """;
                     else:
                         feats = feats.tolist() + [np.zeros_like(feats[0])
                                                   for _ in range(num_paddings)]
@@ -163,6 +165,8 @@ class CustomDataset(Dataset):
                         self.image_video_feats[vid].append(feats)
                     elif i == 1:
                         self.motion_video_feats[vid].append(feats)
+                    elif i == 2:
+                        self.object_video_feats[vid].append(feats)
                     elif i == 3:
                         self.rel_feats[vid].append(feats)
                 else:
@@ -171,8 +175,10 @@ class CustomDataset(Dataset):
                     elif i == 1:
                         self.motion_video_feats[vid].append(feats)
                     elif i == 2:
+                        """
                         feats = self.load_object_feats(
                             frames=frames, fin_o=fin, fin_b=fin_b, vid=vid)
+                        """;
                         self.object_video_feats[vid].append(feats)
                     elif i == 3:
                         self.rel_feats[vid].append(feats)

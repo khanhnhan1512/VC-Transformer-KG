@@ -11,19 +11,31 @@ from typing import List, Optional
 Hypothesis = namedtuple('Hypothesis', ['value', 'score'])
 
 
+class NewGELUActivation(nn.Module):
+    """
+    Implementation of the GELU activation function currently in Google BERT repo (identical to OpenAI GPT). Also see
+    the Gaussian Error Linear Units paper: https://arxiv.org/abs/1606.08415
+
+    Taken from https://github.com/huggingface/transformers/blob/main/src/transformers/activations.py
+    """
+
+    def forward(self, input):
+        return 0.5 * input * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (input + 0.044715 * torch.pow(input, 3.0))))
+
+
 class FFNFeatureFusion(nn.Module):
-    def __init__(self, d_model: int, num_features: int, dropout: float = 0.1):
+    def __init__(self, d_model: int, num_features: int, dropout: float):
         super(FFNFeatureFusion, self).__init__()
-        lowrank_dim = max(128, d_model // num_features)
+        lowrank_dim = max(128, d_model // 4)
         self.bottlenecks = nn.ModuleList([nn.Linear(d_model, lowrank_dim) for _ in range(num_features)])
         self.lns = nn.ModuleList([nn.LayerNorm(lowrank_dim) for _ in range(num_features)])
         self.dropout = nn.Dropout(dropout)
+        self.activation = NewGELUActivation()
         # final projector from concat(lowrank) -> d_model
         self.final = nn.Linear(num_features * lowrank_dim, d_model)
         self.out_ln = nn.LayerNorm(d_model)
-        # residual scale (learnable)
-        # self.res_alpha = nn.Parameter(torch.tensor(1.0))
-            
+        self.num_features = num_features
+        
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
         """
         Args:
@@ -35,20 +47,19 @@ class FFNFeatureFusion(nn.Module):
             raise ValueError("features must be a list/tuple of tensors")
         if len(features) == 0:
             raise ValueError("features list is empty")
+        if len(features) != self.num_features:
+            raise ValueError(f"Expected {self.num_features} features, got {len(features)}")
         
         proj = []
         for f, proj_layer, ln in zip(features, self.bottlenecks, self.lns):
             z = proj_layer(f)             # (B,S,bottleneck) linear
-            z = F.relu(z)                 # non-linear (GELU/ReLU)
+            z = self.activation(z)        # non-linear (GELU/ReLU)
             z = ln(z)                     # LayerNorm on last dim
             z = self.dropout(z)
             proj.append(z)
         x = torch.cat(proj, dim=-1)       # (B,S, num*bottleneck)
         out = self.final(x)               # (B,S,D)
         out = self.out_ln(out)
-        # residual: mean of inputs as safe default
-        # residual = torch.stack(features, dim=0).mean(dim=0)
-        # out = out + self.res_alpha * residual
         return out
 
 
@@ -75,39 +86,6 @@ class TextEmbedding(nn.Module):
 
     def forward(self, x):
         return self.embed(x) * math.sqrt(self.d_model)
-
-
-class PositionalEncoding(nn.Module):
-    """
-    Positional Encoding cho tensor batch_first: [batch_size, seq_len, d_model].
-    Phù hợp với video captioning (frame features hoặc caption tokens).
-    """
-    def __init__(self, d_model, dropout=0.1, max_len=5000):
-        super(PositionalEncoding, self).__init__()
-        if d_model % 2 != 0:
-            raise ValueError(f"Cannot use sin/cos positional encoding with odd d_model (got {d_model})")
-        pe = torch.zeros(1, max_len, d_model)  # Shape: [1, max_len, d_model]
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)  # [max_len, 1]
-        div_term = torch.exp(torch.arange(0, d_model, 2, dtype=torch.float) * -(math.log(10000.0) / d_model))  # [d_model // 2]
-        # Broadcasting: position [max_len, 1] * div_term [1, d_model // 2] -> [max_len, d_model // 2]
-        pe[0, :, 0::2] = torch.sin(position * div_term.unsqueeze(0))  # [max_len, d_model // 2]
-        pe[0, :, 1::2] = torch.cos(position * div_term.unsqueeze(0))
-        self.register_buffer('pe', pe)
-        self.dropout = nn.Dropout(p=dropout)
-        self.d_model = d_model
-
-    def forward(self, x, step=None):
-        """
-        x: [batch_size, seq_len, d_model]
-        step: Nếu cung cấp, x là [batch_size, 1, d_model] (dùng khi decoding từng bước)
-        """
-        x = x * math.sqrt(self.d_model)
-        if step is None:
-            x = x + self.pe[:, :x.size(1), :]  # Lấy seq_len tương ứng
-        else:
-            x = x + self.pe[:, step:step + 1, :]  # Lấy vị trí step
-        x = self.dropout(x)
-        return x
 
 
 def apply_rotary_positional_embedding(
@@ -245,16 +223,15 @@ class MultiHeadAttention(nn.Module):
     
     Multi-Head Latent Attention (MLA) from DeepSeek-V2, simplified without RoPE.
     """
-    def __init__(self, num_heads: int, d_model: int, dropout: float) -> None:
+    def __init__(self, num_heads: int, d_model: int, dropout: float, use_rope: bool) -> None:
         super(MultiHeadAttention, self).__init__()
         if d_model % num_heads != 0:
             raise ValueError(f"d_model must be divisible by num_heads (got {d_model} % {num_heads} != 0)")
         
         # --- MLA Parameters ---
         n_embd = d_model
-        head_dim = d_model // num_heads             # 64 = 768 / 21 | 6 = 768 / 128
-        kv_compression_dim = max(256, 4 * head_dim) # 256 > 128     | 128 > 24
-        q_compression_dim = d_model // 2            # 384           | 384
+        kv_compression_dim = max(128, d_model // 4)
+        q_compression_dim = d_model // 2
         self.head_size = n_embd // num_heads
         self.rotary_embeddings = RotaryPositionalEmbedding(
             n_embd=n_embd,
@@ -286,8 +263,24 @@ class MultiHeadAttention(nn.Module):
         self.num_heads = num_heads
         self.d_model = d_model
         
-        self.output_linear = nn.Linear(d_model, d_model)
+        self.activation = NewGELUActivation()
+        
+        # self.output_linear = nn.Linear(d_model, d_model)
+        """
+        self.video_embeddings = nn.Sequential(
+            nn.LayerNorm(d_feat),
+            nn.Dropout(dropout),
+            nn.Linear(d_feat, d_model)
+        )
+        """
+        self.output_linear = nn.Sequential(
+            nn.Linear(d_model, d_model // 3),
+            NewGELUActivation(),
+            nn.Linear(d_model // 3, d_model)
+        )
+        
         self.dropout = nn.Dropout(p=dropout)
+        self.use_rope = use_rope
         self.attn_weights = None  # To store if needed
 
     def forward(self, query, key, value, mask=None):
@@ -301,37 +294,35 @@ class MultiHeadAttention(nn.Module):
 
         # 1. Query Path
         # (B, T, C) -> (B, T, q_compression_dim)
-        compressed_q_latent = F.relu(self.W_dq(query))
+        compressed_q_latent = self.activation(self.W_dq(query))
         compressed_q_latent_norm = self.q_layer_norm(compressed_q_latent)
         # (B, T, q_compression_dim) -> (B, T, C)
-        q_final = F.relu(self.W_uq(compressed_q_latent_norm))
+        q_final = self.W_uq(compressed_q_latent_norm)
 
         # 2. Key-Value Path
         # (B, T, C) -> (B, T, kv_compression_dim)
-        compressed_kv_latent = F.relu(self.W_dkv(key))
+        compressed_kv_latent = self.activation(self.W_dkv(key))
         compressed_kv_latent_norm = self.kv_layer_norm(compressed_kv_latent)
         # (B, T, kv_compression_dim) -> (B, T, C)
-        k_final = F.relu(self.W_uk(compressed_kv_latent_norm))
+        k_final = self.W_uk(compressed_kv_latent_norm)
         # (B, T, kv_compression_dim) -> (B, T, C)
-        v_final = F.relu(self.W_uv(compressed_kv_latent_norm))
+        v_final = self.W_uv(compressed_kv_latent_norm)
 
         # 3. Apply Rotary Positional Embedding to Q, K
-        theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
-        q_rope = apply_rotary_positional_embedding(q_final, theta_is)
-        theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
-        k_rope = apply_rotary_positional_embedding(k_final, theta_is)
-                
+        if self.use_rope:
+            theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
+            q_rope = apply_rotary_positional_embedding(q_final, theta_is)
+            theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
+            k_rope = apply_rotary_positional_embedding(k_final, theta_is)
+        else:
+            q_rope = q_final
+            k_rope = k_final
+        
         # 4. Reshape Q, K, V for multi-head attention
         # (B, T, C) -> (B, T, num_heads, head_size) -> (B, num_heads, T, head_size)
         q_heads = q_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
         k_heads = k_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
         v_heads = v_final.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
-        
-        # batch_size = query.size(0)
-        # # Project and split heads: [batch_size, seq_len, num_heads, d_k] -> [batch_size, num_heads, seq_len, d_k]
-        # query = self.query_linear(query).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
-        # key = self.key_linear(key).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
-        # value = self.value_linear(value).view(batch_size, -1, self.num_heads, self.d_k).transpose(1, 2)
         
         # Expand mask if provided: [batch_size, 1, seq_q, seq_k]
         if mask is not None:
@@ -367,18 +358,20 @@ class SwiGLU(nn.Module):
         self.w2 = nn.Linear(d_model, hidden_dim)
         self.w3 = nn.Linear(hidden_dim, d_model)
         self.dropout = nn.Dropout(dropout)
+        self.main_activation = nn.SiLU()  # Swish activation
+        self.sub_activation = NewGELUActivation()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
-        x1 = F.silu(self.w1(x))
+        x1 = self.main_activation(self.w1(x))
         x2 = self.w2(x)
-        y = self.w3(self.dropout(x1 * x2))
+        y = self.dropout(self.w3(x1 * x2))
         return y
 
 
 class SublayerConnection(nn.Module):
 
-    def __init__(self, size, dropout=0.1):
+    def __init__(self, size: int, dropout: float):
         super(SublayerConnection, self).__init__()
         self.norm_1 = nn.LayerNorm(size)
         self.norm_2 = nn.LayerNorm(size)
@@ -391,9 +384,9 @@ class SublayerConnection(nn.Module):
 
 class EncoderLayer(nn.Module):
     
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool):
         super(EncoderLayer, self).__init__()
-        self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
@@ -406,7 +399,7 @@ class EncoderLayer(nn.Module):
 
 class EncoderLayerNoAttention(nn.Module):
     
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
         super(EncoderLayerNoAttention, self).__init__()
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection = SublayerConnection(size=d_model, dropout=dropout)
@@ -418,7 +411,7 @@ class EncoderLayerNoAttention(nn.Module):
 
 # class DecoderLayer(nn.Module):
 
-#     def __init__(self, size, attn, feed_forward, sublayer_num, dropout=0.1):
+#     def __init__(self, size, attn, feed_forward, sublayer_num, dropout):
 #         super(DecoderLayer, self).__init__()
 #         self.attn = attn
 #         self.feed_forward = feed_forward
@@ -436,11 +429,11 @@ class EncoderLayerNoAttention(nn.Module):
 
 class R2LDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool):
         assert sublayer_num == 3, "[R2LDecoderLayer.__init__] sublayer_num must be 3"
         super(R2LDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
@@ -458,12 +451,12 @@ class R2LDecoderLayer(nn.Module):
 
 class L2RDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool):
         assert sublayer_num == 4, "[L2RDecoderLayer.__init__] sublayer_num must be 4"
         super(L2RDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
-        self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
@@ -483,11 +476,11 @@ class L2RDecoderLayer(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(Encoder, self).__init__()
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
-            EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout)
+            EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope)
             for _ in range(num_layers)
         ])
         self.out_norm = nn.LayerNorm(d_model)
@@ -502,7 +495,7 @@ class Encoder(nn.Module):
 
 class EncoderNoAttention(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_layers: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_layers: int, dropout: float):
         super(EncoderNoAttention, self).__init__()
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
@@ -521,12 +514,13 @@ class EncoderNoAttention(nn.Module):
 
 class R2L_Decoder(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(R2L_Decoder, self).__init__()
         self.norm_1 = nn.LayerNorm(d_model)
         self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
-            R2LDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=3, dropout=dropout)
+            R2LDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=3, 
+                            dropout=dropout, use_rope=use_rope)
             for _ in range(num_layers)
         ])
 
@@ -540,12 +534,13 @@ class R2L_Decoder(nn.Module):
 
 class L2R_Decoder(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float=0.1):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(L2R_Decoder, self).__init__()
         self.norm_1 = nn.LayerNorm(d_model)
         self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
-            L2RDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=4, dropout=dropout)
+            L2RDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=4, 
+                            dropout=dropout, use_rope=use_rope)
             for _ in range(num_layers)
         ])
 
@@ -629,7 +624,7 @@ class ABDTransformer(nn.Module):
         self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
         self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
-        self.l2r_rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
+        # self.l2r_rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -637,25 +632,22 @@ class ABDTransformer(nn.Module):
 
         # Feature fusion module
         self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
-        self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=4, dropout=dropout)
+        self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
-        # self.encoder_no_heads = Encoder(n_layers, EncoderLayer(d_model, c(attn_no_heads), c(feed_forward), dropout))
-
-        # self.encoder_big2 = Encoder(n_layers, EncoderLayer(d_model, c(attn_big2), c(feed_forward), dropout))
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
-        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout)
-        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout)
+        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
-        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout)
-        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout)
-        self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout)
+        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
 
         # self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
-        self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_layers, dropout=dropout)
+        # self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_layers, dropout=dropout)
 
-        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout)
-        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout)
+        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
 
         # self.generator = Generator(d_model, vocab.n_vocabs)
         self.r2l_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
@@ -695,15 +687,15 @@ class ABDTransformer(nn.Module):
             x3 = self.l2r_obj_encoder(x3, src_mask[2])
             # x3 = self.encoder_no_attention(x3, src_mask[2])
 
-            x4 = self.l2r_rel_src_embed(src[3])
+            # x4 = self.l2r_rel_src_embed(src[3])
             # x4 = self.pos_embed(x4)
             # x4 = self.encoder(x4, src_mask[3])
             # x4 = self.encoder_no_attention(x4, src_mask[3])
-            x4 = self.l2r_rel_encoder_no_attention(x4, src_mask[3])
+            # x4 = self.l2r_rel_encoder_no_attention(x4, src_mask[3])
             
             # return x1 + x2 + x3 + x4
             # return self.feat_fusion([x1, x2, x3, x4])
-            return self.l2r_feat_fusion([x1, x2, x3, x4])
+            return self.l2r_feat_fusion([x1, x2, x3])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)

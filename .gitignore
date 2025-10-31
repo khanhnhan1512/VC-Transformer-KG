@@ -180,3 +180,5 @@ LICENSE
 # Exclude development files
 development/*
 _old_source/*
+# Exclude Jupyter Notebook files
+*.ipynb

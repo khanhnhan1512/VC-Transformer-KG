@@ -1,8 +1,6 @@
-import math
 import re
 import string
 
-from nltk.tokenize import wordpunct_tokenize
 import numpy as np
 import torch
 
@@ -17,7 +15,7 @@ class UniformSample:
             return frames
 
         sample_indices = np.linspace(0, n_frames-1, self.n_sample, dtype=int)
-        samples = [ frames[i] for i in sample_indices ]
+        samples = [frames[i] for i in sample_indices]
         return samples
 
 
@@ -35,34 +33,14 @@ class RandomSample:
         uniformly_sampled_indices = np.linspace(0, start_of_final_clip, self.n_sample, dtype=int)
         random_noise = np.random.choice(block_len, self.n_sample, replace=True)
         randomly_sampled_indices = uniformly_sampled_indices + random_noise
-        samples = [ frames[i] for i in randomly_sampled_indices ]
+        samples = [frames[i] for i in randomly_sampled_indices]
         return samples
-
-
-class TrimIfLongerThan:
-    def __init__(self, n):
-        self.n = n
-
-    def __call__(self, frames):
-        if len(frames) > self.n:
-            frames = frames[:self.n]
-        return frames
-
-
-class ZeroPadIfLessThan:
-    def __init__(self, n):
-        self.n = n
-
-    def __call__(self, frames):
-        while len(frames) < self.n:
-            frames = np.vstack([ frames, np.zeros_like(frames[0]) ])
-        return frames
 
 
 class ToTensor:
     def __init__(self, dtype=None):
         self.dtype = dtype
-    
+
     def __call__(self, array):
         np_array = np.asarray(array)
         t = torch.from_numpy(np_array)
@@ -71,16 +49,8 @@ class ToTensor:
         return t
 
 
-class NLTKWordpunctTokenizer:
-
-    def __call__(self, sentence):
-        return wordpunct_tokenize(sentence)
-
-
 class TrimExceptAscii:
-
     def __call__(self, sentence):
-
         if isinstance(sentence, list):
             return sentence
         else:
@@ -97,13 +67,11 @@ class RemovePunctuation:
 
 
 class Lowercase:
-
     def __call__(self, sentence):
         return sentence.lower()
 
 
 class SplitWithWhiteSpace:
-
     def __call__(self, sentence):
         return sentence.split()
 
@@ -121,7 +89,7 @@ class PadFirst:
         self.token = token
 
     def __call__(self, words):
-        return [ self.token ] + words
+        return [self.token] + words
 
 
 class PadLast:
@@ -129,7 +97,7 @@ class PadLast:
         self.token = token
 
     def __call__(self, words):
-        return words + [ self.token ]
+        return words + [self.token]
 
 
 class PadToLength:
@@ -139,7 +107,7 @@ class PadToLength:
 
     def __call__(self, words):
         n_pads = self.length - len(words)
-        return words + [ self.token ] * n_pads
+        return words + [self.token] * n_pads
 
 
 class ToIndex:
@@ -154,5 +122,4 @@ class ToIndex:
         #     else:
         #         word_to_idx.append(self.word2idx['<UNK>'])
         # return word_to_idx
-        return [ self.word2idx[word] for word in words if word in self.word2idx ]
-
+        return [self.word2idx[word] for word in words if word in self.word2idx]

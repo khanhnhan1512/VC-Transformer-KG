@@ -3,17 +3,26 @@ from typing import List
 
 
 class FeatureConfig:
-    model: str = "InceptionResNetV2+I3D+OFeat+rel"
+    model: str = "BlipBaseClsKF+I3DRaft+MaskRCNNv2+rel"
     feature_dims: List[int] = []
 
     # Per-image feature dimension
-    if model.startswith('InceptionResNetV2'):   feature_dims.append(1536)
-    if model.startswith('ResNet152'):           feature_dims.append(2048)
+    if model.startswith('InceptionResNetV2+'):  feature_dims.append(1536)
+    if model.startswith('ResNet152+'):          feature_dims.append(2048)
+    if model.startswith('BlipCls+'):            feature_dims.append(768)
+    if model.startswith('BlipBaseClsKF+'):      feature_dims.append(768)
 
+    # Motion feature dimension
+    if model.find('+I3D+') != -1:       feature_dims.append(1024)
+    if model.find('+I3DRaft+') != -1:   feature_dims.append(1024)
+
+    # Object feature dimension
+    if model.find('+OFeat+') != -1:      feature_dims.append(1028)
+    if model.find('+FasterRCNN+') != -1: feature_dims.append(1028)
+    if model.find('+MaskRCNNv2+') != -1: feature_dims.append(1028)
+    
     # Other feature dimension
-    if model.find('I3D') != -1:     feature_dims.append(1024)
-    if model.find('OFeat') != -1:   feature_dims.append(1028)
-    if model.find('rel') != -1:     feature_dims.append(300)
+    if model.find('+rel') != -1:        feature_dims.append(300)
 
 
 class VocabConfig:
@@ -32,33 +41,30 @@ class MSVDLoaderConfig:
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     # total_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/MSR Video Description Corpus.csv")
-    train_caption_fpath = os.path.join(
-        DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
-    val_caption_fpath = os.path.join(
-        DATA_FOLDER_PATH, "MSVD/metadata/val.csv")
-    test_caption_fpath = os.path.join(
-        DATA_FOLDER_PATH, "MSVD/metadata/test.csv")
+    train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
+    val_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/val.csv")
+    test_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/test.csv")
 
     min_count = 3
-    max_caption_len = 20
+    max_caption_len = 30
 
     # total_video_feat_fpath_tpl = "./data/{}/features/{}.hdf5"
     # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
-    total_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}.hdf5"
+    # total_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}.hdf5"
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
-    frame_sample_len = 50
+    frame_sample_len = 10
 
     num_workers = 8  # Kaggle: suggested max number of worker in current system is 4
 
 
 class TransformerConfig:
-    d_model = 768
-    d_ff = 3072         # d_ff / d_model = 4
-    n_heads_big = 128   # d_model / n_heads_big = 6
-    n_heads = 12        # d_model / n_heads = 64
+    d_model = 512
+    d_ff = 2048         # d_ff / d_model = 4
+    n_heads_big = 128   # d_model / n_heads_big = 4
+    n_heads = 8         # d_model / n_heads = 64
     n_layers = 3
     dropout = 0.1
 
@@ -70,16 +76,17 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 16
-    batch_size = 32
+    epochs = 14
+    batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
     lr_decay_start_from = 3
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
     weight_decay = 0.5e-5
+    warmup_epochs = 3
     reg_lambda = 0.5    # weights of l2r
-    beam_size = 5
+    beam_size = 4
     label_smoothing = 0.15
 
     """ Evaluation Metrics """

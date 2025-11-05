@@ -620,6 +620,7 @@ class ABDTransformer(nn.Module):
 
         self.r2l_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
+        self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
         self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
@@ -631,12 +632,13 @@ class ABDTransformer(nn.Module):
         # self.pos_embed = PositionalEncoding(d_model, dropout)
 
         # Feature fusion module
-        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
+        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
         self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
         self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
@@ -666,9 +668,12 @@ class ABDTransformer(nn.Module):
             # x2 = self.encoder_big(x2, src_mask[1])
             x2 = self.r2l_mot_encoder_big(x2, src_mask[1])
 
+            x3 = self.r2l_object_src_embed(src[2])
+            x3 = self.r2l_obj_encoder_big(x3, src_mask[2])
+
             # return x1 + x2
-            return self.r2l_feat_fusion([x1, x2])
-        
+            return self.r2l_feat_fusion([x1, x2, x3])
+
         # ============== Object-Relation Encoding ==============
         else:
             x1 = self.l2r_image_src_embed(src[0])
@@ -745,8 +750,8 @@ class ABDTransformer(nn.Module):
         # 1.2 Setup Tgt Hypothesis Tracking
         "hypothesis is List(4 bt)[(cur beam_sz, dec_sent_len)], init: List(4 bt)[(1 init_beam_sz, dec_sent_len)]"
         "hypotheses[i] is shape (cur beam_sz, dec_sent_len)"
-        hypotheses = [copy.deepcopy(torch.full((1, 1), start_symbol, dtype=torch.long,
-                                               device=self.device)) for _ in range(batch_size)]
+        hypotheses = [copy.deepcopy(torch.full((1, 1), start_symbol, dtype=torch.long, device=self.device)) 
+                      for _ in range(batch_size)]
         "List after init: List 4 bt of List of len max_len_completed, init: List of len 4 bt of []"
         completed_hypotheses = [copy.deepcopy([]) for _ in range(batch_size)]
         "List len batch_sz of shape (cur beam_sz), init: List(4 bt)[(1 init_beam_sz)]"
@@ -781,7 +786,7 @@ class ABDTransformer(nn.Module):
             y_tm1 = torch.cat(last_tokens, dim=0)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
             out = self.r2l_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                    Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device))
+                                  Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device))
             r2l_outputs = out
 
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
@@ -827,8 +832,7 @@ class ABDTransformer(nn.Module):
                 # 2.2.3 For each of the topk words, we append the new word to the current (generating) sentence
                 # We add this to new_hypotheses_i and add its corresponding total score to new_hyp_scores_i
                 new_hypotheses_i, new_hyp_scores_i = [], []  # Removed live_hyp_ids_i, which is used in the LSTM decoder to track live hypothesis ids
-                for prev_hyp_id, hyp_word_id, cand_new_hyp_score in zip(prev_hyp_ids, hyp_word_ids,
-                                                                        top_cand_hyp_scores):
+                for prev_hyp_id, hyp_word_id, cand_new_hyp_score in zip(prev_hyp_ids, hyp_word_ids, top_cand_hyp_scores):
                     prev_hyp_id, hyp_word_id, cand_new_hyp_score = \
                         prev_hyp_id.item(), hyp_word_id.item(), cand_new_hyp_score.item()
 
@@ -905,8 +909,8 @@ class ABDTransformer(nn.Module):
         model_encodings = self.encode(src, enc_src_mask)
 
         r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, dec_src_mask,
-                                                                            model_encodings=r2l_model_encodings,
-                                                                            beam_size=beam_size, max_len=max_len)
+                                                                           model_encodings=r2l_model_encodings,
+                                                                           beam_size=beam_size, max_len=max_len)
 
         # 1.2 Setup r2l target output
         # r2l_memory, r2l_completed_hypotheses = self.r2l_beam_search_decode(batch_size, src, src_mask,
@@ -917,8 +921,8 @@ class ABDTransformer(nn.Module):
         # 1.3 Setup Tgt Hypothesis Tracking
         "hypothesis is List(4 bt)[(cur beam_sz, dec_sent_len)], init: List(4 bt)[(1 init_beam_sz, dec_sent_len)]"
         "hypotheses[i] is shape (cur beam_sz, dec_sent_len)"
-        hypotheses = [copy.deepcopy(torch.full((1, 1), start_symbol, dtype=torch.long,
-                                               device=self.device)) for _ in range(batch_size)]
+        hypotheses = [copy.deepcopy(torch.full((1, 1), start_symbol, dtype=torch.long, device=self.device)) 
+                      for _ in range(batch_size)]
         "List after init: List 4 bt of List of len max_len_completed, init: List of len 4 bt of []"
         completed_hypotheses = [copy.deepcopy([]) for _ in range(batch_size)]
         "List len batch_sz of shape (cur beam_sz), init: List(4 bt)[(1 init_beam_sz)]"
@@ -955,8 +959,8 @@ class ABDTransformer(nn.Module):
             r2l_memory_cur = torch.cat(r2l_memory_l, dim=0)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 128 d_model)"
             out = self.l2r_decode(Variable(y_tm1).to(self.device), model_encodings_cur, src_mask_cur,
-                                    Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
-                                    r2l_memory_cur, r2l_trg_mask=None)
+                                  Variable(subsequent_mask(y_tm1.size(-1)).type_as(src[0].data)).to(self.device),
+                                  r2l_memory_cur, r2l_trg_mask=None)
             "shape (sum(4 bt * cur_beam_sz_i), 1 dec_sent_len, 50002 vocab_sz)"
             # log_prob = self.generator(out[:, -1, :]).unsqueeze(1)
             log_prob = self.l2r_generator(out[:, -1, :]).unsqueeze(1)

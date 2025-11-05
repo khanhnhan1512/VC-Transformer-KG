@@ -1,5 +1,6 @@
 import os
 from typing import List
+import time
 
 
 class FeatureConfig:
@@ -57,7 +58,7 @@ class MSVDLoaderConfig:
     assert frame_sampling_method in ['uniform', 'random']
     frame_sample_len = 10
 
-    num_workers = 8  # Kaggle: suggested max number of worker in current system is 4
+    num_workers = 4
 
 
 class TransformerConfig:
@@ -111,8 +112,13 @@ class TrainConfig:
     hyperparams_id = f"bs-{batch_size}-gc-{gradient_clip}-ls-{label_smoothing}"
 
     model_id = " = ".join(
-        [feat_id, transformer_id, optimizer_id, hyperparams_id])
+        [feat_id, transformer_id, optimizer_id, hyperparams_id, str(int(time.time()))])
 
     """ Log """
     ckpt_dpath = f"./checkpoints/{model_id}"
     ckpt_fpath_tpl = os.path.join(ckpt_dpath, "{}.ckpt")
+
+
+if __name__ == "__main__":
+    C = TrainConfig()
+    print(f">> Model ID:\n{C.model_id}")

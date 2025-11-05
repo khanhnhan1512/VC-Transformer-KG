@@ -191,8 +191,7 @@ class CustomDataset(Dataset):
     def build_video_caption_pairs(self):
         self.load_captions()
         self.load_four_video_feats()
-        assert self.image_video_feats.keys() == self.motion_video_feats.keys(), "Image feats is not match with " \
-                                                                                "motion feats "
+        assert self.image_video_feats.keys() == self.motion_video_feats.keys(), "Image feats is not match with motion feats"
         for vid in self.image_video_feats.keys():
             image_video_feats = self.image_video_feats[vid]
             motion_video_feats = self.motion_video_feats[vid]

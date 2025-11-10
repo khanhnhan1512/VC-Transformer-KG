@@ -34,16 +34,16 @@ class LossChecker:
 
 
 def parse_batch(batch):
-    vids, image_feats, motion_feats, object_feats, rel_feats, r2l_captions, l2r_captions = batch
+    vids, image_feats, motion_feats, object_feats, r2l_captions, l2r_captions = batch
     image_feats = [feat.cuda() for feat in image_feats]
     motion_feats = [feat.cuda() for feat in motion_feats]
     object_feats = [feat.cuda() for feat in object_feats]
-    rel_feats = [feat.cuda() for feat in rel_feats]
+    
     image_feats = torch.cat(image_feats, dim=2)
     motion_feats = torch.cat(motion_feats, dim=2)
     object_feats = torch.cat(object_feats, dim=2)
-    rel_feats = torch.cat(rel_feats, dim=2)
-    feats = (image_feats, motion_feats, object_feats, rel_feats)
+    
+    feats = (image_feats, motion_feats, object_feats)
     r2l_captions = r2l_captions.long().cuda()
     l2r_captions = l2r_captions.long().cuda()
     return vids, feats, r2l_captions, l2r_captions
@@ -143,10 +143,9 @@ def get_predicted_captions(data_iter, model, beam_size, max_len):
         for batch in tqdm(iter(data_iter)):
 
             vids, feats, _, _ = parse_batch(batch)
-            for vid, image_feat, motion_feat, object_feat, rel_feat in zip(vids, feats[0], feats[1], feats[2], feats[3]):
+            for vid, image_feat, motion_feat, object_feat in zip(vids, feats[0], feats[1], feats[2]):
                 if vid not in onlyonce_dataset:
-                    onlyonce_dataset[vid] = (
-                        image_feat, motion_feat, object_feat, rel_feat)
+                    onlyonce_dataset[vid] = (image_feat, motion_feat, object_feat)
         onlyonce_iter = []
         vids = list(onlyonce_dataset.keys())
         feats = list(onlyonce_dataset.values())
@@ -157,15 +156,14 @@ def get_predicted_captions(data_iter, model, beam_size, max_len):
             image_feats = []
             motion_feats = []
             object_feats = []
-            rel_feats = []
-            for image_feature, motion_feature, object_feat, rel_feat in feats[:batch_size]:
+            
+            for image_feature, motion_feature, object_feat in feats[:batch_size]:
                 image_feats.append(image_feature)
                 motion_feats.append(motion_feature)
                 object_feats.append(object_feat)
-                rel_feats.append(rel_feat)
+
             onlyonce_iter.append((vids[:batch_size],
-                                  (torch.stack(image_feats), torch.stack(motion_feats), torch.stack(object_feats),
-                                   torch.stack(rel_feats))))
+                                  (torch.stack(image_feats), torch.stack(motion_feats), torch.stack(object_feats))))
             vids = vids[batch_size:]
             feats = feats[batch_size:]
         return onlyonce_iter
@@ -183,10 +181,8 @@ def get_predicted_captions(data_iter, model, beam_size, max_len):
             r2l_captions, l2r_captions = model.beam_search_decode(
                 feats, beam_size, max_len)
             # r2l_captions = [idxs_to_sentence(caption, vocab.idx2word, BOS_idx) for caption in r2l_captions]
-            l2r_captions = [" ".join(caption[0].value)
-                            for caption in l2r_captions]
-            r2l_captions = [" ".join(caption[0].value)
-                            for caption in r2l_captions]
+            l2r_captions = [" ".join(caption[0].value) for caption in l2r_captions]
+            r2l_captions = [" ".join(caption[0].value) for caption in r2l_captions]
             r2l_vid2pred.update({v: p for v, p in zip(vids, r2l_captions)})
             l2r_vid2pred.update({v: p for v, p in zip(vids, l2r_captions)})
     return r2l_vid2pred, l2r_vid2pred

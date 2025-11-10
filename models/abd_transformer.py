@@ -200,6 +200,33 @@ class RotaryPositionalEmbedding(nn.Module):
         return self.theta_is[:sequence_length]
 
 
+class PositionalEncoding(nn.Module):
+
+    def __init__(self, dim, dropout, max_len=5000):
+        super(PositionalEncoding, self).__init__()
+        pe = torch.zeros(max_len, dim)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) *
+                              -(math.log(10000.0) / dim)))
+        pe[:, 0::2] = torch.sin(position.float() * div_term)
+        pe[:, 1::2] = torch.cos(position.float() * div_term)
+        self.register_buffer('pe', pe)
+        assert self.pe.ndim == 2
+        
+        self.drop_out = nn.Dropout(p=dropout)
+        #self.dim = dim
+
+    def forward(self, emb, step=None):
+
+        #emb = emb * math.sqrt(self.dim)'
+        if step is None:
+            emb = emb + self.pe[:emb.size(1), :]
+        else:
+            emb = emb + self.pe[step]
+        emb = self.drop_out(emb)
+        return emb
+
+
 def scaled_dot_product_attention(query, key, value, mask=None, dropout=None):
     """
     Scaled Dot-Product Attention function.
@@ -227,6 +254,8 @@ class MultiHeadAttention(nn.Module):
         super(MultiHeadAttention, self).__init__()
         if d_model % num_heads != 0:
             raise ValueError(f"d_model must be divisible by num_heads (got {d_model} % {num_heads} != 0)")
+        if use_rope:
+            raise ValueError("Rotary Positional Embedding (RoPE) is not supported in this implementation of MultiHeadAttention.")
         
         # --- MLA Parameters ---
         n_embd = d_model
@@ -265,20 +294,14 @@ class MultiHeadAttention(nn.Module):
         
         self.activation = NewGELUActivation()
         
-        # self.output_linear = nn.Linear(d_model, d_model)
-        """
-        self.video_embeddings = nn.Sequential(
-            nn.LayerNorm(d_feat),
-            nn.Dropout(dropout),
-            nn.Linear(d_feat, d_model)
-        )
+        self.output_linear = nn.Linear(d_model, d_model)
         """
         self.output_linear = nn.Sequential(
             nn.Linear(d_model, d_model // 3),
             NewGELUActivation(),
             nn.Linear(d_model // 3, d_model)
         )
-        
+        """
         self.dropout = nn.Dropout(p=dropout)
         self.use_rope = use_rope
         self.attn_weights = None  # To store if needed
@@ -360,6 +383,14 @@ class SwiGLU(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.main_activation = nn.SiLU()  # Swish activation
         self.sub_activation = NewGELUActivation()
+        """
+        self.transform = nn.Sequential(
+            nn.Linear(d_model, d_ff),
+            NewGELUActivation(),
+            nn.Linear(d_ff, d_model),
+            nn.Dropout(dropout)
+        )
+        """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
@@ -382,13 +413,27 @@ class SublayerConnection(nn.Module):
         return self.dropout(x + self.norm_2(sublayer(self.norm_1(x))))
 
 
+class SkipConnectionAfterLN(nn.Module):
+
+    def __init__(self, size: int, dropout: float):
+        super(SkipConnectionAfterLN, self).__init__()
+        self.norm = nn.LayerNorm(size)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x, sublayer):
+        return self.dropout(x + self.norm(sublayer(x)))
+    
+
 class EncoderLayer(nn.Module):
     
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool, first_layer: bool):
         super(EncoderLayer, self).__init__()
         self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
+        if first_layer:
+            self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:
+            self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
 
     def forward(self, x, mask):
@@ -399,10 +444,13 @@ class EncoderLayer(nn.Module):
 
 class EncoderLayerNoAttention(nn.Module):
     
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float, first_layer: bool):
         super(EncoderLayerNoAttention, self).__init__()
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        self.sublayer_connection = SublayerConnection(size=d_model, dropout=dropout)
+        if first_layer:
+            self.sublayer_connection = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:
+            self.sublayer_connection = SublayerConnection(size=d_model, dropout=dropout)
 
     def forward(self, x, mask):
         x = self.sublayer_connection(x, self.feed_forward)
@@ -429,13 +477,16 @@ class EncoderLayerNoAttention(nn.Module):
 
 class R2LDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool, first_layer: bool):
         assert sublayer_num == 3, "[R2LDecoderLayer.__init__] sublayer_num must be 3"
         super(R2LDecoderLayer, self).__init__()
         self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
+        if first_layer:
+            self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:
+            self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_3 = SublayerConnection(size=d_model, dropout=dropout)
 
@@ -451,14 +502,17 @@ class R2LDecoderLayer(nn.Module):
 
 class L2RDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool):
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool, first_layer: bool):
         assert sublayer_num == 4, "[L2RDecoderLayer.__init__] sublayer_num must be 4"
         super(L2RDecoderLayer, self).__init__()
         self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
+        if first_layer:
+            self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:
+            self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_3 = SublayerConnection(size=d_model, dropout=dropout)
         self.sublayer_connection_4 = SublayerConnection(size=d_model, dropout=dropout)
@@ -480,8 +534,9 @@ class Encoder(nn.Module):
         super(Encoder, self).__init__()
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
-            EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope)
-            for _ in range(num_layers)
+            EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope,
+                         first_layer=(i == 0))
+            for i in range(num_layers)
         ])
         self.out_norm = nn.LayerNorm(d_model)
 
@@ -499,8 +554,9 @@ class EncoderNoAttention(nn.Module):
         super(EncoderNoAttention, self).__init__()
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
-            EncoderLayerNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-            for _ in range(num_layers)
+            EncoderLayerNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout,
+                                    first_layer=(i == 0))
+            for i in range(num_layers)
         ])
         self.out_norm = nn.LayerNorm(d_model)
 
@@ -520,8 +576,8 @@ class R2L_Decoder(nn.Module):
         self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
             R2LDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=3, 
-                            dropout=dropout, use_rope=use_rope)
-            for _ in range(num_layers)
+                            dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            for i in range(num_layers)
         ])
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
@@ -540,8 +596,8 @@ class L2R_Decoder(nn.Module):
         self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
             L2RDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=4, 
-                            dropout=dropout, use_rope=use_rope)
-            for _ in range(num_layers)
+                            dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            for i in range(num_layers)
         ])
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
@@ -620,7 +676,7 @@ class ABDTransformer(nn.Module):
 
         self.r2l_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-        self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
+        #self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
         self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
@@ -629,27 +685,27 @@ class ABDTransformer(nn.Module):
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        # self.pos_embed = PositionalEncoding(d_model, dropout)
+        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=36)
 
         # Feature fusion module
-        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
+        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
         self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
-        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
-        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=True)
-        self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
+        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
-        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
-        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
         self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
 
         # self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
         # self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_layers, dropout=dropout)
 
-        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
-        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=True)
+        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
 
         # self.generator = Generator(d_model, vocab.n_vocabs)
         self.r2l_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
@@ -659,41 +715,38 @@ class ABDTransformer(nn.Module):
         # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
             x1 = self.r2l_image_src_embed(src[0])
-            # x1 = self.pos_embed(x1)
+            x1 = self.pos_embed(x1)
             # x1 = self.encoder_big(x1, src_mask[0])
             x1 = self.r2l_img_encoder_big(x1, src_mask[0])
 
             x2 = self.r2l_motion_src_embed(src[1])
-            # x2 = self.pos_embed(x2)
+            x2 = self.pos_embed(x2)
             # x2 = self.encoder_big(x2, src_mask[1])
             x2 = self.r2l_mot_encoder_big(x2, src_mask[1])
 
-            x3 = self.r2l_object_src_embed(src[2])
-            x3 = self.r2l_obj_encoder_big(x3, src_mask[2])
-
             # return x1 + x2
-            return self.r2l_feat_fusion([x1, x2, x3])
+            return self.r2l_feat_fusion([x1, x2])
 
         # ============== Object-Relation Encoding ==============
         else:
             x1 = self.l2r_image_src_embed(src[0])
-            # x1 = self.pos_embed(x1)
+            x1 = self.pos_embed(x1)
             # x1 = self.encoder(x1, src_mask[0])
             x1 = self.l2r_img_encoder(x1, src_mask[0])
 
             x2 = self.l2r_motion_src_embed(src[1])
-            # x2 = self.pos_embed(x2)
+            x2 = self.pos_embed(x2)
             # x2 = self.encoder(x2, src_mask[1])
             x2 = self.l2r_mot_encoder(x2, src_mask[1])
 
             x3 = self.l2r_object_src_embed(src[2])
-            # x3 = self.pos_embed(x3)
+            x3 = self.pos_embed(x3)
             # x3 = self.encoder(x3, src_mask[2])
             x3 = self.l2r_obj_encoder(x3, src_mask[2])
             # x3 = self.encoder_no_attention(x3, src_mask[2])
 
             # x4 = self.l2r_rel_src_embed(src[3])
-            # x4 = self.pos_embed(x4)
+            # x4 = self.pos_embed'(x4)
             # x4 = self.encoder(x4, src_mask[3])
             # x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.l2r_rel_encoder_no_attention(x4, src_mask[3])
@@ -704,12 +757,12 @@ class ABDTransformer(nn.Module):
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)
-        # x = self.pos_embed(x)
+        x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.l2r_trg_embed(trg)
-        # x = self.pos_embed(x)
+        x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
     def forward(self, src, r2l_trg, trg, mask):

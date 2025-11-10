@@ -175,10 +175,12 @@ LICENSE
 
 # Exclude all .zip files
 *.zip
-# Exclude .vector_cache folder
+# Exclude cache files
 .vector_cache/*
+cache/*
 # Exclude development files
 development/*
 _old_source/*
-# Exclude Jupyter Notebook files
+# Exclude some helper files
 *.ipynb
+*.avi

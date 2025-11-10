@@ -3,6 +3,7 @@ from __future__ import print_function
 import gc
 import torch
 import random
+import time
 import numpy as np
 from loader.MSVD import MSVD
 from config import TrainConfig as C
@@ -102,11 +103,15 @@ def main():
     best_val_CIDEr: float = float("-inf")
     best_epoch: int = -1
     best_ckpt_fpath: str = ""
+    total_train_time: float = 0.0
+    total_valid_time: float = 0.0
+    total_test_time: float = 0.0
     for e in range(1, C.epochs + 1):
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 
         """ Train """
         print("\n")
+        _train_start_time = time.time()
         train_loss = train(
             e=e,
             model=model,
@@ -116,6 +121,10 @@ def main():
             reg_lambda=C.reg_lambda,
             gradient_clip=C.gradient_clip
         )
+        _train_end_time = time.time()
+        total_train_time += (_train_end_time - _train_start_time)
+        print(f">> train time: {_train_end_time - _train_start_time:.2f} seconds")
+        
         log_train(e=e, loss=train_loss, reg_lambda=C.reg_lambda)
 
         """ Validation """
@@ -125,6 +134,8 @@ def main():
             vocab=vocab,
             reg_lambda=C.reg_lambda
         )
+        
+        _valid_start_time = time.time()
         r2l_val_scores, l2r_val_scores = evaluate(
             data_iter=val_iter,
             model=model,
@@ -132,6 +143,10 @@ def main():
             beam_size=C.beam_size,
             max_len=C.loader.max_caption_len
         )
+        _valid_end_time = time.time()
+        total_valid_time += (_valid_end_time - _valid_start_time)
+        print(f">> validation time: {_valid_end_time - _valid_start_time:.2f} seconds")
+        
         log_val(e=e, loss=val_loss, reg_lambda=C.reg_lambda,
                 r2l_scores=r2l_val_scores, l2r_scores=l2r_val_scores)
 
@@ -160,6 +175,8 @@ def main():
     torch.cuda.empty_cache()
     print(f"\n\n\n[BEST: {best_epoch} | SEED: {seed} | VAL-CIDEr: {best_val_CIDEr}]")
     best_model = load_checkpoint(model=model, ckpt_fpath=best_ckpt_fpath)
+    
+    _test_start_time = time.time()
     r2l_best_scores, l2r_best_scores = evaluate(
         data_iter=test_iter, 
         model=best_model, 
@@ -167,9 +184,16 @@ def main():
         beam_size=C.beam_size, 
         max_len=C.loader.max_caption_len
     )
+    _test_end_time = time.time()
+    total_test_time += (_test_end_time - _test_start_time)
+    
     print(f"r2l scores: {r2l_best_scores}")
     print(f"l2r scores: {l2r_best_scores}")
     print(">> Finish training!")
+    print("-"*40)
+    print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
+    print(f">> [Valid time] Total: {total_valid_time:.2f} seconds => Per epoch: {total_valid_time / C.epochs:.2f} seconds")
+    print(f">> [Test  time] Total: {total_test_time:.2f} seconds")
     
     return
 

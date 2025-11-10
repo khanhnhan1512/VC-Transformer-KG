@@ -4,26 +4,30 @@ import time
 
 
 class FeatureConfig:
-    model: str = "BlipBaseClsKF+I3DRaft+MaskRCNNv2+rel"
+    model: str = "Blip2ClsKF+MViTv2+ImgCapKF"
     feature_dims: List[int] = []
 
     # Per-image feature dimension
-    if model.startswith('InceptionResNetV2+'):  feature_dims.append(1536)
-    if model.startswith('ResNet152+'):          feature_dims.append(2048)
-    if model.startswith('BlipCls+'):            feature_dims.append(768)
-    if model.startswith('BlipBaseClsKF+'):      feature_dims.append(768)
+    if   model.startswith('InceptionResNetV2+'): feature_dims.append(1536)
+    # elif model.startswith('ResNet152+'):         feature_dims.append(2048)
+    # elif model.startswith('BlipCls+'):           feature_dims.append(768)
+    # elif model.startswith('BlipBaseClsKF+'):     feature_dims.append(768)
+    # elif model.startswith('BlipBaseAvgKF+'):     feature_dims.append(768)
+    elif model.startswith('Blip2ClsKF+'):        feature_dims.append(1408)
 
     # Motion feature dimension
-    if model.find('+I3D+') != -1:       feature_dims.append(1024)
-    if model.find('+I3DRaft+') != -1:   feature_dims.append(1024)
+    if   model.find('+I3D+') != -1:     feature_dims.append(1024)
+    # elif model.find('+I3DRaft+') != -1: feature_dims.append(1024)
+    elif model.find('+MViTv2+') != -1:  feature_dims.append(768)
 
     # Object feature dimension
-    if model.find('+OFeat+') != -1:      feature_dims.append(1028)
-    if model.find('+FasterRCNN+') != -1: feature_dims.append(1028)
-    if model.find('+MaskRCNNv2+') != -1: feature_dims.append(1024)
+    if   model.find('+OFeat') != -1:      feature_dims.append(1028)
+    # elif model.find('+FasterRCNN') != -1: feature_dims.append(1028)
+    # elif model.find('+MaskRCNNv2') != -1: feature_dims.append(1024)
+    elif model.find('+ImgCapKF') != -1:   feature_dims.append(384)
     
     # Other feature dimension
-    if model.find('+rel') != -1:        feature_dims.append(300)
+    # if model.find('+rel') != -1:        feature_dims.append(300)
 
 
 class VocabConfig:
@@ -77,7 +81,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 14
+    epochs = 25
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

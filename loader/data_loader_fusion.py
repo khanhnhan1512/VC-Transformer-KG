@@ -57,7 +57,6 @@ class CustomDataset(Dataset):
         self.image_video_feats = defaultdict(lambda: [])
         self.motion_video_feats = defaultdict(lambda: [])
         self.object_video_feats = defaultdict(lambda: [])
-        self.rel_feats = defaultdict(lambda: [])
 
         # captions: {vid, caption}
         self.r2l_captions = defaultdict(lambda: [])
@@ -70,46 +69,19 @@ class CustomDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        vid, image_video_feats, motion_video_feats, object_video_feats, rel_feats, r2l_caption, l2r_caption = \
+        vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption = \
             self.data[idx]
-        if self.transform_frame:
+        
+        if self.transform_frame: # transform video features
             image_video_feats = [self.transform_frame(feat) for feat in image_video_feats]
             motion_video_feats = [self.transform_frame(feat) for feat in motion_video_feats]
             object_video_feats = [self.transform_frame(feat) for feat in object_video_feats]
-            rel_feats = [self.transform_frame(feat) for feat in rel_feats]
-        if self.transform_caption:
+
+        if self.transform_caption: # transform captions
             r2l_caption = self.transform_caption(r2l_caption)
             l2r_caption = self.transform_caption(l2r_caption)
 
-        return vid, image_video_feats, motion_video_feats, object_video_feats, rel_feats, r2l_caption, l2r_caption
-
-    # It's too complex so write another function
-    def load_object_feats(self, frames, fin_o, fin_b, vid):
-        raise NotImplementedError("[CustomDataset.load_object_feats] You should implement this function.")
-        """
-        # vid = 'video122'
-        # assert vid == vid1, "video id of OFeat and BFeat is not align"
-        feats_b = fin_b[vid][()]
-        feats_o = fin_o[vid][()]
-        # to = torch.Tensor(feats_o).cuda()
-        # tb = torch.Tensor(feats_b).cuda()
-        # feats = torch.cat((tb, to), 1).cpu().numpy()
-        # feats = np.hstack((feats_b, feats_o))
-        feats = np.concatenate((feats_b, feats_o), axis=1)
-        num_paddings = frames - len(feats)
-        if feats.size == 0:
-            # now just object feat may appear the feature is empty
-            feats = np.zeros((frames, 1028))
-        else:
-            feats = feats.tolist() + [np.zeros_like(feats[0])
-                                      for _ in range(num_paddings)]
-        feats = np.asarray(feats)
-        sampled_idxs = np.linspace(
-            0, len(feats) - 1, frames, dtype=int)  # return evenly sapced number within the specified
-        feats = feats[sampled_idxs]
-        assert len(feats) == frames
-        return feats
-        """;
+        return vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption
 
     def load_four_video_feats(self):
         models = self.C.feat.model.split('+')
@@ -117,73 +89,39 @@ class CustomDataset(Dataset):
         for i in range(len(models)):
             # print('Begin to start load %d feats, total are %d' % (i + 1, len(models)))
             frames = self.C.loader.frame_sample_len
-            # i = 2
-            # if i == 2:
-            #     frames = self.C.feat.num_boxes
-            # if i == 3:
-            #     frames = self.C.feat.three_turple
+            
             fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
                 "MSVD", "MSVD" + '_' + models[i], self.phase)
-            fpath_b = self.C.loader.phase_video_feat_fpath_tpl.format(
-                "MSVD", "MSVD" + '_' + 'BFeat', self.phase)  # load two feats at the sames
+            
             # time, there are some problems in efficiency
             fin = h5py.File(fpath, 'r')
-            fin_b = h5py.File(fpath_b, 'r')
+            
             tqdm(fin.keys()).set_description('Load_four_feature_feats:')
             for vid in tqdm(fin.keys()):
                 # vid = 'video122'
                 feats = fin[vid][()]
                 if len(feats) < frames:
-                    """
-                    if i == 2:
-                        # fin_o = h5py.File(fpath, 'r')
-
-                        feats = self.load_object_feats(
-                            frames=frames, fin_o=fin, fin_b=fin_b, vid=vid)
-                        self.object_video_feats[vid].append(feats)
-                        continue
-                    """;
                     num_paddings = frames - len(feats)
                     if feats.size == 0:
                         raise ValueError("[CustomDataset.load_four_video_feats] Feature size is zero!")
-                        """
-                        # for _ in range(num_paddings):
-                        # now just object feat may appear the feature is empty
-                        feats = np.zeros((frames, 1024))
-                        """;
                     else:
-                        feats = feats.tolist() + [np.zeros_like(feats[0])
-                                                  for _ in range(num_paddings)]
-                    # feats = feats.tolist() + [np.zeros_like(feats[0])
-                    #                           for _ in range(num_paddings)]
+                        feats = feats.tolist() + [np.zeros_like(feats[0]) for _ in range(num_paddings)]
+                    
                     feats = np.asarray(feats)
-                    sampled_idxs = np.linspace(
-                        0, len(feats) - 1, frames, dtype=int)  # return evenly sapced number within the specified
+                    sampled_idxs = np.linspace(0, len(feats) - 1, frames, dtype=int)  # return evenly sapced number within the specified
                     feats = feats[sampled_idxs]
                     assert len(feats) == frames
-                    if i == 0:
-                        self.image_video_feats[vid].append(feats)
-                    elif i == 1:
-                        self.motion_video_feats[vid].append(feats)
-                    elif i == 2:
-                        self.object_video_feats[vid].append(feats)
-                    elif i == 3:
-                        self.rel_feats[vid].append(feats)
+                    
+                    if   i == 0: self.image_video_feats[vid].append(feats)
+                    elif i == 1: self.motion_video_feats[vid].append(feats)
+                    elif i == 2: self.object_video_feats[vid].append(feats)
+                    
                 else:
-                    if i == 0:
-                        self.image_video_feats[vid].append(feats)
-                    elif i == 1:
-                        self.motion_video_feats[vid].append(feats)
-                    elif i == 2:
-                        """
-                        feats = self.load_object_feats(
-                            frames=frames, fin_o=fin, fin_b=fin_b, vid=vid)
-                        """;
-                        self.object_video_feats[vid].append(feats)
-                    elif i == 3:
-                        self.rel_feats[vid].append(feats)
+                    if   i == 0: self.image_video_feats[vid].append(feats)
+                    elif i == 1: self.motion_video_feats[vid].append(feats)
+                    elif i == 2: self.object_video_feats[vid].append(feats)
+                    
             fin.close()
-            fin_b.close()
 
     def load_captions(self):
         raise NotImplementedError("You should implement this function.")
@@ -192,6 +130,7 @@ class CustomDataset(Dataset):
         self.load_captions()
         self.load_four_video_feats()
         assert self.image_video_feats.keys() == self.motion_video_feats.keys(), "Image feats is not match with motion feats"
+        
         for vid in self.image_video_feats.keys():
             image_video_feats = self.image_video_feats[vid]
             motion_video_feats = self.motion_video_feats[vid]
@@ -200,14 +139,9 @@ class CustomDataset(Dataset):
             else:
                 raise NotImplementedError("Object features are missing!")
                 # object_video_feats = list(np.zeros((1, self.C.feat.num_boxes, self.C.msrvtt_dim)))
-            if self.rel_feats[vid]:
-                rel_feats = self.rel_feats[vid]
-            else:
-                raise NotImplementedError("Relation features are missing!")
-                # rel_feats = list(np.zeros((1, self.C.feat.num_boxes, self.C.rel_dim)))
-                # self.C.FeatureConfig.size[-1]
+            
             for r2l_caption, l2r_caption in zip(self.r2l_captions[vid], self.l2r_captions[vid]):
-                self.data.append((vid, image_video_feats, motion_video_feats, object_video_feats, rel_feats,
+                self.data.append((vid, image_video_feats, motion_video_feats, object_video_feats,
                                   r2l_caption, l2r_caption))
 
 
@@ -291,24 +225,17 @@ class Corpus:
         return dataset
 
     def four_feature_collate_fn(self, batch):
-        vids, image_video_feats, motion_video_feats, object_video_feats, rel_feats, r2l_captions, l2r_captions = zip(
+        vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions = zip(
             *batch)
-        image_video_feats_list = zip(*image_video_feats)
-        motion_video_feats_list = zip(*motion_video_feats)
-        object_video_feats_list = zip(*object_video_feats)
-        rel_feats_list = zip(*rel_feats)
 
-        image_video_feats_list = [torch.stack(video_feats).float() for video_feats in image_video_feats_list]
-        motion_video_feats_list = [torch.stack(video_feats).float() for video_feats in motion_video_feats_list]
-        object_video_feats_list = [torch.stack(video_feats).float() for video_feats in object_video_feats_list]
-        rel_feats_list = [torch.stack(video_feats).float() for video_feats in rel_feats_list]
+        image_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*image_video_feats)]
+        motion_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*motion_video_feats)]
+        object_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*object_video_feats)]
 
-        r2l_captions = torch.stack(r2l_captions)
-        l2r_captions = torch.stack(l2r_captions)
-
-        r2l_captions = r2l_captions.float()
-        l2r_captions = l2r_captions.float()
-        return vids, image_video_feats_list, motion_video_feats_list, object_video_feats_list, rel_feats_list, r2l_captions, l2r_captions
+        r2l_captions = torch.stack(r2l_captions).float()
+        l2r_captions = torch.stack(l2r_captions).float()
+        
+        return vids, image_video_feats_list, motion_video_feats_list, object_video_feats_list, r2l_captions, l2r_captions
 
     def build_data_loader(self, dataset, phase):
         collate_fn = self.four_feature_collate_fn

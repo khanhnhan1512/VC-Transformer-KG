@@ -611,6 +611,8 @@ class L2R_Decoder(nn.Module):
 def pad_mask(src, r2l_trg, trg, pad_idx):
     if isinstance(src, tuple):
         if len(src) == 4:
+            raise ValueError("[pad_mask] src should not be a tuple of length 4.")
+            """
             src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
             src_object_mask = (src[2][:, :, 0] != pad_idx).unsqueeze(1)
@@ -618,6 +620,7 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
             enc_src_mask = (src_image_mask, src_motion_mask, src_object_mask, src_rel_mask)
             dec_src_mask = src_image_mask & src_motion_mask
             src_mask = (enc_src_mask, dec_src_mask)
+            """
         if len(src) == 3:
             src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
@@ -626,11 +629,14 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
             dec_src_mask = src_image_mask & src_motion_mask
             src_mask = (enc_src_mask, dec_src_mask)
         if len(src) == 2:
+            raise ValueError("[pad_mask] src should not be a tuple of length 2.")
+            """
             src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
             enc_src_mask = (src_image_mask, src_motion_mask)
             dec_src_mask = src_image_mask & src_motion_mask
             src_mask = (enc_src_mask, dec_src_mask)
+            """
     else:
         src_mask = (src[:, :, 0] != pad_idx).unsqueeze(1)
     if trg is not None:
@@ -667,21 +673,21 @@ class Generator(nn.Module):
 
 class ABDTransformer(nn.Module):
 
-    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_layers, dropout,
-                 n_heads_big, device='cuda'):
+    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
+                 n_enc_layers, n_dec_layers, dropout, device='cuda'):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
         self.device = device
         multiple_of = 128
 
-        self.r2l_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
+        self.r2l_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
         self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
         #self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
-        self.l2r_image_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
+        self.l2r_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
         self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
-        # self.l2r_rel_src_embed = FeatEmbedding(d_feat[3], d_model, dropout)
+        # self.l2r_rel_src_embed  = FeatEmbedding(d_feat[3], d_model, dropout)
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -692,20 +698,20 @@ class ABDTransformer(nn.Module):
         self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
-        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
-        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
-        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
-        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
-        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
-        self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         # self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
-        # self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_layers, dropout=dropout)
+        # self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_enc_layers, dropout=dropout)
 
-        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
-        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_layers, dropout=dropout, use_rope=False)
+        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
+        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
 
         # self.generator = Generator(d_model, vocab.n_vocabs)
         self.r2l_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)

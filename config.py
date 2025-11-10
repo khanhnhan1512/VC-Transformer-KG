@@ -4,7 +4,7 @@ import time
 
 
 class FeatureConfig:
-    model: str = "Blip2ClsKF+MViTv2+ImgCapKF"
+    model: str = "Blip2ClsKF+MViTv2+ImgCapBlipLargeKF"
     feature_dims: List[int] = []
 
     # Per-image feature dimension
@@ -21,10 +21,11 @@ class FeatureConfig:
     elif model.find('+MViTv2+') != -1:  feature_dims.append(768)
 
     # Object feature dimension
-    if   model.find('+OFeat') != -1:      feature_dims.append(1028)
+    if   model.find('+OFeat') != -1:      feature_dims.append(1024)
     # elif model.find('+FasterRCNN') != -1: feature_dims.append(1028)
     # elif model.find('+MaskRCNNv2') != -1: feature_dims.append(1024)
-    elif model.find('+ImgCapKF') != -1:   feature_dims.append(384)
+    # elif model.find('+ImgCapKF') != -1:   feature_dims.append(384)
+    elif model.find('+ImgCapBlipLargeKF') != -1:   feature_dims.append(1024)
     
     # Other feature dimension
     # if model.find('+rel') != -1:        feature_dims.append(300)
@@ -70,7 +71,8 @@ class TransformerConfig:
     d_ff = 2048         # d_ff / d_model = 4
     n_heads_big = 128   # d_model / n_heads_big = 4
     n_heads = 8         # d_model / n_heads = 64
-    n_layers = 3
+    n_enc_layers = 2    # Number of encoder layers
+    n_dec_layers = 2    # Number of decoder layers
     dropout = 0.1
 
 
@@ -104,14 +106,15 @@ class TrainConfig:
 
     transformer_id = f"Transformer "\
                      f"d-{transformer.d_model} " \
-                     f"N-{transformer.n_layers} " \
+                     f"N_enc-{transformer.n_enc_layers} " \
+                     f"N_dec-{transformer.n_dec_layers} " \
                      f"h-{transformer.n_heads} " \
                      f"h_big-{transformer.n_heads_big} " \
                      f"dp-{transformer.dropout}"
 
-    optimizer_id = f"OPTIM lr-{lr}-dc-{lr_decay_start_from}-" \
-                   f"gamma-{lr_decay_gamma}-pat-{lr_decay_patience}-" \
-                   f"wd-{weight_decay}-rg-{reg_lambda}"
+    optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
+                   f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \
+                   f"wd-{weight_decay} rg-{reg_lambda}"
 
     hyperparams_id = f"bs-{batch_size}-gc-{gradient_clip}-ls-{label_smoothing}"
 

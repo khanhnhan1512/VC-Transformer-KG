@@ -27,9 +27,10 @@ def build_model(vocab):
         d_model=C.transformer.d_model,
         d_ff=C.transformer.d_ff,
         n_heads=C.transformer.n_heads,
-        n_layers=C.transformer.n_layers,
+        n_heads_big=C.transformer.n_heads_big,
+        n_enc_layers=C.transformer.n_enc_layers,
+        n_dec_layers=C.transformer.n_dec_layers,
         dropout=C.transformer.dropout,
-        n_heads_big=C.transformer.n_heads_big
     )
     model.cuda()
     return model

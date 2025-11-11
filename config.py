@@ -4,7 +4,7 @@ import time
 
 
 class FeatureConfig:
-    model: str = "Blip2ClsKF+MViTv2+ImgCapBlipLargeKF"
+    model: str = "Blip2ClsKF+MViTv2+ImgCapBlip2KF"
     feature_dims: List[int] = []
 
     # Per-image feature dimension
@@ -25,7 +25,8 @@ class FeatureConfig:
     # elif model.find('+FasterRCNN') != -1: feature_dims.append(1028)
     # elif model.find('+MaskRCNNv2') != -1: feature_dims.append(1024)
     # elif model.find('+ImgCapKF') != -1:   feature_dims.append(384)
-    elif model.find('+ImgCapBlipLargeKF') != -1:   feature_dims.append(1024)
+    # elif model.find('+ImgCapBlipLargeKF') != -1:   feature_dims.append(1024)
+    elif model.find('+ImgCapBlip2KF') != -1:   feature_dims.append(1024)
     
     # Other feature dimension
     # if model.find('+rel') != -1:        feature_dims.append(300)

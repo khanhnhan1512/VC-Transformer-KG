@@ -626,7 +626,7 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
             src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
             src_object_mask = (src[2][:, :, 0] != pad_idx).unsqueeze(1)
             enc_src_mask = (src_image_mask, src_motion_mask, src_object_mask)
-            dec_src_mask = src_image_mask & src_motion_mask
+            dec_src_mask = src_image_mask & src_motion_mask & src_object_mask
             src_mask = (enc_src_mask, dec_src_mask)
         if len(src) == 2:
             raise ValueError("[pad_mask] src should not be a tuple of length 2.")
@@ -682,7 +682,7 @@ class ABDTransformer(nn.Module):
 
         self.r2l_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
         self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-        #self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
+        self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
         self.l2r_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
@@ -694,13 +694,13 @@ class ABDTransformer(nn.Module):
         self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=36)
 
         # Feature fusion module
-        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=2, dropout=dropout)
+        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
         self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
         self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
         self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
@@ -730,8 +730,12 @@ class ABDTransformer(nn.Module):
             # x2 = self.encoder_big(x2, src_mask[1])
             x2 = self.r2l_mot_encoder_big(x2, src_mask[1])
 
+            x3 = self.r2l_object_src_embed(src[2])
+            x3 = self.pos_embed(x3)
+            x3 = self.r2l_obj_encoder_big(x3, src_mask[2])
+            
             # return x1 + x2
-            return self.r2l_feat_fusion([x1, x2])
+            return self.r2l_feat_fusion([x1, x2, x3])
 
         # ============== Object-Relation Encoding ==============
         else:

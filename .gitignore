@@ -181,10 +181,8 @@ cache/*
 # Exclude development files
 development/*
 _old_source/*
+video_feature_extractor/*
 # Exclude some helper files
 *.ipynb
 *.avi
 *.csv
-blip*
-faster*
-mvit*

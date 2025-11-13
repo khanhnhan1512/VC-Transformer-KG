@@ -184,3 +184,7 @@ _old_source/*
 # Exclude some helper files
 *.ipynb
 *.avi
+*.csv
+blip*
+faster*
+mvit*

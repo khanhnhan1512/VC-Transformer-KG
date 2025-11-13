@@ -62,10 +62,15 @@ class MSVDLoaderConfig:
 
 
 class MSRVTTLoaderConfig(object):
-    train_caption_fpath = "./data/MSRVTT/metadata/train.json"
-    val_caption_fpath   = "./data/MSRVTT/metadata/val.json"
-    test_caption_fpath  = "./data/MSRVTT/metadata/test.json"
-    phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
+    # Flexible to change the path to data folder when run on Kaggle
+    DATA_FOLDER_PATH = "./data"
+    if not os.path.exists(DATA_FOLDER_PATH):
+        DATA_FOLDER_PATH = "/kaggle/input/btkg-msrvtt-dataset"
+    
+    train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/train.json")
+    val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/val.json")
+    test_caption_fpath  = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/test.json")
+    phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     min_count = 3
     max_caption_len = 30
@@ -86,8 +91,8 @@ class TransformerConfig:
 
 
 class TrainConfig:
-    corpus = "MSVD"
-    # corpus = "MSRVTT"
+    # corpus = "MSVD"
+    corpus = "MSRVTT"
     
     feat = FeatureConfig
     vocab = VocabConfig
@@ -97,7 +102,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 25
+    epochs = 18
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

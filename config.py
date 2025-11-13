@@ -73,9 +73,9 @@ class MSRVTTLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     min_count = 3
-    max_caption_len = 30
+    max_caption_len = 48
     num_workers = 4
-    frame_sample_len = 10
+    frame_sample_len = 4
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
@@ -102,7 +102,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 18
+    epochs = 14
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

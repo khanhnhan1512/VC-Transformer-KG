@@ -35,6 +35,7 @@ def build_model(vocab):
         n_enc_layers=C.transformer.n_enc_layers,
         n_dec_layers=C.transformer.n_dec_layers,
         dropout=C.transformer.dropout,
+        max_caption_len=C.loader.max_caption_len,
     )
     model.cuda()
     return model
@@ -78,7 +79,6 @@ def log_val(e, loss, reg_lambda, r2l_scores, l2r_scores, time_taken, summary):
 
 
 def log_test(r2l_scores, l2r_scores, time_taken):
-    print(f"[TEST BEST MODEL]")
     print(f"time: {time_taken:.2f} seconds")
     print(f"r2l_scores: {r2l_scores}")
     print(f"l2r_scores: {l2r_scores}")
@@ -256,7 +256,6 @@ def main():
                      test_summary=test_summary,
                      log_folder=C.log_folder)
     
-    print("Finish training!")
     print("-"*40)
     print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
     print(f">> [Val time] Total: {total_val_time:.2f} seconds => Per epoch: {total_val_time / C.epochs:.2f} seconds")

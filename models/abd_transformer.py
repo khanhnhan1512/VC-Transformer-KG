@@ -686,10 +686,10 @@ class Generator(nn.Module):
 class ABDTransformer(nn.Module):
 
     def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
-                 n_enc_layers, n_dec_layers, dropout, device='cuda'):
+                 n_enc_layers, n_dec_layers, dropout, max_caption_len):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
-        self.device = device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         multiple_of = 128
 
         self.r2l_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
@@ -703,7 +703,7 @@ class ABDTransformer(nn.Module):
             
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=36)
+        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=max_caption_len+6)
 
         # Feature fusion module
         #self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)

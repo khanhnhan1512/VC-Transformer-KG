@@ -61,7 +61,6 @@ class MSVDLoaderConfig:
     assert frame_sampling_method in ['uniform', 'random']
 
 
-
 class MSRVTTLoaderConfig(object):
     train_caption_fpath = "./data/MSRVTT/metadata/train.json"
     val_caption_fpath   = "./data/MSRVTT/metadata/val.json"
@@ -74,7 +73,6 @@ class MSRVTTLoaderConfig(object):
     frame_sample_len = 10
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
-
 
 
 class TransformerConfig:
@@ -99,7 +97,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 2
+    epochs = 25
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

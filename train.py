@@ -103,9 +103,6 @@ def save_log_summary(train_summary, val_summary, test_summary, log_folder):
     
     with open(os.path.join(log_folder, 'test_summary.json'), 'w') as f:
         json.dump(test_summary, f, indent=4)
-    
-    print(f"Log summaries saved to {log_folder}")
-
 
 
 def get_parameter_number(net):

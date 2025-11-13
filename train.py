@@ -5,7 +5,10 @@ import torch
 import random
 import time
 import numpy as np
+import json
+import os
 from loader.MSVD import MSVD
+from loader.MSRVTT import MSRVTT
 from config import TrainConfig as C
 from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
@@ -13,7 +16,8 @@ from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
 def build_loaders():
-    corpus = MSVD(C)
+    if   C.corpus == "MSVD":   corpus = MSVD(C)
+    elif C.corpus == "MSRVTT": corpus = MSRVTT(C)
     print('#vocabs: {} ({}), #words: {} ({}). Trim words which appear less than {} times.'.format(
         corpus.vocab.n_vocabs, corpus.vocab.n_vocabs_untrimmed, corpus.vocab.n_words,
         corpus.vocab.n_words_untrimmed, C.loader.min_count))
@@ -36,24 +40,72 @@ def build_model(vocab):
     return model
 
 
-def log_train(e, loss, reg_lambda, scores=None):
+# refers: https://stackoverflow.com/questions/52660985/pytorch-how-to-get-learning-rate-during-training
+def get_lr(optimizer):
+    for param_group in optimizer.param_groups:
+        return param_group['lr']
+    
+    
+def log_train(e, loss, reg_lambda, time_taken, lr, summary):
     print(f"[EPOCH {e} TRAIN]")
+    print(f"time: {time_taken:.2f} seconds | lr: {lr:.6f}")
     print(f"loss:{loss['total']:.6f} = (1-reg):{1-reg_lambda:.2f} * r2l_loss:{loss['r2l_loss']:.6f} + (reg):{reg_lambda:.2f} * l2r_loss:{loss['l2r_loss']:.6f}")
-    if scores is not None:
-        print(f"scores: {scores}")
+    # Store summary
+    summary[e] = {
+        "total_loss": loss['total'],
+        "r2l_loss": loss['r2l_loss'],
+        "l2r_loss": loss['l2r_loss'],
+        "time": time_taken,
+        "lr": lr,
+    }
 
 
-def log_val(e, loss, reg_lambda, r2l_scores, l2r_scores):
+def log_val(e, loss, reg_lambda, r2l_scores, l2r_scores, time_taken, summary):
     print(f"[EPOCH {e} VAL]")
+    print(f"time: {time_taken:.2f} seconds")
     print(f"loss:{loss['total']:.6f} = (1-reg):{1-reg_lambda:.2f} * r2l_loss:{loss['r2l_loss']:.6f} + (reg):{reg_lambda:.2f} * l2r_loss:{loss['l2r_loss']:.6f}")
     print(f"r2l_scores: {r2l_scores}")
     print(f"l2r_scores: {l2r_scores}")
+    # Store summary
+    summary[e] = {
+        "total_loss": loss['total'],
+        "r2l_loss": loss['r2l_loss'],
+        "l2r_loss": loss['l2r_loss'],
+        "r2l_scores": r2l_scores,
+        "l2r_scores": l2r_scores,
+        "time": time_taken,
+    }
 
 
-def log_test(e, r2l_scores, l2r_scores):
-    print(f"[EPOCH {e} TEST]")
+def log_test(r2l_scores, l2r_scores, time_taken):
+    print(f"[TEST BEST MODEL]")
+    print(f"time: {time_taken:.2f} seconds")
     print(f"r2l_scores: {r2l_scores}")
     print(f"l2r_scores: {l2r_scores}")
+    # return summary
+    summary = {
+        "r2l_scores": r2l_scores,
+        "l2r_scores": l2r_scores,
+        "time": time_taken,
+    }
+    return summary
+
+
+def save_log_summary(train_summary, val_summary, test_summary, log_folder):
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+    
+    with open(os.path.join(log_folder, 'train_summary.json'), 'w') as f:
+        json.dump(train_summary, f, indent=4)
+    
+    with open(os.path.join(log_folder, 'val_summary.json'), 'w') as f:
+        json.dump(val_summary, f, indent=4)
+    
+    with open(os.path.join(log_folder, 'test_summary.json'), 'w') as f:
+        json.dump(test_summary, f, indent=4)
+    
+    print(f"Log summaries saved to {log_folder}")
+
 
 
 def get_parameter_number(net):
@@ -101,12 +153,17 @@ def main():
         patience=C.lr_decay_patience
     )
 
+    # Find the best model
     best_val_CIDEr: float = float("-inf")
     best_epoch: int = -1
     best_ckpt_fpath: str = ""
+    # Time taken for training, validation, and testing
     total_train_time: float = 0.0
-    total_valid_time: float = 0.0
-    total_test_time: float = 0.0
+    total_val_time: float = 0.0
+    # Logging summaries
+    train_summary = {}
+    val_summary = {}
+    
     for e in range(1, C.epochs + 1):
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
 
@@ -123,10 +180,12 @@ def main():
             gradient_clip=C.gradient_clip
         )
         _train_end_time = time.time()
-        total_train_time += (_train_end_time - _train_start_time)
-        print(f">> train time: {_train_end_time - _train_start_time:.2f} seconds")
+        _train_time_taken = _train_end_time - _train_start_time
+        total_train_time += _train_time_taken
         
-        log_train(e=e, loss=train_loss, reg_lambda=C.reg_lambda)
+        log_train(e=e, loss=train_loss, reg_lambda=C.reg_lambda,
+                  time_taken=_train_time_taken, lr=get_lr(optimizer), 
+                  summary=train_summary)
 
         """ Validation """
         val_loss = test(
@@ -136,7 +195,7 @@ def main():
             reg_lambda=C.reg_lambda
         )
         
-        _valid_start_time = time.time()
+        _val_start_time = time.time()
         r2l_val_scores, l2r_val_scores = evaluate(
             data_iter=val_iter,
             model=model,
@@ -144,12 +203,13 @@ def main():
             beam_size=C.beam_size,
             max_len=C.loader.max_caption_len
         )
-        _valid_end_time = time.time()
-        total_valid_time += (_valid_end_time - _valid_start_time)
-        print(f">> validation time: {_valid_end_time - _valid_start_time:.2f} seconds")
+        _val_end_time = time.time()
+        _val_time_taken = _val_end_time - _val_start_time
+        total_val_time += _val_time_taken
         
         log_val(e=e, loss=val_loss, reg_lambda=C.reg_lambda,
-                r2l_scores=r2l_val_scores, l2r_scores=l2r_val_scores)
+                r2l_scores=r2l_val_scores, l2r_scores=l2r_val_scores,
+                time_taken=_val_time_taken, summary=val_summary)
 
         """ Learning Rate Decay & Checkpointing """
         if e <= C.warmup_epochs:
@@ -186,16 +246,23 @@ def main():
         max_len=C.loader.max_caption_len
     )
     _test_end_time = time.time()
-    total_test_time += (_test_end_time - _test_start_time)
+    _test_time_taken = _test_end_time - _test_start_time
     
-    print(f"r2l scores: {r2l_best_scores}")
-    print(f"l2r scores: {l2r_best_scores}")
-    print(">> Finish training!")
+    test_summary = log_test(
+        r2l_scores=r2l_best_scores, 
+        l2r_scores=l2r_best_scores, 
+        time_taken=_test_time_taken
+    )
+    
+    save_log_summary(train_summary=train_summary,
+                     val_summary=val_summary,
+                     test_summary=test_summary,
+                     log_folder=C.log_folder)
+    
+    print("Finish training!")
     print("-"*40)
     print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
-    print(f">> [Valid time] Total: {total_valid_time:.2f} seconds => Per epoch: {total_valid_time / C.epochs:.2f} seconds")
-    print(f">> [Test  time] Total: {total_test_time:.2f} seconds")
-    
+    print(f">> [Val time] Total: {total_val_time:.2f} seconds => Per epoch: {total_val_time / C.epochs:.2f} seconds")
     return
 
 

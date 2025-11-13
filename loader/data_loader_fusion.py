@@ -91,7 +91,7 @@ class CustomDataset(Dataset):
             frames = self.C.loader.frame_sample_len
             
             fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
-                "MSVD", "MSVD" + '_' + models[i], self.phase)
+                self.C.corpus, self.C.corpus + '_' + models[i], self.phase)
             
             # time, there are some problems in efficiency
             fin = h5py.File(fpath, 'r')

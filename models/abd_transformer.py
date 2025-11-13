@@ -386,7 +386,7 @@ class SwiGLU(nn.Module):
         """
         self.transform = nn.Sequential(
             nn.Linear(d_model, d_ff),
-            NewGELUActivation(),
+            nn.ReLU(),
             nn.Linear(d_ff, d_model),
             nn.Dropout(dropout)
         )
@@ -395,8 +395,12 @@ class SwiGLU(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # Forward pass using Swish activation and dropout
         x1 = self.main_activation(self.w1(x))
+        #x1 = self.sub_activation(self.w1(x))'
         x2 = self.w2(x)
         y = self.dropout(self.w3(x1 * x2))
+        """
+        y = self.transform(x)
+        """
         return y
 
 
@@ -532,18 +536,22 @@ class Encoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(Encoder, self).__init__()
+        """
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope,
                          first_layer=(i == 0))
             for i in range(num_layers)
         ])
+        """
         self.out_norm = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
+        """
         x = self.in_norm(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
+        """
         x = self.out_norm(x)
         return x
 
@@ -552,18 +560,22 @@ class EncoderNoAttention(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_layers: int, dropout: float):
         super(EncoderNoAttention, self).__init__()
+        """
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayerNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout,
                                     first_layer=(i == 0))
             for i in range(num_layers)
         ])
+        """
         self.out_norm = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
+        """
         x = self.in_norm(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
+        """
         x = self.out_norm(x)
         return x
 
@@ -694,8 +706,8 @@ class ABDTransformer(nn.Module):
         self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=36)
 
         # Feature fusion module
-        self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
-        self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
+        #self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
+        #self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
         self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
@@ -732,10 +744,11 @@ class ABDTransformer(nn.Module):
 
             x3 = self.r2l_object_src_embed(src[2])
             x3 = self.pos_embed(x3)
+            # x3 = self.encoder(x3, src_mask[2])
             x3 = self.r2l_obj_encoder_big(x3, src_mask[2])
-            
-            # return x1 + x2
-            return self.r2l_feat_fusion([x1, x2, x3])
+
+            return x1 + x2 + x3
+            #return self.r2l_feat_fusion([x1, x2, x3])
 
         # ============== Object-Relation Encoding ==============
         else:
@@ -761,9 +774,9 @@ class ABDTransformer(nn.Module):
             # x4 = self.encoder_no_attention(x4, src_mask[3])
             # x4 = self.l2r_rel_encoder_no_attention(x4, src_mask[3])
             
-            # return x1 + x2 + x3 + x4
+            return x1 + x2 + x3
             # return self.feat_fusion([x1, x2, x3, x4])
-            return self.l2r_feat_fusion([x1, x2, x3])
+            #return self.l2r_feat_fusion([x1, x2, x3])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)

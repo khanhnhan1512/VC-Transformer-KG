@@ -1,17 +1,20 @@
 # coding=utf-8
-import pandas as pd
+import json
 import random
 from loader.data_loader_fusion import CustomVocab, CustomDataset, Corpus
 
 
-class MSVDVocab(CustomVocab):
-    """ MSVD Vocaburary """
+class MSRVTTVocab(CustomVocab):
+    """ MSR-VTT Vocaburary """
 
     def load_captions(self):
-        df = pd.read_csv(self.caption_fpath)
-        df = df[df['Language'] == 'English']
-        df = df[pd.notnull(df['Description'])]
-        captions = df['Description'].values
+        with open(self.caption_fpath, 'r') as fin:
+            data = json.load(fin)
+
+        captions = []
+        for vid, depth1 in data.items():
+            for sid, caption in depth1.items():
+                captions.append(caption)
         return captions
 
     def build(self):
@@ -34,27 +37,25 @@ class MSVDVocab(CustomVocab):
         self.n_words = sum([self.word_freq_dict[word] for word in keep_words])
 
 
-class MSVDDataset(CustomDataset):
-    """ MSVD Dataset """
+class MSRVTTDataset(CustomDataset):
+    """ MSR-VTT Dataset """
 
     def load_captions(self):
-        df = pd.read_csv(self.caption_fpath)
-        df = df[df['Language'] == 'English']
-        df = df[['VideoID', 'Start', 'End', 'Description']]
-        df = df[pd.notnull(df['Description'])]
+        with open(self.caption_fpath, 'r') as fin:
+            data = json.load(fin)
 
-        for video_id, start, end, caption in df.values:
-            vid = "{}_{}_{}".format(video_id, start, end)
-            r2l_caption = " ".join(caption.strip('.').split()[::-1])
-            self.l2r_captions[vid].append(caption)
-            self.r2l_captions[vid].append(r2l_caption)
+        for vid, depth1 in data.items():
+            for caption in depth1.values():
+                r2l_caption = " ".join(caption.strip('.').split()[::-1])
+                self.r2l_captions[vid].append(r2l_caption)
+                self.l2r_captions[vid].append(caption)
         for vid, caption in self.r2l_captions.items():
             # self.r2l_captions[vid] = caption[::-1]
             random.shuffle(caption)
 
 
-class MSVD(Corpus):
-    """ MSVD Corpus """
+class MSRVTT(Corpus):
+    """ MSR-VTT Corpus """
 
     def __init__(self, C):
-        super(MSVD, self).__init__(C, MSVDVocab, MSVDDataset)
+        super(MSRVTT, self).__init__(C, MSRVTTVocab, MSRVTTDataset)

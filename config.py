@@ -81,18 +81,18 @@ class MSRVTTLoaderConfig(object):
 
 
 class TransformerConfig:
-    d_model = 512
-    d_ff = 2048         # d_ff / d_model = 4
+    d_model = 768
+    d_ff = 3072         # d_ff / d_model = 4
     n_heads_big = 128   # d_model / n_heads_big = 4
-    n_heads = 32        # d_model / n_heads = 16
-    n_enc_layers = 0    # Number of encoder layers
+    n_heads = 12        # d_model / n_heads = 64
+    n_enc_layers = 3    # Number of encoder layers
     n_dec_layers = 3    # Number of decoder layers
     dropout = 0.1
 
 
 class TrainConfig:
-    # corpus = "MSVD"
-    corpus = "MSRVTT"
+    corpus = "MSVD"
+    #corpus = "MSRVTT"
     
     feat = FeatureConfig
     vocab = VocabConfig
@@ -102,7 +102,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 14
+    epochs = 16
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

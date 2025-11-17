@@ -74,7 +74,8 @@ class FeatEmbedding(nn.Module):
         )
 
     def forward(self, x):
-        return self.video_embeddings(x)
+        x = self.video_embeddings(x)
+        return x
 
 
 class TextEmbedding(nn.Module):
@@ -536,46 +537,18 @@ class Encoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(Encoder, self).__init__()
-        """
         self.in_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope,
                          first_layer=(i == 0))
             for i in range(num_layers)
         ])
-        """
         self.out_norm = nn.LayerNorm(d_model)
 
     def forward(self, x, src_mask):
-        """
         x = self.in_norm(x)
         for layer in self.encoder_layers:
             x = layer(x, src_mask)
-        """
-        x = self.out_norm(x)
-        return x
-
-
-class EncoderNoAttention(nn.Module):
-
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_layers: int, dropout: float):
-        super(EncoderNoAttention, self).__init__()
-        """
-        self.in_norm = nn.LayerNorm(d_model)
-        self.encoder_layers = nn.ModuleList([
-            EncoderLayerNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout,
-                                    first_layer=(i == 0))
-            for i in range(num_layers)
-        ])
-        """
-        self.out_norm = nn.LayerNorm(d_model)
-
-    def forward(self, x, src_mask):
-        """
-        x = self.in_norm(x)
-        for layer in self.encoder_layers:
-            x = layer(x, src_mask)
-        """
         x = self.out_norm(x)
         return x
 
@@ -624,38 +597,39 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
     if isinstance(src, tuple):
         if len(src) == 4:
             raise ValueError("[pad_mask] src should not be a tuple of length 4.")
-            """
-            src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
-            src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
-            src_object_mask = (src[2][:, :, 0] != pad_idx).unsqueeze(1)
-            src_rel_mask = (src[3][:, :, 0] != pad_idx).unsqueeze(1)
-            enc_src_mask = (src_image_mask, src_motion_mask, src_object_mask, src_rel_mask)
-            dec_src_mask = src_image_mask & src_motion_mask
-            src_mask = (enc_src_mask, dec_src_mask)
-            """
         if len(src) == 3:
-            src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
-            src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
-            src_object_mask = (src[2][:, :, 0] != pad_idx).unsqueeze(1)
-            enc_src_mask = (src_image_mask, src_motion_mask, src_object_mask)
-            dec_src_mask = src_image_mask & src_motion_mask & src_object_mask
+            m1 = (src[0][:, :, 0] != pad_idx)
+            assert m1.ndim == 2, f"[pad_mask] m1.ndim={m1.ndim}"
+            assert m1.shape[1] == 10, f"[pad_mask] m1.shape={m1.shape}"
+
+            m2 = (src[1][:, :, 0] != pad_idx)
+            assert m2.ndim == 2, f"[pad_mask] m2.ndim={m2.ndim}"
+            assert m2.shape[1] == 10, f"[pad_mask] m2.shape={m2.shape}"
+
+            m3 = (src[2][:, :, 0] != pad_idx)
+            assert m3.ndim == 2, f"[pad_mask] m3.ndim={m3.ndim}"
+            assert m3.shape[1] == 10, f"[pad_mask] m3.shape={m3.shape}"
+
+            _stacked = torch.stack([m1, m2, m3], dim=2)
+            out_mask = _stacked.reshape(m1.size(0), -1)
+            assert out_mask.ndim == 2, f"[pad_mask] out_mask.ndim={out_mask.ndim}"
+            assert out_mask.shape[1] == 30, f"[pad_mask] out_mask.shape={out_mask.shape}"
+            assert torch.equal(out_mask[:,0::3], m1[:,:]) == True
+            assert torch.equal(out_mask[:,1::3], m2[:,:]) == True
+            assert torch.equal(out_mask[:,2::3], m3[:,:]) == True
+
+            enc_src_mask = out_mask.unsqueeze(1)
+            dec_src_mask = out_mask.unsqueeze(1)
             src_mask = (enc_src_mask, dec_src_mask)
         if len(src) == 2:
             raise ValueError("[pad_mask] src should not be a tuple of length 2.")
-            """
-            src_image_mask = (src[0][:, :, 0] != pad_idx).unsqueeze(1)
-            src_motion_mask = (src[1][:, :, 0] != pad_idx).unsqueeze(1)
-            enc_src_mask = (src_image_mask, src_motion_mask)
-            dec_src_mask = src_image_mask & src_motion_mask
-            src_mask = (enc_src_mask, dec_src_mask)
-            """
     else:
         src_mask = (src[:, :, 0] != pad_idx).unsqueeze(1)
     if trg is not None:
         if isinstance(src_mask, tuple):
-            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(src_image_mask.data)
-            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(src_image_mask.data)
-            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(src_image_mask.data)
+            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(m1.data)
+            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(m1.data)
+            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(m1.data)
             return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask
         else:
             trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(src_mask.data)
@@ -685,7 +659,7 @@ class Generator(nn.Module):
 
 class ABDTransformer(nn.Module):
 
-    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
+    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big,
                  n_enc_layers, n_dec_layers, dropout, max_caption_len):
         super(ABDTransformer, self).__init__()
         self.vocab = vocab
@@ -699,28 +673,26 @@ class ABDTransformer(nn.Module):
         self.l2r_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
         self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
-        # self.l2r_rel_src_embed  = FeatEmbedding(d_feat[3], d_model, dropout)
-            
+        
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=max_caption_len+6)
+        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=max_caption_len+4)
 
         # Feature fusion module
         #self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         #self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
         
         # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
-        self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
-        self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-
-        # self.encoder_no_attention = Encoder(n_layers,EncoderLayerNoAttention(d_model, c(attn), c(feed_forward), dropout), d_model)
-        # self.l2r_rel_encoder_no_attention = EncoderNoAttention(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_layers=n_enc_layers, dropout=dropout)
+        #self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        #self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
         self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
@@ -732,59 +704,57 @@ class ABDTransformer(nn.Module):
     def encode(self, src, src_mask, feature_mode_two=False):
         # ============== Spatial-Temporal Encoding ==============
         if feature_mode_two:
-            x1 = self.r2l_image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
-            # x1 = self.encoder_big(x1, src_mask[0])
-            x1 = self.r2l_img_encoder_big(x1, src_mask[0])
+            x1 = self.r2l_image_src_embed(src[0])  # shape (64, 10, 512)
+            x2 = self.r2l_motion_src_embed(src[1]) # shape (64, 10, 512)
+            x3 = self.r2l_object_src_embed(src[2]) # shape (64, 10, 512)
 
-            x2 = self.r2l_motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
-            # x2 = self.encoder_big(x2, src_mask[1])
-            x2 = self.r2l_mot_encoder_big(x2, src_mask[1])
+            B, _, D = x1.shape
+            _stacked = torch.stack([x1, x2, x3], dim=2)
+            r2l_x = _stacked.reshape(B, -1, D)
+            assert torch.equal(r2l_x[:,0::3,:], x1[:,:,:]) == True
+            assert torch.equal(r2l_x[:,1::3,:], x2[:,:,:]) == True
+            assert torch.equal(r2l_x[:,2::3,:], x3[:,:,:]) == True
 
-            x3 = self.r2l_object_src_embed(src[2])
-            x3 = self.pos_embed(x3)
-            # x3 = self.encoder(x3, src_mask[2])
-            x3 = self.r2l_obj_encoder_big(x3, src_mask[2])
-
-            return x1 + x2 + x3
+            r2l_x = self.pos_embed(r2l_x)
+            return self.r2l_encoder_big(r2l_x, src_mask)
+            #return torch.cat((x1, x2, x3), dim=1)
+            #assert x1.shape == x2.shape == x3.shape, f"x1.shape[{x1.shape}], x2.shape[{x2.shape}], x3.shape[{x3.shape}]"
+            #print(f"x1.shape: {x1.shape}")
             #return self.r2l_feat_fusion([x1, x2, x3])
 
         # ============== Object-Relation Encoding ==============
         else:
             x1 = self.l2r_image_src_embed(src[0])
-            x1 = self.pos_embed(x1)
-            # x1 = self.encoder(x1, src_mask[0])
-            x1 = self.l2r_img_encoder(x1, src_mask[0])
-
             x2 = self.l2r_motion_src_embed(src[1])
-            x2 = self.pos_embed(x2)
-            # x2 = self.encoder(x2, src_mask[1])
-            x2 = self.l2r_mot_encoder(x2, src_mask[1])
-
             x3 = self.l2r_object_src_embed(src[2])
-            x3 = self.pos_embed(x3)
-            # x3 = self.encoder(x3, src_mask[2])
-            x3 = self.l2r_obj_encoder(x3, src_mask[2])
-            # x3 = self.encoder_no_attention(x3, src_mask[2])
 
-            # x4 = self.l2r_rel_src_embed(src[3])
-            # x4 = self.pos_embed'(x4)
-            # x4 = self.encoder(x4, src_mask[3])
-            # x4 = self.encoder_no_attention(x4, src_mask[3])
-            # x4 = self.l2r_rel_encoder_no_attention(x4, src_mask[3])
-            
-            return x1 + x2 + x3
+            B, _, D = x1.shape
+            _stacked = torch.stack([x1, x2, x3], dim=2)
+            l2r_x = _stacked.reshape(B, -1, D)
+            assert torch.equal(l2r_x[:,0::3,:], x1[:,:,:]) == True
+            assert torch.equal(l2r_x[:,1::3,:], x2[:,:,:]) == True
+            assert torch.equal(l2r_x[:,2::3,:], x3[:,:,:]) == True
+
+            l2r_x = self.pos_embed(l2r_x)
+            return self.l2r_encoder(l2r_x, src_mask)
+            #return torch.cat((x1, x2, x3), dim=1)
+            #assert x1.shape == x2.shape == x3.shape, f"x1.shape[{x1.shape}], x2.shape[{x2.shape}], x3.shape[{x3.shape}]"
+            #print(f"x1.shape: {x1.shape}")
             # return self.feat_fusion([x1, x2, x3, x4])
             #return self.l2r_feat_fusion([x1, x2, x3])
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)
+        #print(f"[r2l_decode] emb.shape: {x.shape}")
+        #print(f"[r2l_decode] memory.shape: {memory.shape}")
         x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
         x = self.l2r_trg_embed(trg)
+        #print(f"[l2r_decode] emb.shape: {x.shape}")
+        #print(f"[l2r_decode] memory.shape: {memory.shape}")
+        #print(f"[l2r_decode] r2l_memory.shape: {r2l_memory.shape}")
         x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
@@ -793,10 +763,20 @@ class ABDTransformer(nn.Module):
         
         enc_src_mask, dec_src_mask = src_mask
         r2l_encoding_outputs = self.encode(src, enc_src_mask, feature_mode_two=True)
+        #print("Finish r2l-enc")
         encoding_outputs = self.encode(src, enc_src_mask)
+        #print("Finish l2r-enc")
+        #print(f"r2l_enc_out.shape: {r2l_encoding_outputs.shape}")
+        #print(f"l2r_enc_out.shape: {encoding_outputs.shape}")
+        #print(f"r2l_trg.shape: {r2l_trg.shape}")
+        #print(f"trg.shape: {trg.shape}")
 
         r2l_outputs = self.r2l_decode(r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
+        #print("Finish r2l-dec")
         l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
+        #print("Finish l2r-dec")
+        #print(f"r2l_outputs.shape: {r2l_outputs.shape}")
+        #print(f"l2r_outputs.shape: {l2r_outputs.shape}")
 
         # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
         # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
@@ -806,6 +786,10 @@ class ABDTransformer(nn.Module):
         # l2r_pred = self.generator(l2r_outputs)
         r2l_pred = self.r2l_generator(r2l_outputs)
         l2r_pred = self.l2r_generator(l2r_outputs)
+        #print(f"r2l_pred.shape: {r2l_pred.shape}")
+        #print(f"l2r_pred.shape: {l2r_pred.shape}")
+
+        #raise NotImplementedError("You should implement this function.")
         
         return r2l_pred, l2r_pred
 

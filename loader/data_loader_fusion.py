@@ -72,14 +72,23 @@ class CustomDataset(Dataset):
         vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption = \
             self.data[idx]
         
+        assert type(vid) == str, f"[__getitem__] before: type(vid)={type(vid)}"
+        assert type(image_video_feats) == np.ndarray, f"[__getitem__] before: type(image_video_feats)={type(image_video_feats)}"
+        assert type(r2l_caption) == str, f"[__getitem__] before: type(r2l_caption)={type(r2l_caption)}"
+
         if self.transform_frame: # transform video features
-            image_video_feats = [self.transform_frame(feat) for feat in image_video_feats]
-            motion_video_feats = [self.transform_frame(feat) for feat in motion_video_feats]
-            object_video_feats = [self.transform_frame(feat) for feat in object_video_feats]
+            image_video_feats  = self.transform_frame(image_video_feats)
+            motion_video_feats = self.transform_frame(motion_video_feats)
+            object_video_feats = self.transform_frame(object_video_feats)
 
         if self.transform_caption: # transform captions
             r2l_caption = self.transform_caption(r2l_caption)
             l2r_caption = self.transform_caption(l2r_caption)
+
+        assert type(image_video_feats) == torch.Tensor, f"[__getitem__] after: type(image_video_feats)={type(image_video_feats)}"
+        assert type(r2l_caption) == torch.Tensor, f"[__getitem__] after: type(r2l_caption)={type(r2l_caption)}"
+        assert image_video_feats.ndim == 2, f"[__getitem__] after: image_video_feats.ndim={image_video_feats.ndim}"
+        assert r2l_caption.ndim == 1, f"[__getitem__] after: r2l_caption.ndim={r2l_caption.ndim}"
 
         return vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption
 
@@ -98,29 +107,25 @@ class CustomDataset(Dataset):
             
             tqdm(fin.keys()).set_description('Load_four_feature_feats:')
             for vid in tqdm(fin.keys()):
-                # vid = 'video122'
                 feats = fin[vid][()]
-                if len(feats) < frames:
-                    num_paddings = frames - len(feats)
-                    if feats.size == 0:
-                        raise ValueError("[CustomDataset.load_four_video_feats] Feature size is zero!")
-                    else:
-                        feats = feats.tolist() + [np.zeros_like(feats[0]) for _ in range(num_paddings)]
-                    
-                    feats = np.asarray(feats)
+                if feats.size == 0: raise ValueError("[CustomDataset.load_four_video_feats] Feature size is zero!")
+                assert type(feats) == np.ndarray, f"[load_video_feats] type(feats)={type(feats)}"
+                assert feats.ndim == 2, f"[load_video_feats] feats.ndim={feats.ndim}"
+
+                if len(feats) > frames:
                     sampled_idxs = np.linspace(0, len(feats) - 1, frames, dtype=int)  # return evenly sapced number within the specified
                     feats = feats[sampled_idxs]
-                    assert len(feats) == frames
-                    
-                    if   i == 0: self.image_video_feats[vid].append(feats)
-                    elif i == 1: self.motion_video_feats[vid].append(feats)
-                    elif i == 2: self.object_video_feats[vid].append(feats)
-                    
-                else:
-                    if   i == 0: self.image_video_feats[vid].append(feats)
-                    elif i == 1: self.motion_video_feats[vid].append(feats)
-                    elif i == 2: self.object_video_feats[vid].append(feats)
-                    
+                elif len(feats) < frames:
+                    num_padding = frames - feats.shape[0]
+                    pad_tokens = np.zeros((num_padding, feats.shape[1]), dtype=feats.dtype)
+                    feats = np.concatenate((feats, pad_tokens), axis=0)
+
+                assert len(feats) == frames
+
+                if   i == 0: self.image_video_feats[vid].append(feats)
+                elif i == 1: self.motion_video_feats[vid].append(feats)
+                elif i == 2: self.object_video_feats[vid].append(feats)
+            
             fin.close()
 
     def load_captions(self):
@@ -132,14 +137,14 @@ class CustomDataset(Dataset):
         assert self.image_video_feats.keys() == self.motion_video_feats.keys(), "Image feats is not match with motion feats"
         
         for vid in self.image_video_feats.keys():
-            image_video_feats = self.image_video_feats[vid]
-            motion_video_feats = self.motion_video_feats[vid]
-            if self.object_video_feats[vid]:
-                object_video_feats = self.object_video_feats[vid]
-            else:
-                raise NotImplementedError("Object features are missing!")
-                # object_video_feats = list(np.zeros((1, self.C.feat.num_boxes, self.C.msrvtt_dim)))
+            image_video_feats  = self.image_video_feats[vid][0] # self.image_video_feats[vid] is a list
+            motion_video_feats = self.motion_video_feats[vid][0]
+            object_video_feats = self.object_video_feats[vid][0]
             
+            assert type(image_video_feats)  == np.ndarray, f"[build_video_caption_pairs] type(image_video_feats)={type(image_video_feats)}"
+            assert type(motion_video_feats) == np.ndarray, f"[build_video_caption_pairs] type(motion_video_feats)={type(motion_video_feats)}"
+            assert type(object_video_feats) == np.ndarray, f"[build_video_caption_pairs] type(object_video_feats)={type(object_video_feats)}"
+
             for r2l_caption, l2r_caption in zip(self.r2l_captions[vid], self.l2r_captions[vid]):
                 self.data.append((vid, image_video_feats, motion_video_feats, object_video_feats,
                                   r2l_caption, l2r_caption))
@@ -192,7 +197,7 @@ class Corpus:
             raise NotImplementedError("Unknown frame sampling method: {}".format(self.C.loader.frame_sampling_method))
 
         self.transform_frame = transforms.Compose([
-            Sample(self.C.loader.frame_sample_len),
+            #Sample(self.C.loader.frame_sample_len),
             ToTensor(torch.float),
         ])
         self.transform_caption = transforms.Compose([
@@ -225,17 +230,34 @@ class Corpus:
         return dataset
 
     def four_feature_collate_fn(self, batch):
-        vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions = zip(
-            *batch)
+        vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions = zip(*batch)
 
-        image_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*image_video_feats)]
-        motion_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*motion_video_feats)]
-        object_video_feats_list = [torch.stack(video_feats).float() for video_feats in zip(*object_video_feats)]
+        assert type(vids) == tuple, f"[collate_fn] before: type(vids)={type(vids)}"
+        assert type(vids[0]) == str, f"[collate_fn] before: type(vids[0])={type(vids[0])}"
 
-        r2l_captions = torch.stack(r2l_captions).float()
-        l2r_captions = torch.stack(l2r_captions).float()
+        assert type(image_video_feats) == tuple, f"[collate_fn] before: type(image_video_feats)={type(image_video_feats)}"
+        assert type(image_video_feats[0]) == torch.Tensor, f"[collate_fn] before: type(image_video_feats[0])={type(image_video_feats[0])}"
+        assert image_video_feats[0].ndim == 2, f"[collate_fn] before: image_video_feats[0].ndim={image_video_feats[0].ndim}"
+
+        assert type(r2l_captions) == tuple, f"[collate_fn] before: type(r2l_captions)={type(r2l_captions)}"
+        assert type(r2l_captions[0]) == torch.Tensor, f"[collate_fn] before: type(r2l_captions[0])={type(r2l_captions[0])}"
+        assert r2l_captions[0].ndim == 1, f"[collate_fn] before: type(r2l_captions[0].ndim)={r2l_captions[0].ndim}"
         
-        return vids, image_video_feats_list, motion_video_feats_list, object_video_feats_list, r2l_captions, l2r_captions
+        image_video_feats  = torch.stack(image_video_feats)
+        motion_video_feats = torch.stack(motion_video_feats)
+        object_video_feats = torch.stack(object_video_feats)
+        r2l_captions = torch.stack(r2l_captions)
+        l2r_captions = torch.stack(l2r_captions)
+        
+        assert type(r2l_captions) == torch.Tensor, f"[collate_fn] after: type(r2l_captions)={type(r2l_captions)}"
+        assert r2l_captions.ndim == 2, f"[collate_fn] after: r2l_captions.ndim={r2l_captions.ndim}"
+        assert r2l_captions.dtype == torch.long, f"[collate_fn] after: r2l_captions.dtype={r2l_captions.dtype}"
+
+        assert type(image_video_feats) == torch.Tensor, f"[collate_fn] after: type(image_video_feats)={type(image_video_feats)}"
+        assert image_video_feats.ndim == 3, f"[collate_fn] after: image_video_feats.ndim={image_video_feats.ndim}"
+        assert image_video_feats.dtype == torch.float, f"[collate_fn] after: image_video_feats.dtype={image_video_feats.dtype}"
+        
+        return vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions
 
     def build_data_loader(self, dataset, phase):
         collate_fn = self.four_feature_collate_fn

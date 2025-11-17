@@ -35,17 +35,22 @@ class LossChecker:
 
 def parse_batch(batch):
     vids, image_feats, motion_feats, object_feats, r2l_captions, l2r_captions = batch
-    image_feats = [feat.cuda() for feat in image_feats]
-    motion_feats = [feat.cuda() for feat in motion_feats]
-    object_feats = [feat.cuda() for feat in object_feats]
-    
-    image_feats = torch.cat(image_feats, dim=2)
-    motion_feats = torch.cat(motion_feats, dim=2)
-    object_feats = torch.cat(object_feats, dim=2)
-    
+
+    assert type(image_feats) == torch.Tensor, f"[parse_batch] type(image_feats)={type(image_feats)}"
+    assert type(image_feats) == type(motion_feats) == type(object_feats)
+    assert image_feats.ndim == 3, f"[parse_batch] image_feats.ndim={image_feats.ndim}"
+
+    assert type(r2l_captions) == torch.Tensor, f"[parse_batch] type(r2l_captions)={type(r2l_captions)}"
+    assert r2l_captions.ndim == 2, f"[parse_batch] r2l_captions.ndim={r2l_captions.ndim}"
+
+    image_feats  = image_feats.cuda()
+    motion_feats = motion_feats.cuda()
+    object_feats = object_feats.cuda()
     feats = (image_feats, motion_feats, object_feats)
-    r2l_captions = r2l_captions.long().cuda()
-    l2r_captions = l2r_captions.long().cuda()
+
+    r2l_captions = r2l_captions.cuda()
+    l2r_captions = l2r_captions.cuda()
+
     return vids, feats, r2l_captions, l2r_captions
 
 

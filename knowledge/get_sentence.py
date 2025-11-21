@@ -15,9 +15,9 @@ def msvd_load_captions(caption_fpath):
 
 if dataset == 'msvd':
     cnt = 0
-    train_id_path = '../BTKG-MSVD-dataset/MSVD/metadata/train.list'
-    train_sentence_path = '../BTKG-MSVD-dataset/MSVD/metadata/train.csv'
-    sentence_path = '../BTKG-MSVD-dataset/MSVD/metadata/msvd_sentence.txt'
+    train_id_path = '/kaggle/input/btkg-msvd-dataset/MSVD/metadata/train.list'
+    train_sentence_path = '/kaggle/input/btkg-msvd-dataset/MSVD/metadata/train.csv'
+    sentence_path = '/kaggle/working/msvd_sentence.txt'
     w = open(sentence_path, 'a', encoding='utf-8')
     sentence = msvd_load_captions(train_sentence_path)
     print(sentence.size)

@@ -39,8 +39,8 @@ def WriteDatasToFile(listInfo, new_filename):
 
 if __name__ == "__main__":
     # listFileInfo = ReadFileDatas('../MSR-VTT/OPENKE_file/msrvtt/b.txt')
-    listFileInfo = ReadFileDatas('../BTKG-MSVD-dataset/MSVD/OPENKE_file/total_id.txt')
+    listFileInfo = ReadFileDatas('/kaggle/working/OPENKE_file/total_id.txt')
     l_train, l_val, l_test = TrainValTestFile(listFileInfo)
-    WriteDatasToFile(l_train, '../BTKG-MSVD-dataset/MSVD/OPENKE_file/train2id.txt')
-    WriteDatasToFile(l_val, '../BTKG-MSVD-dataset/MSVD/OPENKE_file/valid2id.txt')
-    WriteDatasToFile(l_test, '../BTKG-MSVD-dataset/MSVD/OPENKE_file/test2id.txt')
+    WriteDatasToFile(l_train, '/kaggle/working/OPENKE_file/train2id.txt')
+    WriteDatasToFile(l_val, '/kaggle/working/OPENKE_file/valid2id.txt')
+    WriteDatasToFile(l_test, '/kaggle/working/OPENKE_file/test2id.txt')

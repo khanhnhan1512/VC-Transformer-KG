@@ -97,8 +97,8 @@ def top_counts(word_list, n=100):
 # 测试部分
 if __name__ == '__main__':
     # file_list = ['../MSR-VTT/metadata/entity_total.txt']
-    file_list = ['../BTKG-MSVD-dataset/MSVD/OPENKE_file/relation2id.txt']
-    word_frequency_file = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/rel_frequency.txt'
+    file_list = ['/kaggle/working/OPENKE_file/relation2id.txt']
+    word_frequency_file = '/kaggle/working/OPENKE_file/rel_frequency.txt'
     w = open(word_frequency_file, 'w')
     cc = map(readFile, file_list)
     word_list = functools.reduce(merge2, cc)

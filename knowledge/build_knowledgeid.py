@@ -1,8 +1,13 @@
 
-rel_induction = '../MSR-VTT/OPENKE_file/rel.txt'
-ent_induction = '../MSR-VTT/OPENKE_file/ent.txt'
-entity2id = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/entity2id.txt'
-relation2id = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/relation2id.txt'
+import os
+
+if not os.path.exists('/kaggle/working/OPENKE_file'):
+    os.makedirs('/kaggle/working/OPENKE_file')
+
+rel_induction = '/kaggle/working/OPENKE_file/rel.txt'
+ent_induction = '/kaggle/working/OPENKE_file/ent.txt'
+entity2id = '/kaggle/working/OPENKE_file/entity2id.txt'
+relation2id = '/kaggle/working/OPENKE_file/relation2id.txt'
 
 f1 = open(rel_induction, 'r')
 f2 = open(ent_induction, 'r')

@@ -4,9 +4,9 @@ from stanfordcorenlp import StanfordCoreNLP
 import json
 import tqdm
 
-nlp = StanfordCoreNLP(r'/home/silverbullet/Tool/stanford-corenlp-4.2.2')
-sentence_path = '../BTKG-MSVD-dataset/MSVD/metadata/msvd_sentence.txt'
-entity_rel_path = '../BTKG-MSVD-dataset/MSVD/metadata/entity_total.txt'
+nlp = StanfordCoreNLP(r'/kaggle/working/stanford-corenlp-4.5.4')
+sentence_path = '/kaggle/working/msvd_sentence.txt'
+entity_rel_path = '/kaggle/working/entity_total.txt'
 # doc = nlp("The 22-year-old recently won ATP Challenger tournament.")
 
 

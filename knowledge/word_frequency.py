@@ -115,7 +115,7 @@ def DIY_draw(data, words):
 # --------------------------------------读取函数
 def main():
     # 读取用户输入的数据
-    read("../BTKG-MSVD-dataset/MSVD/metadata/entity_total.txt", data, words)  # 调用read()函数
+    read("/kaggle/working/entity_total.txt", data, words)  # 调用read()函数
     DIY_draw(data, words)
     breakpoint()
 

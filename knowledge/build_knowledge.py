@@ -1,12 +1,12 @@
 from tqdm import tqdm
 
-rel_induction = '../MSR-VTT/OPENKE_file/rel.txt'  # rules of nlp result to rel
-ent_induction = '../MSR-VTT/OPENKE_file/ent.txt'  # rules of nlp result to entity
-target = '../BTKG-MSVD-dataset/MSVD/metadata/entity_total.txt'
-entity2id = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/entity2id.txt'
-relation2id = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/relation2id.txt'
-total = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/total_word.txt'
-total_id = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/total_id.txt'
+rel_induction = '/kaggle/working/OPENKE_file/rel.txt'  # rules of nlp result to rel
+ent_induction = '/kaggle/working/OPENKE_file/ent.txt'  # rules of nlp result to entity
+target = '/kaggle/working/OPENKE_file/entity_total.txt'
+entity2id = '/kaggle/working/OPENKE_file/entity2id.txt'
+relation2id = '/kaggle/working/OPENKE_file/relation2id.txt'
+total = '/kaggle/working/OPENKE_file/total_word.txt'
+total_id = '/kaggle/working/OPENKE_file/total_id.txt'
 # test = '../MSR-VTT/OPENKE_file/msrvtt/test.txt'
 # valid = '../MSR-VTT/OPENKE_file/msrvtt/valid.txt'
 

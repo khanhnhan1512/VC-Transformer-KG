@@ -1,11 +1,11 @@
 from tqdm import trange
-entity_rel_path = '../BTKG-MSVD-dataset/MSVD/metadata/entity_total.txt'
+entity_rel_path = '/kaggle/working/entity_total.txt'
 # relation_total_path = '../MSR-VTT/OPENKE_file/relation_total.txt'
 # openke_train_file = '../MSR-VTT/OPENKE_file/train.txt'
 # openke_valid_file = '../MSR-VTT/OPENKE_file/valid.txt'
 # openke_test_file = '../MSR-VTT/OPENKE_file/test.txt'
-entity_id_file = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/entity2id.txt'
-relation_id_file = '../BTKG-MSVD-dataset/MSVD/OPENKE_file/relation2id.txt'
+entity_id_file = '/kaggle/working/OPENKE_file/entity2id.txt'
+relation_id_file = '/kaggle/working/OPENKE_file/relation2id.txt'
 
 f = open(entity_rel_path, 'r')
 w1 = open(entity_id_file, 'w')

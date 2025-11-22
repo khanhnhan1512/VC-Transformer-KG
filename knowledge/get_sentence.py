@@ -12,10 +12,11 @@ def msvd_load_captions(caption_fpath):
     captions = df['Description'].values
     return captions
 
+# hàm đọc caption từ file csv của MSVD và lưu vào file txt
 
 if dataset == 'msvd':
     cnt = 0
-    train_id_path = '/kaggle/input/btkg-msvd-dataset/MSVD/metadata/train.list'
+    # train_id_path = '/kaggle/input/btkg-msvd-dataset/MSVD/metadata/train.list'
     train_sentence_path = '/kaggle/input/btkg-msvd-dataset/MSVD/metadata/train.csv'
     sentence_path = '/kaggle/working/msvd_sentence.txt'
     w = open(sentence_path, 'a', encoding='utf-8')

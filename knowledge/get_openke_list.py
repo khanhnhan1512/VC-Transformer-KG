@@ -4,12 +4,12 @@ entity_rel_path = '/kaggle/working/entity_total.txt'
 # openke_train_file = '../MSR-VTT/OPENKE_file/train.txt'
 # openke_valid_file = '../MSR-VTT/OPENKE_file/valid.txt'
 # openke_test_file = '../MSR-VTT/OPENKE_file/test.txt'
-entity_id_file = '/kaggle/working/OPENKE_file/entity2id.txt'
-relation_id_file = '/kaggle/working/OPENKE_file/relation2id.txt'
+entity_id_path = '/kaggle/working/OPENKE_file/entity2id.txt'
+relation_id_path = '/kaggle/working/OPENKE_file/relation2id.txt'
 
 f = open(entity_rel_path, 'r')
-w1 = open(entity_id_file, 'w')
-w2 = open(relation_id_file, 'w')
+w1 = open(entity_id_path, 'w')
+w2 = open(relation_id_path, 'w')
 # w3 = open(relation_total_path, 'w')
 
 lines = f.readlines()

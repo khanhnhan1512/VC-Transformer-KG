@@ -1,103 +1,135 @@
+import os
 from tqdm import tqdm
 
-rel_induction = '/kaggle/working/OPENKE_file/rel.txt'  # rules of nlp result to rel
-ent_induction = '/kaggle/working/OPENKE_file/ent.txt'  # rules of nlp result to entity
-target = '/kaggle/working/OPENKE_file/entity_total.txt'
-entity2id = '/kaggle/working/OPENKE_file/entity2id.txt'
-relation2id = '/kaggle/working/OPENKE_file/relation2id.txt'
-total = '/kaggle/working/OPENKE_file/total_word.txt'
-total_id = '/kaggle/working/OPENKE_file/total_id.txt'
+# Tạo thư mục output nếu chưa tồn tại
+if not os.path.exists('/kaggle/working/OPENKE_file'):
+    os.makedirs('/kaggle/working/OPENKE_file')
+
+# Định nghĩa đường dẫn file
+# Input: file quy tắc induction (cần upload vào /kaggle/working/OPENKE_file/ trước khi chạy)
+rel_induction = '/kaggle/working/OPENKE_file/rel.txt'  # quy tắc ánh xạ relation
+ent_induction = '/kaggle/working/OPENKE_file/ent.txt'  # quy tắc ánh xạ entity
+
+# Input: file triple từ bước sen2entity
+target_entity = '/kaggle/working/entity_total.txt'  # file input chứa triple (output từ sen2entity)
+
+# Input: file ánh xạ ID (output từ build_knowledgeid.py)
+entity2id = '/kaggle/working/OPENKE_file/entity2id.txt'  # file nội dung ánh xạ entity sang ID
+relation2id = '/kaggle/working/OPENKE_file/relation2id.txt'  # file nội dung ánh xạ relation sang ID
+
+# Output: file kết quả
+total_word = '/kaggle/working/OPENKE_file/total_word.txt'  # file tổng hợp entity và relation dạng text
+total_id = '/kaggle/working/OPENKE_file/total_id.txt'  # file tổng hợp entity và relation đã được ánh xạ sang ID
 # test = '../MSR-VTT/OPENKE_file/msrvtt/test.txt'
 # valid = '../MSR-VTT/OPENKE_file/msrvtt/valid.txt'
 
-f1 = open(rel_induction, 'r')
-f2 = open(ent_induction, 'r')
-t = open(target, 'r')
-# w1 = open(relation2id, 'w')
-# w2 = open(entity2id, 'w')
-# r1 = open(relation2id, 'r')
-# r2 = open(entity2id, 'r')
+rel_induction_f = open(rel_induction, 'r')
+ent_induction_f = open(ent_induction, 'r')
+target_entity_f = open(target_entity, 'r')
 ####################
-w3 = open(total, 'w')
+total_word_f = open(total_word, 'w')
 
-rel_induction_lines = f1.readlines()
-ent_induction_lines = f2.readlines()
-target_lines = t.readlines()
-# ur1 = r1.readlines()
-# ur2 = r2.readlines()
+rel_induction_lines = rel_induction_f.readlines() # vd: drive|driving#drives#ride#drive\n
+ent_induction_lines = ent_induction_f.readlines() # vd: bicycle|bike#cycle#pushbike\n
+target_lines = target_entity_f.readlines()
+
+
+############
+# Chuyển triple từ dạng text sang dạng entity và relation
+# Quy trình:
+# 1. Đọc các file quy tắc và dữ liệu đầu vào
+# 2. Với mỗi dòng trong entity_total.txt, tách theo ký tự & thành 3 phần: [entity1, entity2, relation]
+# 3. Xử lý entity (index 0, 1):
+#     - So khớp với các quy tắc trong ent.txt
+#     - Tìm entity chuẩn hóa tương ứng
+#     - Ghi vào file total_word.txt hoặc none nếu không tìm thấy
+# 4. Xử lý relation (index 2):
+#     - So khớp với các quy tắc trong rel.txt
+#     - Tìm relation chuẩn hóa tương ứng
+#     - Ghi vào file total_word.txt hoặc none nếu không tìm thấy
 
 for target_line in tqdm(target_lines):
-    list1 = target_line.split('&')
+    list1 = target_line.split('&') # triple split by &: [entity1, entity2, relation]
     for i in range(len(list1)):
-        if i == 0 or i == 1:
+        if i == 0 or i == 1: # entity1 or entity2
             no_match = True
+            entity = list1[i].strip()
             for line in ent_induction_lines:
                 if not no_match:  # avoid repeat match string
                     break
-                step1 = line.split('|')
-
-                step2 = step1[1].replace('\n', '').split('#')
-                # if list1[i].strip() in step2:
+                step1 = line.split('|') #  ['bicycle', 'bike#cycle#pushbike\n']
+                entity_normalized = step1[0].replace(' ', '') # bicycle
+                step2 = step1[1].replace('\n', '').split('#') # bike#cycle#pushbike\n → bike#cycle#pushbike → ['bike', 'cycle', 'pushbike']
                 for j in step2:
-                    if j in list1[i].strip() and j != '':
-                        w3.write(step1[0].replace(' ', '') + ',')
+                    if j and j in entity:
+                        total_word_f.write(entity_normalized + ',') # write entity chuẩn hóa: bike → bicycle
                         no_match = False
                         break
 
-                # print(step2)
             if no_match:
-                w3.write('none,')
-            # w1.close()
-        elif i == 2:
+                total_word_f.write('none,')
+
+        elif i == 2: # relation
             no_match = True
+            relation = list1[i].strip()
             for line in rel_induction_lines:
                 if not no_match:
                     break
                 step1 = line.split('|')
+                relation_normalized = step1[0].replace(' ', '')
                 step2 = step1[1].replace('\n', '').split('#')
                 for j in step2:
-                    if j in list1[i].strip():
-                        w3.write(step1[0].replace(' ', '') + '\n')
+                    if j and j in relation:
+                        total_word_f.write(relation_normalized + '\n')
                         no_match = False
                         break
             if no_match:
-                w3.write('none\n')
+                total_word_f.write('none\n')
+total_word_f.close() # vd: entity1,entity2,relation
 
-            # w2.close()
-w3.close()
+
 ############
-# tran total.txt to id
-r1 = open(relation2id, 'r')
-r2 = open(entity2id, 'r')
-r3 = open(total, 'r')
-total_id = open(total_id, 'w')
+# Chuyển total.txt dạng text sang dạng id: total_word.txt → total_id.txt
+# Quy trình:
+# 1 Đọc file ánh xạ entity2id.txt và relation2id.txt vào dictionary
+# 2. Đọc file total_word.txt (kết quả phần 1)
+# 3. Với mỗi triple dạng text:
+#     - Bỏ qua nếu có phần tử none
+#     - Tra cứu ID từ dictionary
+#     - Kiểm tra ràng buộc: entity ID ≤ 80, relation ID ≤ 20
+#     - Ghi vào total_id.txt theo định dạng: entity1_id entity2_id relation_id
+
+
+rel2id_f = open(relation2id, 'r')
+ent2id_f = open(entity2id, 'r')
+total_word_f = open(total_word, 'r')
+total_id_f = open(total_id, 'w')
 # w_test = open(test, 'w')
 # w_valid = open(valid, 'w')
 
-relid = r1.readlines()
-entid = r2.readlines()
+rel2id_lines = rel2id_f.readlines()
+ent2id_lines = ent2id_f.readlines()
 reldict = {}
 entdict = {}
-for line in relid:
+for line in rel2id_lines:
     rel_id = line.split('\t')
-    # print(rel_id)
     reldict[rel_id[0]] = int(rel_id[-1].replace('\n', ''))
-for line in entid:
+for line in ent2id_lines:
     ent_id = line.split('\t')
     entdict[ent_id[0]] = int(ent_id[-1].replace('\n', ''))
 print(reldict, '\n', entdict)
-r1.close()
-r2.close()
-total = r3.readlines()
-for line in tqdm(total):
-    word = line.split(',')
-    word[2] = word[2].replace('\n', '')
-    if word[0] == 'none' or word[1] == 'none' or word[2] == 'none':
+rel2id_f.close()
+ent2id_f.close()
+total_word_lines = total_word_f.readlines()
+for line in tqdm(total_word_lines):
+    word = line.split(',') # [entity1, entity2, relation]
+    word[2] = word[2].replace('\n', '') # relation
+    if word[0] == 'none' or word[1] == 'none' or word[2] == 'none': # entity1 or entity2 or relation is none
         continue
     for i in range(3):
-        if i == 0 or i == 1:
+        if i == 0 or i == 1: # entity1 or entity2
             assert 0 <= entdict[word[i]] <= 80, "entity id get some trouble!!!"
-            total_id.write(str(entdict[word[i]]) + ' ')
-        elif i == 2:
+            total_id_f.write(str(entdict[word[i]]) + ' ')
+        elif i == 2: # relation
             assert 0 <= reldict[word[i]] <= 20, "relation id get some trouble!!!"
-            total_id.write(str(reldict[word[i]]) + '\n')
+            total_id_f.write(str(reldict[word[i]]) + '\n')

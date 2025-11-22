@@ -1,6 +1,10 @@
 import os
 import random
 
+# Tạo thư mục output nếu chưa tồn tại
+if not os.path.exists('/kaggle/working/OPENKE_file'):
+    os.makedirs('/kaggle/working/OPENKE_file')
+
 
 def ReadFileDatas(original_filename):
     file = open(original_filename, 'r+')

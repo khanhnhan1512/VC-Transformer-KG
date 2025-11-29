@@ -23,46 +23,6 @@ class NewGELUActivation(nn.Module):
         return 0.5 * input * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (input + 0.044715 * torch.pow(input, 3.0))))
 
 
-class FFNFeatureFusion(nn.Module):
-    def __init__(self, d_model: int, num_features: int, dropout: float):
-        super(FFNFeatureFusion, self).__init__()
-        lowrank_dim = max(128, d_model // 4)
-        self.bottlenecks = nn.ModuleList([nn.Linear(d_model, lowrank_dim) for _ in range(num_features)])
-        self.lns = nn.ModuleList([nn.LayerNorm(lowrank_dim) for _ in range(num_features)])
-        self.dropout = nn.Dropout(dropout)
-        self.activation = NewGELUActivation()
-        # final projector from concat(lowrank) -> d_model
-        self.final = nn.Linear(num_features * lowrank_dim, d_model)
-        self.out_ln = nn.LayerNorm(d_model)
-        self.num_features = num_features
-        
-    def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
-        """
-        Args:
-            features: list of tensors, each shape (B, S, D) and same D.
-        Returns:
-            fused tensor shape (B, S, D)
-        """
-        if not isinstance(features, (list, tuple)):
-            raise ValueError("features must be a list/tuple of tensors")
-        if len(features) == 0:
-            raise ValueError("features list is empty")
-        if len(features) != self.num_features:
-            raise ValueError(f"Expected {self.num_features} features, got {len(features)}")
-        
-        proj = []
-        for f, proj_layer, ln in zip(features, self.bottlenecks, self.lns):
-            z = proj_layer(f)             # (B,S,bottleneck) linear
-            z = self.activation(z)        # non-linear (GELU/ReLU)
-            z = ln(z)                     # LayerNorm on last dim
-            z = self.dropout(z)
-            proj.append(z)
-        x = torch.cat(proj, dim=-1)       # (B,S, num*bottleneck)
-        out = self.final(x)               # (B,S,D)
-        out = self.out_ln(out)
-        return out
-
-
 class FeatEmbedding(nn.Module):
 
     def __init__(self, d_feat, d_model, dropout):
@@ -74,8 +34,7 @@ class FeatEmbedding(nn.Module):
         )
 
     def forward(self, x):
-        x = self.video_embeddings(x)
-        return x
+        return self.video_embeddings(x)
 
 
 class TextEmbedding(nn.Module):
@@ -87,118 +46,6 @@ class TextEmbedding(nn.Module):
 
     def forward(self, x):
         return self.embed(x) * math.sqrt(self.d_model)
-
-
-def apply_rotary_positional_embedding(
-    x: torch.Tensor, theta_is: torch.Tensor
-) -> torch.Tensor:
-    """
-    Apply rotary positional embedding to input tensor x.
-
-    Args:
-        x : Input tensor of shape (B, T, D).
-        theta_is : Precomputed complex frequencies of shape (T, D//2).
-
-    Returns:
-        torch.Tensor: Tensor with RoPE applied, same shape as input x.
-    """
-
-    # Reshape x to separate real and imaginary parts (pairs of features)
-    # Shape: (B, T, D)    -> (B, T, D//2, 2)
-    x_combined = x.float().reshape(*x.shape[:-1], -1, 2)
-
-    # Convert to complex numbers
-    # Shape: (B, T, D//2)
-    x_complex = torch.view_as_complex(x_combined)
-
-    # Reshape theta_is for broadcasting
-    # Shape: (T, D//2) -> (1, T, D//2)
-    # Add batch dimension (dim=0)
-    theta_is = theta_is.unsqueeze(0)
-
-    # Apply rotation by multiplying complex numbers
-    # Broadcasting works:
-    # (B, T, D//2) * (1, T, D//2) -> (B, T, D//2)
-    x_rotated = x_complex * theta_is.to(x_complex.device)
-
-    # Convert back to real numbers
-    # Shape: (B, T, D//2, 2)
-    x_out = torch.view_as_real(x_rotated)
-
-    # Reshape back to original input shape
-    # Shape: (B, T, D)
-    # Flatten the last two dimensions (D//2, 2) -> D
-    x_out = x_out.flatten(start_dim=-2)
-    return x_out.type_as(x)
-
-
-class RotaryPositionalEmbedding(nn.Module):
-    def __init__(
-        self,
-        n_embd: int,
-        block_size: int,
-        base_frequency: int = 10000,
-        device: Optional[torch.device] = None,
-    ) -> None:
-        """
-        Initializes the Rotary Positional Embedding.
-
-        Args:
-            n_embd : Dimension of the head embeddings. Must be even.
-            block_size : Maximum sequence length.
-            base_frequency : The base_frequency value for frequency calculation (theta_i).
-            device : Device to store the precomputed frequencies.
-        """
-        super(RotaryPositionalEmbedding, self).__init__()
-        if n_embd % 2 != 0:
-            raise ValueError("Dimension must be even for RoPE.")
-
-        self.n_embd = n_embd
-        self.block_size = block_size
-        self.base_frequency = base_frequency
-        self.device = device
-
-        # Precompute theta values for RoPE
-        # For each i in [0, n_embd/ 2 ):
-        #   theta_i = 1 / (base_frequency^(2 * i / n_embd))
-        half_dimension = self.n_embd // 2
-        frequency_range = torch.arange(half_dimension, dtype=torch.float32)
-        exponent = 2 * frequency_range / self.n_embd
-        denominator = torch.pow(self.base_frequency, exponent)
-        # Shape: (n_embd // 2,)
-        theta_is = 1.0 / denominator
-
-        # Calculate frequencies for each position: m * theta
-        # Shape: (block_size, n_embd / 2)
-        position_indices = torch.arange(self.block_size, dtype=torch.float32)
-        frequencies = torch.outer(position_indices, theta_is)
-
-        # Calculate complex numbers in polar form: cos(m*theta) + i*sin(m*theta)
-        # Shape: (block_size, n_embd / 2)
-        self.theta_is = torch.polar(torch.ones_like(frequencies), frequencies)
-
-        if self.device:
-            self.theta_is = self.theta_is.to(self.device)
-
-    def get_theta_is(self, sequence_length: int, device: torch.device) -> torch.Tensor:
-        """
-        Returns the precomputed complex frequencies for a given sequence length.
-
-        Args:
-            sequence_length : The sequence length (T).
-            device : Target device.
-
-        Returns:
-            Complex frequencies of shape (sequence_length, n_embd / 2).
-        """
-        if sequence_length > self.block_size:
-            raise ValueError(
-                f"Sequence length {sequence_length} exceeds maximum precomputed length {self.block_size}"
-            )
-
-        # Return the slice for the current sequence length T
-        self.theta_is = self.theta_is.to(device)
-        return self.theta_is[:sequence_length]
 
 
 class PositionalEncoding(nn.Module):
@@ -218,8 +65,6 @@ class PositionalEncoding(nn.Module):
         #self.dim = dim
 
     def forward(self, emb, step=None):
-
-        #emb = emb * math.sqrt(self.dim)'
         if step is None:
             emb = emb + self.pe[:emb.size(1), :]
         else:
@@ -258,56 +103,19 @@ class MultiHeadAttention(nn.Module):
         if use_rope:
             raise ValueError("Rotary Positional Embedding (RoPE) is not supported in this implementation of MultiHeadAttention.")
         
-        # --- MLA Parameters ---
-        n_embd = d_model
-        kv_compression_dim = max(128, d_model // 4)
-        q_compression_dim = d_model // 2
-        self.head_size = n_embd // num_heads
-        self.rotary_embeddings = RotaryPositionalEmbedding(
-            n_embd=n_embd,
-            block_size=1_000, # d_model * 2
-            base_frequency=10_000,
-            device="cuda" if torch.cuda.is_available() else "cpu",
-        )
-        # ----------------------
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.output_linear = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(p=dropout)
         
-        # --- Query Compression Path ---
-        # Down-projection for query
-        self.W_dq = nn.Linear(n_embd, q_compression_dim)
-        # LayerNorm after query down-projection
-        self.q_layer_norm = nn.LayerNorm(q_compression_dim)
-        # Up-projection for query
-        self.W_uq = nn.Linear(q_compression_dim, n_embd)
-        
-        # --- Key-Value Joint Compression Path ---
-        # Down-projection for key-value
-        self.W_dkv = nn.Linear(n_embd, kv_compression_dim)
-        # LayerNorm after key-value down-projection
-        self.kv_layer_norm = nn.LayerNorm(kv_compression_dim)
-        # Up-projection for key (from compressed KV)
-        self.W_uk = nn.Linear(kv_compression_dim, n_embd)
-        # Up-projection for value (from compressed KV)
-        self.W_uv = nn.Linear(kv_compression_dim, n_embd)
-        
-        self.d_k = d_model // num_heads
         self.num_heads = num_heads
         self.d_model = d_model
-        
-        self.activation = NewGELUActivation()
-        
-        self.output_linear = nn.Linear(d_model, d_model)
-        """
-        self.output_linear = nn.Sequential(
-            nn.Linear(d_model, d_model // 3),
-            NewGELUActivation(),
-            nn.Linear(d_model // 3, d_model)
-        )
-        """
-        self.dropout = nn.Dropout(p=dropout)
+        self.head_size = d_model // num_heads
         self.use_rope = use_rope
         self.attn_weights = None  # To store if needed
 
-    def forward(self, query, key, value, mask=None):
+    def forward(self, query, key_value, mask=None):
         """
         query, key, value: [batch_size, seq_len, d_model]
         mask: Optional [batch_size, seq_q, seq_k] with 0/1 (0 to mask)
@@ -317,35 +125,18 @@ class MultiHeadAttention(nn.Module):
         B, T, C = query.shape
 
         # 1. Query Path
-        # (B, T, C) -> (B, T, q_compression_dim)
-        compressed_q_latent = self.activation(self.W_dq(query))
-        compressed_q_latent_norm = self.q_layer_norm(compressed_q_latent)
-        # (B, T, q_compression_dim) -> (B, T, C)
-        q_final = self.W_uq(compressed_q_latent_norm)
+        q_final = self.W_q(query)
 
         # 2. Key-Value Path
-        # (B, T, C) -> (B, T, kv_compression_dim)
-        compressed_kv_latent = self.activation(self.W_dkv(key))
-        compressed_kv_latent_norm = self.kv_layer_norm(compressed_kv_latent)
-        # (B, T, kv_compression_dim) -> (B, T, C)
-        k_final = self.W_uk(compressed_kv_latent_norm)
-        # (B, T, kv_compression_dim) -> (B, T, C)
-        v_final = self.W_uv(compressed_kv_latent_norm)
+        k_final = self.W_k(key_value)
+        v_final = self.W_v(key_value)
 
-        # 3. Apply Rotary Positional Embedding to Q, K
-        if self.use_rope:
-            theta_is = self.rotary_embeddings.get_theta_is(q_final.shape[1], query.device)
-            q_rope = apply_rotary_positional_embedding(q_final, theta_is)
-            theta_is = self.rotary_embeddings.get_theta_is(k_final.shape[1], key.device)
-            k_rope = apply_rotary_positional_embedding(k_final, theta_is)
-        else:
-            q_rope = q_final
-            k_rope = k_final
-        
+        # TODO: 3. Apply Rotary Positional Embedding to Q, K
+    
         # 4. Reshape Q, K, V for multi-head attention
         # (B, T, C) -> (B, T, num_heads, head_size) -> (B, num_heads, T, head_size)
-        q_heads = q_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
-        k_heads = k_rope.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
+        q_heads = q_final.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
+        k_heads = k_final.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
         v_heads = v_final.view(B, -1, self.num_heads, self.head_size).transpose(1, 2)
         
         # Expand mask if provided: [batch_size, 1, seq_q, seq_k]
@@ -368,40 +159,18 @@ class MultiHeadAttention(nn.Module):
         return self.output_linear(x)
 
 
-class SwiGLU(nn.Module):
-    """
-    A standard SwiGLU FFN implementation.
-    Reference: Noam Shazeer's "GLU Variants Improve Transformer"
-    (https://arxiv.org/abs/2002.05202)
-    """
+class FFN(nn.Module):
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
-        super(SwiGLU, self).__init__()
-        # Adjust hidden_dim to be a multiple of multiple_of
-        hidden_dim = multiple_of * ((2 * d_ff // 3 + multiple_of - 1) // multiple_of)
-        self.w1 = nn.Linear(d_model, hidden_dim)
-        self.w2 = nn.Linear(d_model, hidden_dim)
-        self.w3 = nn.Linear(hidden_dim, d_model)
-        self.dropout = nn.Dropout(dropout)
-        self.main_activation = nn.SiLU()  # Swish activation
-        self.sub_activation = NewGELUActivation()
-        """
+        super(FFN, self).__init__()
         self.transform = nn.Sequential(
             nn.Linear(d_model, d_ff),
-            nn.ReLU(),
+            NewGELUActivation(),
             nn.Linear(d_ff, d_model),
             nn.Dropout(dropout)
         )
-        """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # Forward pass using Swish activation and dropout
-        x1 = self.main_activation(self.w1(x))
-        #x1 = self.sub_activation(self.w1(x))'
-        x2 = self.w2(x)
-        y = self.dropout(self.w3(x1 * x2))
-        """
         y = self.transform(x)
-        """
         return y
 
 
@@ -430,54 +199,28 @@ class SkipConnectionAfterLN(nn.Module):
     
 
 class EncoderLayer(nn.Module):
-    
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool, first_layer: bool):
         super(EncoderLayer, self).__init__()
-        self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        if first_layer:
-            self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
-        else:
-            self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
+        
+        self.self_attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        if first_layer: self.self_attn_skipconn = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:           self.self_attn_skipconn = SublayerConnection(size=d_model, dropout=dropout)
+        
+        self.cross_attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.cross_attn_skipconn = SublayerConnection(size=d_model, dropout=dropout)
+        
+        self.query_ffn = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
+        self.query_ffn_skipconn = SublayerConnection(size=d_model, dropout=dropout)
 
-    def forward(self, x, mask):
-        x = self.sublayer_connection_1(x, lambda x: self.attn(x, x, x, mask))
-        x = self.sublayer_connection_2(x, self.feed_forward)
-        return x
-
-
-class EncoderLayerNoAttention(nn.Module):
-    
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float, first_layer: bool):
-        super(EncoderLayerNoAttention, self).__init__()
-        self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        if first_layer:
-            self.sublayer_connection = SkipConnectionAfterLN(size=d_model, dropout=dropout)
-        else:
-            self.sublayer_connection = SublayerConnection(size=d_model, dropout=dropout)
-
-    def forward(self, x, mask):
-        x = self.sublayer_connection(x, self.feed_forward)
-        return x
-
-
-# class DecoderLayer(nn.Module):
-
-#     def __init__(self, size, attn, feed_forward, sublayer_num, dropout):
-#         super(DecoderLayer, self).__init__()
-#         self.attn = attn
-#         self.feed_forward = feed_forward
-#         self.sublayer_connection = clones(SublayerConnection(size, dropout), sublayer_num)
-
-#     def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
-#         x = self.sublayer_connection[0](x, lambda x: self.attn(x, x, x, trg_mask))
-#         x = self.sublayer_connection[1](x, lambda x: self.attn(x, memory, memory, src_mask))
-
-#         if r2l_memory is not None:
-#             x = self.sublayer_connection[-2](x, lambda x: self.attn(x, r2l_memory, r2l_memory, r2l_trg_mask))
-
-#         return self.sublayer_connection[-1](x, self.feed_forward)
+    def forward(self, query, feature, feat_mask):
+        # --- Self-Attention ---
+        query = self.self_attn_skipconn(query, lambda x: self.self_attn(x, x, None))
+        # --- Cross-Attention ---
+        query = self.cross_attn_skipconn(query, lambda x: self.cross_attn(x, feature, feat_mask))
+        # --- FFN on Query ---
+        query = self.query_ffn_skipconn(query, self.query_ffn)
+        
+        return query
 
 
 class R2LDecoderLayer(nn.Module):
@@ -487,7 +230,7 @@ class R2LDecoderLayer(nn.Module):
         super(R2LDecoderLayer, self).__init__()
         self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         if first_layer:
             self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
         else:
@@ -499,8 +242,8 @@ class R2LDecoderLayer(nn.Module):
         if r2l_memory is not None:
             raise ValueError("[R2LDecoderLayer.forward] r2l_memory must be None")
         
-        x = self.sublayer_connection_1(x, lambda x: self.attn_1(x, x, x, trg_mask))
-        x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, memory, memory, src_mask))
+        x = self.sublayer_connection_1(x, lambda x: self.attn_1(x, x, trg_mask))
+        x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, memory, src_mask))
         x = self.sublayer_connection_3(x, self.feed_forward)
         return x
 
@@ -513,7 +256,7 @@ class L2RDecoderLayer(nn.Module):
         self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
         self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.feed_forward = SwiGLU(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
         if first_layer:
             self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
         else:
@@ -526,9 +269,9 @@ class L2RDecoderLayer(nn.Module):
         if r2l_memory is None:
             raise ValueError("[L2RDecoderLayer.forward] r2l_memory must not be None")
             
-        x = self.sublayer_connection_1(x, lambda x: self.attn_1(x, x, x, trg_mask))
-        x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, memory, memory, src_mask))
-        x = self.sublayer_connection_3(x, lambda x: self.attn_3(x, r2l_memory, r2l_memory, r2l_trg_mask))
+        x = self.sublayer_connection_1(x, lambda x: self.attn_1(x, x, trg_mask))
+        x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, memory, src_mask))
+        x = self.sublayer_connection_3(x, lambda x: self.attn_3(x, r2l_memory, r2l_trg_mask))
         x = self.sublayer_connection_4(x, self.feed_forward)
         return x
 
@@ -537,20 +280,20 @@ class Encoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(Encoder, self).__init__()
-        self.in_norm = nn.LayerNorm(d_model)
+        self.src_norm = nn.LayerNorm(d_model)
+        self.query_norm = nn.LayerNorm(d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope,
                          first_layer=(i == 0))
             for i in range(num_layers)
         ])
-        self.out_norm = nn.LayerNorm(d_model)
 
-    def forward(self, x, src_mask):
-        x = self.in_norm(x)
+    def forward(self, query, src, src_mask):
+        src = self.src_norm(src)
         for layer in self.encoder_layers:
-            x = layer(x, src_mask)
-        x = self.out_norm(x)
-        return x
+            query = layer(query, src, src_mask)
+        query = self.query_norm(query)
+        return query
 
 
 class R2L_Decoder(nn.Module):
@@ -594,49 +337,20 @@ class L2R_Decoder(nn.Module):
 
 
 def pad_mask(src, r2l_trg, trg, pad_idx):
-    if isinstance(src, tuple):
-        if len(src) == 4:
-            raise ValueError("[pad_mask] src should not be a tuple of length 4.")
-        if len(src) == 3:
-            m1 = (src[0][:, :, 0] != pad_idx)
-            assert m1.ndim == 2, f"[pad_mask] m1.ndim={m1.ndim}"
-            assert m1.shape[1] == 10, f"[pad_mask] m1.shape={m1.shape}"
-
-            m2 = (src[1][:, :, 0] != pad_idx)
-            assert m2.ndim == 2, f"[pad_mask] m2.ndim={m2.ndim}"
-            assert m2.shape[1] == 10, f"[pad_mask] m2.shape={m2.shape}"
-
-            m3 = (src[2][:, :, 0] != pad_idx)
-            assert m3.ndim == 2, f"[pad_mask] m3.ndim={m3.ndim}"
-            assert m3.shape[1] == 10, f"[pad_mask] m3.shape={m3.shape}"
-
-            _stacked = torch.stack([m1, m2, m3], dim=2)
-            out_mask = _stacked.reshape(m1.size(0), -1)
-            assert out_mask.ndim == 2, f"[pad_mask] out_mask.ndim={out_mask.ndim}"
-            assert out_mask.shape[1] == 30, f"[pad_mask] out_mask.shape={out_mask.shape}"
-            assert torch.equal(out_mask[:,0::3], m1[:,:]) == True
-            assert torch.equal(out_mask[:,1::3], m2[:,:]) == True
-            assert torch.equal(out_mask[:,2::3], m3[:,:]) == True
-
-            enc_src_mask = out_mask.unsqueeze(1)
-            dec_src_mask = out_mask.unsqueeze(1)
-            src_mask = (enc_src_mask, dec_src_mask)
-        if len(src) == 2:
-            raise ValueError("[pad_mask] src should not be a tuple of length 2.")
-    else:
-        src_mask = (src[:, :, 0] != pad_idx).unsqueeze(1)
+    if not isinstance(src, tuple): 
+        raise ValueError("[padmask] src must be a tuple of tensors for multi-feature input")
+    
+    enc_src_mask = tuple([(feat[:,:,0] != pad_idx).unsqueeze(1) for feat in src])
+    dec_src_mask = enc_src_mask[0]
+    for mask in enc_src_mask[1:]: dec_src_mask = dec_src_mask & mask # AND
+    src_mask = (enc_src_mask, dec_src_mask)
+    
     if trg is not None:
-        if isinstance(src_mask, tuple):
-            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(m1.data)
-            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(m1.data)
-            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(m1.data)
-            return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask
-        else:
-            trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(src_mask.data)
-            r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(src_mask.data)
-            r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(src_mask.data)
-            return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask  # src_mask[batch, 1, lens]  trg_mask[batch, 1, lens]
-
+        sample_mask = dec_src_mask
+        trg_mask = (trg != pad_idx).unsqueeze(1) & subsequent_mask(trg.size(1)).type_as(sample_mask.data)
+        r2l_pad_mask = (r2l_trg != pad_idx).unsqueeze(1).type_as(sample_mask.data)
+        r2l_trg_mask = r2l_pad_mask & subsequent_mask(r2l_trg.size(1)).type_as(sample_mask.data)
+        return src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask
     else:
         return src_mask
 
@@ -659,102 +373,107 @@ class Generator(nn.Module):
 
 class ABDTransformer(nn.Module):
 
-    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big,
-                 n_enc_layers, n_dec_layers, dropout, max_caption_len):
+    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
+                 n_enc_layers, n_dec_layers, dropout, device='cuda'):
         super(ABDTransformer, self).__init__()
-        self.vocab = vocab
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.vocab  = vocab
+        self.device = device
         multiple_of = 128
+        num_queries = 10
 
-        self.r2l_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
+        # --- Feature Embeddings ---
+        self.r2l_visual_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.r2l_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-        self.r2l_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
+        self.r2l_imgcap_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
-        self.l2r_image_src_embed  = FeatEmbedding(d_feat[0], d_model, dropout)
+        self.l2r_visual_src_embed = FeatEmbedding(d_feat[0], d_model, dropout)
         self.l2r_motion_src_embed = FeatEmbedding(d_feat[1], d_model, dropout)
-        self.l2r_object_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
+        self.l2r_imgcap_src_embed = FeatEmbedding(d_feat[2], d_model, dropout)
         
+        # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
-        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=max_caption_len+4)
-
-        # Feature fusion module
-        #self.r2l_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
-        #self.l2r_feat_fusion = FFNFeatureFusion(d_model=d_model, num_features=3, dropout=dropout)
+        self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=256)
         
-        # self.encoder_big = Encoder(n_layers, EncoderLayer(d_model, c(attn_big), c(feed_forward), dropout), d_model)
-        #self.r2l_img_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        #self.r2l_mot_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        #self.r2l_obj_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.r2l_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        # --- Encoders ---
+        self.r2l_query_embed = nn.Parameter(torch.randn(1, num_queries, d_model))
+        self.r2l_visual_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_motion_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_imgcap_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
-        # self.encoder = Encoder(n_layers, EncoderLayer(d_model, c(attn), c(feed_forward), dropout), d_model)
-        #self.l2r_img_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        #self.l2r_mot_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        #self.l2r_obj_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.l2r_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_query_embed = nn.Parameter(torch.randn(1, num_queries, d_model))
+        self.l2r_visual_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_motion_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_imgcap_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
+        # --- Decoders ---
         self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
         self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
 
-        # self.generator = Generator(d_model, vocab.n_vocabs)
+        # --- Generators ---
         self.r2l_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
         self.l2r_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
 
-    def encode(self, src, src_mask, feature_mode_two=False):
-        # ============== Spatial-Temporal Encoding ==============
-        if feature_mode_two:
-            x1 = self.r2l_image_src_embed(src[0])  # shape (64, 10, 512)
-            x2 = self.r2l_motion_src_embed(src[1]) # shape (64, 10, 512)
-            x3 = self.r2l_object_src_embed(src[2]) # shape (64, 10, 512)
+    def encode(self, src, src_mask, r2l_encode=False):
+        # ============== Right-to-Left Encoding ==============
+        if r2l_encode:
+            # Expand queries to match batch size
+            batch_size = src[0].size(0)
+            queries = self.r2l_query_embed.repeat(batch_size, 1, 1)
+            queries = self.pos_embed(queries)
+            
+            # --- Encode each feature type separately ---
+            feat_1 = self.r2l_visual_src_embed(src[0])
+            feat_1 = self.pos_embed(feat_1)
+            queries = self.r2l_visual_encoder_big(queries, feat_1, src_mask[0])
+            q_1 = queries
 
-            B, _, D = x1.shape
-            _stacked = torch.stack([x1, x2, x3], dim=2)
-            r2l_x = _stacked.reshape(B, -1, D)
-            assert torch.equal(r2l_x[:,0::3,:], x1[:,:,:]) == True
-            assert torch.equal(r2l_x[:,1::3,:], x2[:,:,:]) == True
-            assert torch.equal(r2l_x[:,2::3,:], x3[:,:,:]) == True
+            feat_2 = self.r2l_motion_src_embed(src[1])
+            feat_2 = self.pos_embed(feat_2)
+            queries = self.r2l_motion_encoder_big(queries, feat_2, src_mask[1])
+            q_2 = queries
 
-            r2l_x = self.pos_embed(r2l_x)
-            return self.r2l_encoder_big(r2l_x, src_mask)
-            #return torch.cat((x1, x2, x3), dim=1)
-            #assert x1.shape == x2.shape == x3.shape, f"x1.shape[{x1.shape}], x2.shape[{x2.shape}], x3.shape[{x3.shape}]"
-            #print(f"x1.shape: {x1.shape}")
-            #return self.r2l_feat_fusion([x1, x2, x3])
-
-        # ============== Object-Relation Encoding ==============
+            feat_3 = self.r2l_imgcap_src_embed(src[2])
+            feat_3 = self.pos_embed(feat_3)
+            queries = self.r2l_imgcap_encoder_big(queries, feat_3, src_mask[2])
+            q_3 = queries
+            
+            return q_1 + q_2 + q_3
+        
+        # ============== Left-to-Right Encoding ==============
         else:
-            x1 = self.l2r_image_src_embed(src[0])
-            x2 = self.l2r_motion_src_embed(src[1])
-            x3 = self.l2r_object_src_embed(src[2])
+            # Expand queries to match batch size
+            batch_size = src[0].size(0)
+            queries = self.l2r_query_embed.repeat(batch_size, 1, 1)
+            queries = self.pos_embed(queries)
+            
+            # --- Encode each feature type separately ---
+            feat_1 = self.l2r_visual_src_embed(src[0])
+            feat_1 = self.pos_embed(feat_1)
+            queries = self.l2r_visual_encoder(queries, feat_1, src_mask[0])
+            q_1 = queries
 
-            B, _, D = x1.shape
-            _stacked = torch.stack([x1, x2, x3], dim=2)
-            l2r_x = _stacked.reshape(B, -1, D)
-            assert torch.equal(l2r_x[:,0::3,:], x1[:,:,:]) == True
-            assert torch.equal(l2r_x[:,1::3,:], x2[:,:,:]) == True
-            assert torch.equal(l2r_x[:,2::3,:], x3[:,:,:]) == True
+            feat_2 = self.l2r_motion_src_embed(src[1])
+            feat_2 = self.pos_embed(feat_2)
+            queries = self.l2r_motion_encoder(queries, feat_2, src_mask[1])
+            q_2 = queries
 
-            l2r_x = self.pos_embed(l2r_x)
-            return self.l2r_encoder(l2r_x, src_mask)
-            #return torch.cat((x1, x2, x3), dim=1)
-            #assert x1.shape == x2.shape == x3.shape, f"x1.shape[{x1.shape}], x2.shape[{x2.shape}], x3.shape[{x3.shape}]"
-            #print(f"x1.shape: {x1.shape}")
-            # return self.feat_fusion([x1, x2, x3, x4])
-            #return self.l2r_feat_fusion([x1, x2, x3])
+            feat_3 = self.l2r_imgcap_src_embed(src[2])
+            feat_3 = self.pos_embed(feat_3)
+            queries = self.l2r_imgcap_encoder(queries, feat_3, src_mask[2])
+            q_3 = queries
+
+            return q_1 + q_2 + q_3
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
+        src_mask = None # ! Use all queries from encoder
         x = self.r2l_trg_embed(r2l_trg)
-        #print(f"[r2l_decode] emb.shape: {x.shape}")
-        #print(f"[r2l_decode] memory.shape: {memory.shape}")
         x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        src_mask = None # ! Use all queries from encoder
         x = self.l2r_trg_embed(trg)
-        #print(f"[l2r_decode] emb.shape: {x.shape}")
-        #print(f"[l2r_decode] memory.shape: {memory.shape}")
-        #print(f"[l2r_decode] r2l_memory.shape: {r2l_memory.shape}")
         x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
 
@@ -762,34 +481,14 @@ class ABDTransformer(nn.Module):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
         
         enc_src_mask, dec_src_mask = src_mask
-        r2l_encoding_outputs = self.encode(src, enc_src_mask, feature_mode_two=True)
-        #print("Finish r2l-enc")
+        r2l_encoding_outputs = self.encode(src, enc_src_mask, r2l_encode=True)
         encoding_outputs = self.encode(src, enc_src_mask)
-        #print("Finish l2r-enc")
-        #print(f"r2l_enc_out.shape: {r2l_encoding_outputs.shape}")
-        #print(f"l2r_enc_out.shape: {encoding_outputs.shape}")
-        #print(f"r2l_trg.shape: {r2l_trg.shape}")
-        #print(f"trg.shape: {trg.shape}")
-
+        
         r2l_outputs = self.r2l_decode(r2l_trg, r2l_encoding_outputs, dec_src_mask, r2l_trg_mask)
-        #print("Finish r2l-dec")
         l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, r2l_outputs, r2l_pad_mask)
-        #print("Finish l2r-dec")
-        #print(f"r2l_outputs.shape: {r2l_outputs.shape}")
-        #print(f"l2r_outputs.shape: {l2r_outputs.shape}")
 
-        # r2l_outputs = self.r2l_decode(r2l_trg, encoding_outputs, dec_src_mask, r2l_trg_mask)
-        # l2r_outputs = self.l2r_decode(trg, encoding_outputs, dec_src_mask, trg_mask, None, None)
-
-
-        # r2l_pred = self.generator(r2l_outputs)
-        # l2r_pred = self.generator(l2r_outputs)
         r2l_pred = self.r2l_generator(r2l_outputs)
         l2r_pred = self.l2r_generator(l2r_outputs)
-        #print(f"r2l_pred.shape: {r2l_pred.shape}")
-        #print(f"l2r_pred.shape: {l2r_pred.shape}")
-
-        #raise NotImplementedError("You should implement this function.")
         
         return r2l_pred, l2r_pred
 
@@ -964,7 +663,7 @@ class ABDTransformer(nn.Module):
         batch_size = src[0].shape[0]
         enc_src_mask = src_mask[0]
         dec_src_mask = src_mask[1]
-        r2l_model_encodings = self.encode(src, enc_src_mask, feature_mode_two=True)
+        r2l_model_encodings = self.encode(src, enc_src_mask, r2l_encode=True)
         # model_encodings = r2l_model_encodings
         model_encodings = self.encode(src, enc_src_mask)
 

@@ -3,6 +3,8 @@ import os
 
 import torch
 from tqdm import tqdm
+from collections import defaultdict
+from typing import Dict
 from models.abd_transformer import pad_mask
 from models.label_smoothing import LabelSmoothing
 from config import TrainConfig as C
@@ -34,23 +36,10 @@ class LossChecker:
 
 
 def parse_batch(batch):
-    vids, image_feats, motion_feats, object_feats, r2l_captions, l2r_captions = batch
-
-    assert type(image_feats) == torch.Tensor, f"[parse_batch] type(image_feats)={type(image_feats)}"
-    assert type(image_feats) == type(motion_feats) == type(object_feats)
-    assert image_feats.ndim == 3, f"[parse_batch] image_feats.ndim={image_feats.ndim}"
-
-    assert type(r2l_captions) == torch.Tensor, f"[parse_batch] type(r2l_captions)={type(r2l_captions)}"
-    assert r2l_captions.ndim == 2, f"[parse_batch] r2l_captions.ndim={r2l_captions.ndim}"
-
-    image_feats  = image_feats.cuda()
-    motion_feats = motion_feats.cuda()
-    object_feats = object_feats.cuda()
-    feats = (image_feats, motion_feats, object_feats)
-
+    vids, feats_list, r2l_captions, l2r_captions = batch
+    feats = tuple([feats.cuda() for feats in feats_list])
     r2l_captions = r2l_captions.cuda()
     l2r_captions = l2r_captions.cuda()
-
     return vids, feats, r2l_captions, l2r_captions
 
 
@@ -143,70 +132,56 @@ def test(model, val_iter, vocab, reg_lambda):
 
 def get_predicted_captions(data_iter, model, beam_size, max_len):
     def build_onlyonce_iter(data_iter):
-        onlyonce_dataset = {}
+        seen_vids = set()   # to track seen video IDs
+        onlyonce_iter = []  # list to store the final iterator
+        
         tqdm(iter(data_iter)).set_description('build onlyonce_iter:')
         for batch in tqdm(iter(data_iter)):
-
             vids, feats, _, _ = parse_batch(batch)
-            for vid, image_feat, motion_feat, object_feat in zip(vids, feats[0], feats[1], feats[2]):
-                if vid not in onlyonce_dataset:
-                    onlyonce_dataset[vid] = (image_feat, motion_feat, object_feat)
-        onlyonce_iter = []
-        vids = list(onlyonce_dataset.keys())
-        feats = list(onlyonce_dataset.values())
-        del onlyonce_dataset
-        torch.cuda.empty_cache()
-        batch_size = 1
-        while len(vids) > 0:
-            image_feats = []
-            motion_feats = []
-            object_feats = []
-            
-            for image_feature, motion_feature, object_feat in feats[:batch_size]:
-                image_feats.append(image_feature)
-                motion_feats.append(motion_feature)
-                object_feats.append(object_feat)
-
-            onlyonce_iter.append((vids[:batch_size],
-                                  (torch.stack(image_feats), torch.stack(motion_feats), torch.stack(object_feats))))
-            vids = vids[batch_size:]
-            feats = feats[batch_size:]
+            for i, vid in enumerate(vids):
+                if vid not in seen_vids:
+                    seen_vids.add(vid)
+                    feats_tup = tuple(f[i,:,:].unsqueeze(0) for f in feats)
+                    onlyonce_iter.append((vid, feats_tup))
+        
         return onlyonce_iter
-
+    
+    # ==================== Main function body ====================
     model.eval()
 
     onlyonce_iter = build_onlyonce_iter(data_iter)
 
-    r2l_vid2pred = {}
-    l2r_vid2pred = {}
+    r2l_vid2pred: Dict[str, str] = {}
+    l2r_vid2pred: Dict[str, str] = {}
 
-    # BOS_idx = vocab.word2idx['<BOS>']
     with torch.no_grad():
-        for vids, feats in tqdm(onlyonce_iter):
-            r2l_captions, l2r_captions = model.beam_search_decode(
-                feats, beam_size, max_len)
-            # r2l_captions = [idxs_to_sentence(caption, vocab.idx2word, BOS_idx) for caption in r2l_captions]
-            l2r_captions = [" ".join(caption[0].value) for caption in l2r_captions]
-            r2l_captions = [" ".join(caption[0].value) for caption in r2l_captions]
-            r2l_vid2pred.update({v: p for v, p in zip(vids, r2l_captions)})
-            l2r_vid2pred.update({v: p for v, p in zip(vids, l2r_captions)})
+        for vid, feats in tqdm(onlyonce_iter):           
+            batch_r2l_captions, batch_l2r_captions = model.beam_search_decode(feats, beam_size, max_len)
+            """ [1] len(batch_r2l_captions) = batch_size (=1 in eval mode)
+                [2] len(batch_r2l_captions[i]) = beam_size
+            """
+            r2l_captions = batch_r2l_captions[0]
+            l2r_captions = batch_l2r_captions[0]
+            
+            # First caption in the beam (list) is the best one
+            best_r2l_caption = " ".join(r2l_captions[0].value)
+            best_l2r_caption = " ".join(l2r_captions[0].value)
+            
+            r2l_vid2pred[vid] = best_r2l_caption
+            l2r_vid2pred[vid] = best_l2r_caption
     return r2l_vid2pred, l2r_vid2pred
 
 
 def get_groundtruth_captions(data_iter, vocab):
-    r2l_vid2GTs = {}
-    l2r_vid2GTs = {}
+    r2l_vid2GTs = defaultdict(list)
+    l2r_vid2GTs = defaultdict(list)
     S_idx = vocab.word2idx['<S>']
+    
     tqdm(iter(data_iter)).set_description('get_groundtruth_captions:')
     for batch in tqdm(iter(data_iter)):
-
         vids, _, r2l_captions, l2r_captions = parse_batch(batch)
-
+        
         for vid, r2l_caption, l2r_caption in zip(vids, r2l_captions, l2r_captions):
-            if vid not in r2l_vid2GTs:
-                r2l_vid2GTs[vid] = []
-            if vid not in l2r_vid2GTs:
-                l2r_vid2GTs[vid] = []
             r2l_caption = idxs_to_sentence(r2l_caption, vocab.idx2word, S_idx)
             l2r_caption = idxs_to_sentence(l2r_caption, vocab.idx2word, S_idx)
             r2l_vid2GTs[vid].append(r2l_caption)
@@ -215,7 +190,7 @@ def get_groundtruth_captions(data_iter, vocab):
 
 
 def score(vid2pred, vid2GTs):
-    assert set(vid2pred.keys()) == set(vid2GTs.keys())
+    assert set(vid2pred.keys()) == set(vid2GTs.keys()), f"[score] #vid2pred.keys()={len(vid2pred.keys())} != #vid2GTs.keys()={len(vid2GTs.keys())}"
     vid2idx = {v: i for i, v in enumerate(vid2pred.keys())}
     refs = {vid2idx[vid]: GTs for vid, GTs in vid2GTs.items()}
     hypos = {vid2idx[vid]: [pred] for vid, pred in vid2pred.items()}
@@ -249,8 +224,7 @@ def calc_scores(ref, hypo):
 
 
 def evaluate(data_iter, model, vocab, beam_size, max_len):
-    r2l_vid2pred, l2r_vid2pred = get_predicted_captions(
-        data_iter, model, beam_size, max_len)
+    r2l_vid2pred, l2r_vid2pred = get_predicted_captions(data_iter, model, beam_size, max_len)
     r2l_vid2GTs, l2r_vid2GTs = get_groundtruth_captions(data_iter, vocab)
     r2l_scores = score(r2l_vid2pred, r2l_vid2GTs)
     l2r_scores = score(l2r_vid2pred, l2r_vid2GTs)

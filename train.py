@@ -9,6 +9,7 @@ import json
 import os
 from loader.MSVD import MSVD
 from loader.MSRVTT import MSRVTT
+from loader.VATEX import VATEX
 from config import TrainConfig as C
 from models.abd_transformer import ABDTransformer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
@@ -18,6 +19,7 @@ from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 def build_loaders():
     if   C.corpus == "MSVD":   corpus = MSVD(C)
     elif C.corpus == "MSRVTT": corpus = MSRVTT(C)
+    elif C.corpus == "VATEX":  corpus = VATEX(C)
     print('#vocabs: {} ({}), #words: {} ({}). Trim words which appear less than {} times.'.format(
         corpus.vocab.n_vocabs, corpus.vocab.n_vocabs_untrimmed, corpus.vocab.n_words,
         corpus.vocab.n_words_untrimmed, C.loader.min_count))
@@ -35,7 +37,6 @@ def build_model(vocab):
         n_enc_layers=C.transformer.n_enc_layers,
         n_dec_layers=C.transformer.n_dec_layers,
         dropout=C.transformer.dropout,
-        max_caption_len=C.loader.max_caption_len,
     )
     model.cuda()
     return model
@@ -262,5 +263,37 @@ def main():
     return
 
 
+def print_gpu_info():
+    if not torch.cuda.is_available():
+        print("Không có GPU CUDA khả dụng.")
+        return
+
+    n = torch.cuda.device_count()
+    print(f"Found {n} CUDA device(s)\n")
+
+    for i in range(n):
+        dev = torch.device(f"cuda:{i}")
+        props = torch.cuda.get_device_properties(dev)
+        print(f"Device {i}: {props.name}")
+        print(f"  Total memory bytes: {props.total_memory}")
+        print(f"  MultiProcessor count: {props.multi_processor_count}")
+        print(f"  Major.Minor: {props.major}.{props.minor}")
+        print(f"  Max threads per block: {props.max_threads_per_multi_processor}")
+        # PyTorch memory APIs
+        reserved = torch.cuda.memory_reserved(i)
+        allocated = torch.cuda.memory_allocated(i)
+        print(f"  Memory reserved bytes: {reserved}")
+        print(f"  Memory allocated bytes: {allocated}")
+        print(f"  Free inside reserved bytes: {reserved - allocated}")
+        # Detailed stats (may be heavy)
+        try:
+            stats = torch.cuda.memory_stats(i)
+            print(f"  Active allocations: {stats.get('active.all.allocated', 'N/A')}")
+        except Exception:
+            pass
+        print("=" * 40)
+
+
 if __name__ == "__main__":
+    print_gpu_info()
     main()

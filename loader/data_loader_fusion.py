@@ -14,6 +14,7 @@ from loader.transform import UniformSample, RandomSample, ToTensor, TrimExceptAs
     ToIndex
 
 import random
+from typing import List, Dict
 
 
 def seed_worker(worker_id):
@@ -54,9 +55,9 @@ class CustomDataset(Dataset):
         self.transform_frame = transform_frame
         self.transform_caption = transform_caption
 
-        self.image_video_feats = defaultdict(lambda: [])
-        self.motion_video_feats = defaultdict(lambda: [])
-        self.object_video_feats = defaultdict(lambda: [])
+        # features: {vid, [feature1, feature2, ...]}
+        self.video_features: Dict[str, List[np.ndarray]] = defaultdict(lambda: [])
+        self.num_features: int = -1 # Updated when loading features
 
         # captions: {vid, caption}
         self.r2l_captions = defaultdict(lambda: [])
@@ -65,39 +66,19 @@ class CustomDataset(Dataset):
 
         self.build_video_caption_pairs()
 
+    def load_captions(self):
+        raise NotImplementedError("You should implement this function.")
+
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
-        vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption = \
-            self.data[idx]
-        
-        assert type(vid) == str, f"[__getitem__] before: type(vid)={type(vid)}"
-        assert type(image_video_feats) == np.ndarray, f"[__getitem__] before: type(image_video_feats)={type(image_video_feats)}"
-        assert type(r2l_caption) == str, f"[__getitem__] before: type(r2l_caption)={type(r2l_caption)}"
-
-        if self.transform_frame: # transform video features
-            image_video_feats  = self.transform_frame(image_video_feats)
-            motion_video_feats = self.transform_frame(motion_video_feats)
-            object_video_feats = self.transform_frame(object_video_feats)
-
-        if self.transform_caption: # transform captions
-            r2l_caption = self.transform_caption(r2l_caption)
-            l2r_caption = self.transform_caption(l2r_caption)
-
-        assert type(image_video_feats) == torch.Tensor, f"[__getitem__] after: type(image_video_feats)={type(image_video_feats)}"
-        assert type(r2l_caption) == torch.Tensor, f"[__getitem__] after: type(r2l_caption)={type(r2l_caption)}"
-        assert image_video_feats.ndim == 2, f"[__getitem__] after: image_video_feats.ndim={image_video_feats.ndim}"
-        assert r2l_caption.ndim == 1, f"[__getitem__] after: r2l_caption.ndim={r2l_caption.ndim}"
-
-        return vid, image_video_feats, motion_video_feats, object_video_feats, r2l_caption, l2r_caption
-
-    def load_four_video_feats(self):
+    def load_video_feats(self):
+        print('Enter the load_video_feats method.')
         models = self.C.feat.model.split('+')
-        print('Enter the load4 method.')
-        for i in range(len(models)):
-            # print('Begin to start load %d feats, total are %d' % (i + 1, len(models)))
-            frames = self.C.loader.frame_sample_len
+        self.num_features = len(models)
+        
+        for i in range(self.num_features):
+            num_tokens: int = self.C.loader.frame_sample_len
             
             fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
                 self.C.corpus, self.C.corpus + '_' + models[i], self.phase)
@@ -105,49 +86,48 @@ class CustomDataset(Dataset):
             # time, there are some problems in efficiency
             fin = h5py.File(fpath, 'r')
             
-            tqdm(fin.keys()).set_description('Load_four_feature_feats:')
+            tqdm(fin.keys()).set_description('Load_feature_feats:')
             for vid in tqdm(fin.keys()):
-                feats = fin[vid][()]
-                if feats.size == 0: raise ValueError("[CustomDataset.load_four_video_feats] Feature size is zero!")
-                assert type(feats) == np.ndarray, f"[load_video_feats] type(feats)={type(feats)}"
-                assert feats.ndim == 2, f"[load_video_feats] feats.ndim={feats.ndim}"
+                feature: np.ndarray = fin[vid][()]
+                if feature.size == 0: raise ValueError("[CustomDataset.load_video_feats] Feature size is zero!")
 
-                if len(feats) > frames:
-                    sampled_idxs = np.linspace(0, len(feats) - 1, frames, dtype=int)  # return evenly sapced number within the specified
-                    feats = feats[sampled_idxs]
-                elif len(feats) < frames:
-                    num_padding = frames - feats.shape[0]
-                    pad_tokens = np.zeros((num_padding, feats.shape[1]), dtype=feats.dtype)
-                    feats = np.concatenate((feats, pad_tokens), axis=0)
+                if len(feature) < num_tokens: # zero padding
+                    num_padding = num_tokens - feature.shape[0]
+                    pad_tokens = np.zeros((num_padding, feature.shape[1]), dtype=feature.dtype)
+                    feature = np.concatenate((feature, pad_tokens), axis=0)
+                elif len(feature) > num_tokens:
+                    sampled_idxs = np.linspace(0, len(feature) - 1, num_tokens, dtype=int)  # return evenly sapced number within the specified
+                    feature = feature[sampled_idxs]
+                assert len(feature) == num_tokens
 
-                assert len(feats) == frames
-
-                if   i == 0: self.image_video_feats[vid].append(feats)
-                elif i == 1: self.motion_video_feats[vid].append(feats)
-                elif i == 2: self.object_video_feats[vid].append(feats)
-            
+                self.video_features[vid].append(feature)
+                    
             fin.close()
-
-    def load_captions(self):
-        raise NotImplementedError("You should implement this function.")
 
     def build_video_caption_pairs(self):
         self.load_captions()
-        self.load_four_video_feats()
-        assert self.image_video_feats.keys() == self.motion_video_feats.keys(), "Image feats is not match with motion feats"
+        self.load_video_feats()
         
-        for vid in self.image_video_feats.keys():
-            image_video_feats  = self.image_video_feats[vid][0] # self.image_video_feats[vid] is a list
-            motion_video_feats = self.motion_video_feats[vid][0]
-            object_video_feats = self.object_video_feats[vid][0]
+        for vid in self.video_features.keys():
+            feature_list: List[np.ndarray] = self.video_features[vid]
+            assert len(feature_list) == self.num_features, \
+                f"[CustomDataset.build_video_caption_pairs] Number of features mismatch: " \
+                f"expected {self.num_features}, got {len(feature_list)}"
             
-            assert type(image_video_feats)  == np.ndarray, f"[build_video_caption_pairs] type(image_video_feats)={type(image_video_feats)}"
-            assert type(motion_video_feats) == np.ndarray, f"[build_video_caption_pairs] type(motion_video_feats)={type(motion_video_feats)}"
-            assert type(object_video_feats) == np.ndarray, f"[build_video_caption_pairs] type(object_video_feats)={type(object_video_feats)}"
-
             for r2l_caption, l2r_caption in zip(self.r2l_captions[vid], self.l2r_captions[vid]):
-                self.data.append((vid, image_video_feats, motion_video_feats, object_video_feats,
-                                  r2l_caption, l2r_caption))
+                self.data.append((vid, feature_list, r2l_caption, l2r_caption))
+
+    def __getitem__(self, idx):
+        vid, feature_list, r2l_caption, l2r_caption = self.data[idx]
+        
+        if self.transform_frame: # transform video features
+            feature_list = [self.transform_frame(feat) for feat in feature_list]
+
+        if self.transform_caption: # transform captions
+            r2l_caption = self.transform_caption(r2l_caption)
+            l2r_caption = self.transform_caption(l2r_caption)
+
+        return vid, *feature_list, r2l_caption, l2r_caption
 
 
 class Corpus:
@@ -215,9 +195,9 @@ class Corpus:
         self.val_dataset = self.build_dataset("val", self.C.loader.val_caption_fpath)
         self.test_dataset = self.build_dataset("test", self.C.loader.test_caption_fpath)
 
-        self.train_data_loader = self.build_data_loader(self.train_dataset, phase='train')
-        self.val_data_loader = self.build_data_loader(self.val_dataset, phase='val')
-        self.test_data_loader = self.build_data_loader(self.test_dataset, phase='test')
+        self.train_data_loader = self.build_data_loader(self.train_dataset)
+        self.val_data_loader = self.build_data_loader(self.val_dataset)
+        self.test_data_loader = self.build_data_loader(self.test_dataset)
 
     def build_dataset(self, phase, caption_fpath):
         dataset = self.CustomDataset(
@@ -229,52 +209,24 @@ class Corpus:
         )
         return dataset
 
-    def four_feature_collate_fn(self, batch):
-        vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions = zip(*batch)
+    def feature_collate_fn(self, batch):
+        vids, *features, r2l_captions, l2r_captions = zip(*batch)
 
-        assert type(vids) == tuple, f"[collate_fn] before: type(vids)={type(vids)}"
-        assert type(vids[0]) == str, f"[collate_fn] before: type(vids[0])={type(vids[0])}"
-
-        assert type(image_video_feats) == tuple, f"[collate_fn] before: type(image_video_feats)={type(image_video_feats)}"
-        assert type(image_video_feats[0]) == torch.Tensor, f"[collate_fn] before: type(image_video_feats[0])={type(image_video_feats[0])}"
-        assert image_video_feats[0].ndim == 2, f"[collate_fn] before: image_video_feats[0].ndim={image_video_feats[0].ndim}"
-
-        assert type(r2l_captions) == tuple, f"[collate_fn] before: type(r2l_captions)={type(r2l_captions)}"
-        assert type(r2l_captions[0]) == torch.Tensor, f"[collate_fn] before: type(r2l_captions[0])={type(r2l_captions[0])}"
-        assert r2l_captions[0].ndim == 1, f"[collate_fn] before: type(r2l_captions[0].ndim)={r2l_captions[0].ndim}"
-        
-        image_video_feats  = torch.stack(image_video_feats)
-        motion_video_feats = torch.stack(motion_video_feats)
-        object_video_feats = torch.stack(object_video_feats)
+        features_list = [torch.stack(feats_tuple) for feats_tuple in features]
         r2l_captions = torch.stack(r2l_captions)
         l2r_captions = torch.stack(l2r_captions)
         
-        assert type(r2l_captions) == torch.Tensor, f"[collate_fn] after: type(r2l_captions)={type(r2l_captions)}"
-        assert r2l_captions.ndim == 2, f"[collate_fn] after: r2l_captions.ndim={r2l_captions.ndim}"
-        assert r2l_captions.dtype == torch.long, f"[collate_fn] after: r2l_captions.dtype={r2l_captions.dtype}"
+        return vids, features_list, r2l_captions, l2r_captions
 
-        assert type(image_video_feats) == torch.Tensor, f"[collate_fn] after: type(image_video_feats)={type(image_video_feats)}"
-        assert image_video_feats.ndim == 3, f"[collate_fn] after: image_video_feats.ndim={image_video_feats.ndim}"
-        assert image_video_feats.dtype == torch.float, f"[collate_fn] after: image_video_feats.dtype={image_video_feats.dtype}"
-        
-        return vids, image_video_feats, motion_video_feats, object_video_feats, r2l_captions, l2r_captions
-
-    def build_data_loader(self, dataset, phase):
-        collate_fn = self.four_feature_collate_fn
-
-        if phase == 'test':
-            batch_size = 1
-        else:
-            batch_size = self.C.batch_size
-
+    def build_data_loader(self, dataset):
         g = torch.Generator()
         data_loader = DataLoader(
             dataset,
-            batch_size=batch_size,
+            batch_size=self.C.batch_size,
             shuffle=False,  # If sampler is specified, shuffle must be False.
             sampler=RandomSampler(dataset, replacement=False),
             num_workers=self.C.loader.num_workers,
-            collate_fn=collate_fn,
+            collate_fn=self.feature_collate_fn,
             worker_init_fn=seed_worker,
             generator=g,
         )

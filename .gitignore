@@ -186,3 +186,6 @@ video_feature_extractor/*
 *.ipynb
 *.avi
 *.csv
+notebooks/*
+report/*
+qformer*

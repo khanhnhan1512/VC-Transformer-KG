@@ -425,15 +425,15 @@ class ABDTransformer(nn.Module):
             # --- Encode each feature type separately ---
             feat_1 = self.r2l_visual_src_embed(src[0])
             feat_1 = self.pos_embed(feat_1)
-            q_1 = self.r2l_visual_encoder_big(queries, feat_1, src_mask[0])
+            q_1 = self.r2l_visual_encoder_big(queries    , feat_1, src_mask[0])
 
             feat_2 = self.r2l_motion_src_embed(src[1])
             feat_2 = self.pos_embed(feat_2)
-            q_2 = self.r2l_motion_encoder_big(queries, feat_2, src_mask[1])
+            q_2 = self.r2l_motion_encoder_big(queries+q_1, feat_2, src_mask[1])
 
             feat_3 = self.r2l_imgcap_src_embed(src[2])
             feat_3 = self.pos_embed(feat_3)
-            q_3 = self.r2l_imgcap_encoder_big(queries, feat_3, src_mask[2])
+            q_3 = self.r2l_imgcap_encoder_big(queries+q_2, feat_3, src_mask[2])
             
             return q_1 + q_2 + q_3
         
@@ -447,15 +447,15 @@ class ABDTransformer(nn.Module):
             # --- Encode each feature type separately ---
             feat_1 = self.l2r_visual_src_embed(src[0])
             feat_1 = self.pos_embed(feat_1)
-            q_1 = self.l2r_visual_encoder(queries, feat_1, src_mask[0])
+            q_1 = self.l2r_visual_encoder(queries    , feat_1, src_mask[0])
 
             feat_2 = self.l2r_motion_src_embed(src[1])
             feat_2 = self.pos_embed(feat_2)
-            q_2 = self.l2r_motion_encoder(queries, feat_2, src_mask[1])
+            q_2 = self.l2r_motion_encoder(queries+q_1, feat_2, src_mask[1])
 
             feat_3 = self.l2r_imgcap_src_embed(src[2])
             feat_3 = self.pos_embed(feat_3)
-            q_3 = self.l2r_imgcap_encoder(queries, feat_3, src_mask[2])
+            q_3 = self.l2r_imgcap_encoder(queries+q_2, feat_3, src_mask[2])
 
             return q_1 + q_2 + q_3
 

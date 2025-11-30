@@ -280,8 +280,11 @@ class Encoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(Encoder, self).__init__()
-        self.src_norm = nn.LayerNorm(d_model)
+        self.src_1_norm = nn.LayerNorm(d_model)
+        self.src_2_norm = nn.LayerNorm(d_model)
+        self.src_3_norm = nn.LayerNorm(d_model)
         self.query_norm = nn.LayerNorm(d_model)
+        self.segment_embed = nn.Embedding(num_embeddings=3, embedding_dim=d_model)
         self.encoder_layers = nn.ModuleList([
             EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, dropout=dropout, use_rope=use_rope,
                          first_layer=(i == 0))
@@ -289,7 +292,21 @@ class Encoder(nn.Module):
         ])
 
     def forward(self, query, src, src_mask):
-        src = self.src_norm(src)
+        v, m, c = src
+        B = v.size(0)
+        # Tạo vector chứa toàn số 0 cho visual
+        seg_id_v = torch.full((B, v.size(1)), 0, dtype=torch.long).to(v.device)
+        # Tạo vector chứa toàn số 1 cho motion
+        seg_id_m = torch.full((B, m.size(1)), 1, dtype=torch.long).to(m.device)
+        # Tạo vector chứa toàn số 2 cho caption
+        seg_id_c = torch.full((B, c.size(1)), 2, dtype=torch.long).to(c.device)
+        
+        v = self.src_1_norm(v + self.segment_embed(seg_id_v))
+        m = self.src_2_norm(m + self.segment_embed(seg_id_m))
+        c = self.src_3_norm(c + self.segment_embed(seg_id_c))
+                
+        src = torch.cat((v, m, c), dim=1)
+        src_mask = torch.cat(src_mask, dim=2)
         for layer in self.encoder_layers:
             query = layer(query, src, src_mask)
         query = self.query_norm(query)
@@ -397,14 +414,10 @@ class ABDTransformer(nn.Module):
         
         # --- Encoders ---
         self.r2l_query_embed = nn.Parameter(torch.randn(1, num_queries, d_model))
-        self.r2l_visual_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.r2l_motion_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.r2l_imgcap_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.r2l_encoder_big = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads_big, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         self.l2r_query_embed = nn.Parameter(torch.randn(1, num_queries, d_model))
-        self.l2r_visual_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.l2r_motion_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
-        self.l2r_imgcap_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
+        self.l2r_encoder = Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False)
 
         # --- Decoders ---
         self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
@@ -425,17 +438,14 @@ class ABDTransformer(nn.Module):
             # --- Encode each feature type separately ---
             feat_1 = self.r2l_visual_src_embed(src[0])
             feat_1 = self.pos_embed(feat_1)
-            q_1 = self.r2l_visual_encoder_big(queries    , feat_1, src_mask[0])
 
             feat_2 = self.r2l_motion_src_embed(src[1])
             feat_2 = self.pos_embed(feat_2)
-            q_2 = self.r2l_motion_encoder_big(queries+q_1, feat_2, src_mask[1])
 
             feat_3 = self.r2l_imgcap_src_embed(src[2])
             feat_3 = self.pos_embed(feat_3)
-            q_3 = self.r2l_imgcap_encoder_big(queries+q_2, feat_3, src_mask[2])
             
-            return q_1 + q_2 + q_3
+            return self.r2l_encoder_big(queries, (feat_1, feat_2, feat_3), src_mask)
         
         # ============== Left-to-Right Encoding ==============
         else:
@@ -447,17 +457,14 @@ class ABDTransformer(nn.Module):
             # --- Encode each feature type separately ---
             feat_1 = self.l2r_visual_src_embed(src[0])
             feat_1 = self.pos_embed(feat_1)
-            q_1 = self.l2r_visual_encoder(queries    , feat_1, src_mask[0])
 
             feat_2 = self.l2r_motion_src_embed(src[1])
             feat_2 = self.pos_embed(feat_2)
-            q_2 = self.l2r_motion_encoder(queries+q_1, feat_2, src_mask[1])
 
             feat_3 = self.l2r_imgcap_src_embed(src[2])
             feat_3 = self.pos_embed(feat_3)
-            q_3 = self.l2r_imgcap_encoder(queries+q_2, feat_3, src_mask[2])
 
-            return q_1 + q_2 + q_3
+            return self.l2r_encoder(queries, (feat_1, feat_2, feat_3), src_mask)
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         src_mask = None # ! Use all queries from encoder

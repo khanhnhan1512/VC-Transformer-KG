@@ -62,7 +62,7 @@ class MSVDLoaderConfig:
     min_count = 3
     max_caption_len = 20
     num_workers = 4
-    frame_sample_len = 20
+    frame_sample_len = 10
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 

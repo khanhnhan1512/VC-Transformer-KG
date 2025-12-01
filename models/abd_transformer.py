@@ -156,7 +156,7 @@ class MultiHeadAttention(nn.Module):
         # 6. Concat heads: [batch_size, num_heads, seq_len, d_k] -> [batch_size, seq_len, d_model]
         x = x.transpose(1, 2).contiguous().view(B, -1, self.d_model)
         
-        return self.output_linear(x)
+        return self.output_linear(x) + query
 
 
 class FFN(nn.Module):
@@ -165,6 +165,7 @@ class FFN(nn.Module):
         self.transform = nn.Sequential(
             nn.Linear(d_model, d_ff),
             NewGELUActivation(),
+            nn.Dropout(dropout),
             nn.Linear(d_ff, d_model),
             nn.Dropout(dropout)
         )

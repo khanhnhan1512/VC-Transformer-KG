@@ -126,7 +126,6 @@ class MultiHeadAttention(nn.Module):
 
         # 1. Query Path
         q_final = self.W_q(query)
-
         # 2. Key-Value Path
         k_final = self.W_k(key_value)
         v_final = self.W_v(key_value)
@@ -156,7 +155,7 @@ class MultiHeadAttention(nn.Module):
         # 6. Concat heads: [batch_size, num_heads, seq_len, d_k] -> [batch_size, seq_len, d_model]
         x = x.transpose(1, 2).contiguous().view(B, -1, self.d_model)
         
-        return self.output_linear(x) + query
+        return self.output_linear(x) + q_final
 
 
 class FFN(nn.Module):

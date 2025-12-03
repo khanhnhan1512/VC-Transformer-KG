@@ -29,23 +29,28 @@ for line in tqdm.tqdm(lines):
     # print(data['sentences'][0]['tokens'])
 
     for i in range(len(data['sentences'])):
-        result = [data["sentences"][i]["openie"] for item in data]
-        lemmas = [data["sentences"][i]["tokens"] for item in data]
+        result = data["sentences"][i]["openie"]  # Trực tiếp lấy openie của sentence i
+        lemmas = data["sentences"][i]["tokens"]  # Trực tiếp lấy tokens của sentence i
         cnt += 1
-        # result = [data["sentences"][i]["openie"] for item in data]
-        for g in result:
-            for rel in g:
-                l_relation, l_object, l_subject = '', '', ''
-                span = str(rel['subjectSpan']), str(rel['objectSpan']), str(rel['relationSpan'])
-                l_subject1 = lemmas[i][rel['subjectSpan'][0]:rel['subjectSpan'][1]][0:rel['subjectSpan'][1] - rel['subjectSpan'][0]]
-                for h in range(rel['subjectSpan'][1] - rel['subjectSpan'][0]):
-                    l_subject = l_subject1[h]['lemma'] + ' ' + l_subject
-                l_object1 = lemmas[i][rel['objectSpan'][0]:rel['objectSpan'][1]][0:rel['objectSpan'][1] - rel['objectSpan'][0]]
-                for s in range(rel['objectSpan'][1] - rel['objectSpan'][0]):
-                    l_object = l_object1[s]['lemma'] + ' ' + l_object
-                l_relation1 = lemmas[i][rel['relationSpan'][0]:rel['relationSpan'][1]][0:rel['relationSpan'][1] - rel['relationSpan'][0]]
-                for j in range(rel['relationSpan'][1] - rel['relationSpan'][0]):
-                    l_relation = l_relation1[j]['lemma'] + ' ' + l_relation
+        
+        for rel in result:
+            l_relation, l_object, l_subject = '', '', ''
+            span = str(rel['subjectSpan']), str(rel['objectSpan']), str(rel['relationSpan'])
+            
+            # Lấy lemma của subject
+            l_subject1 = lemmas[rel['subjectSpan'][0]:rel['subjectSpan'][1]]
+            for h in range(len(l_subject1)):
+                l_subject = l_subject1[h]['lemma'] + ' ' + l_subject
+            
+            # Lấy lemma của object
+            l_object1 = lemmas[rel['objectSpan'][0]:rel['objectSpan'][1]]
+            for s in range(len(l_object1)):
+                l_object = l_object1[s]['lemma'] + ' ' + l_object
+            
+            # Lấy lemma của relation
+            l_relation1 = lemmas[rel['relationSpan'][0]:rel['relationSpan'][1]]
+            for j in range(len(l_relation1)):
+                l_relation = l_relation1[j]['lemma'] + ' ' + l_relation
                 # l_relation = lemmas[i][rel['relationSpan'][0]:rel['relationSpan'][1]][0][
                 #              0:rel['relationSpan'][1] - rel['relationSpan'][0]]['lemma']
                 # relationSent1 = rel['subject'], rel['object'], rel['relation']

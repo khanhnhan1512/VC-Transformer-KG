@@ -55,11 +55,11 @@ for line in tqdm.tqdm(lines):
                 #              0:rel['relationSpan'][1] - rel['relationSpan'][0]]['lemma']
                 # relationSent1 = rel['subject'], rel['object'], rel['relation']
                 relationSent = l_subject, '&', l_object, '&', l_relation
-                print(relationSent)
+                # print(relationSent)
                 w.writelines(relationSent)
                 w.writelines('\n')
 
-                print(str(cnt))
+                # print(str(cnt))
                 # print(relationSent1)
 print('total number is ' + str(cnt) + '\n')
 print('reslut write to ' + entity_rel_path)

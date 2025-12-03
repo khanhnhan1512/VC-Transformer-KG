@@ -120,6 +120,11 @@ for line in ent2id_lines:
 print(reldict, '\n', entdict)
 rel2id_f.close()
 ent2id_f.close()
+# Tính toán giới hạn ID động dựa trên số lượng entities/relations thực tế
+max_entity_id = len(entdict) - 1
+max_relation_id = len(reldict) - 1
+print(f"Max entity ID: {max_entity_id}, Max relation ID: {max_relation_id}")
+
 total_word_lines = total_word_f.readlines()
 for line in tqdm(total_word_lines):
     word = line.split(',') # [entity1, entity2, relation]
@@ -128,8 +133,8 @@ for line in tqdm(total_word_lines):
         continue
     for i in range(3):
         if i == 0 or i == 1: # entity1 or entity2
-            assert 0 <= entdict[word[i]] <= 80, "entity id get some trouble!!!"
+            assert 0 <= entdict[word[i]] <= max_entity_id, f"entity id {entdict[word[i]]} out of range [0, {max_entity_id}]!"
             total_id_f.write(str(entdict[word[i]]) + ' ')
         elif i == 2: # relation
-            assert 0 <= reldict[word[i]] <= 20, "relation id get some trouble!!!"
+            assert 0 <= reldict[word[i]] <= max_relation_id, f"relation id {reldict[word[i]]} out of range [0, {max_relation_id}]!"
             total_id_f.write(str(reldict[word[i]]) + '\n')

@@ -7,6 +7,7 @@ import time
 import numpy as np
 import json
 import os
+from typing import Dict
 from loader.MSVD import MSVD
 from loader.MSRVTT import MSRVTT
 from loader.VATEX import VATEX
@@ -17,9 +18,9 @@ from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
 def build_loaders():
-    if   C.corpus == "MSVD":   corpus = MSVD(C)
+    if   C.corpus == "MSVD"  : corpus = MSVD(C)
     elif C.corpus == "MSRVTT": corpus = MSRVTT(C)
-    elif C.corpus == "VATEX":  corpus = VATEX(C)
+    elif C.corpus == "VATEX" : corpus = VATEX(C)
     print('#vocabs: {} ({}), #words: {} ({}). Trim words which appear less than {} times.'.format(
         corpus.vocab.n_vocabs, corpus.vocab.n_vocabs_untrimmed, corpus.vocab.n_words,
         corpus.vocab.n_words_untrimmed, C.loader.min_count))
@@ -46,8 +47,8 @@ def build_model(vocab):
 def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
-    
-    
+
+
 def log_train(e, loss, reg_lambda, time_taken, lr, summary):
     print(f"[EPOCH {e} TRAIN]")
     print(f"time: {time_taken:.2f} seconds | lr: {lr:.6f}")
@@ -153,6 +154,7 @@ def main():
 
     # Find the best model
     best_val_CIDEr: float = float("-inf")
+    best_val_scores: Dict[str, float] = {"Bleu_4": float("-inf"), "METEOR": float("-inf"), "ROUGE_L": float("-inf"), "CIDEr": float("-inf")}
     best_epoch: int = -1
     best_ckpt_fpath: str = ""
     # Time taken for training, validation, and testing
@@ -182,7 +184,7 @@ def main():
         total_train_time += _train_time_taken
         
         log_train(e=e, loss=train_loss, reg_lambda=C.reg_lambda,
-                  time_taken=_train_time_taken, lr=get_lr(optimizer), 
+                  time_taken=_train_time_taken, lr=get_lr(optimizer),
                   summary=train_summary)
 
         """ Validation """
@@ -211,23 +213,29 @@ def main():
 
         """ Learning Rate Decay & Checkpointing """
         if e <= C.warmup_epochs:
-            # print(f">> Epoch {e} in warmup phase, applying warmup scheduler.")
             warmup_sched.step()
         else:
-            # print(f">> Epoch {e} in normal phase, applying plateau scheduler.")
             plateau_sched.step(val_loss['total'])
         """
         if e >= C.lr_decay_start_from:
             lr_scheduler.step(val_loss['total'])
         """;
-        if l2r_val_scores['CIDEr'] > best_val_CIDEr:
+        
+        n_better_metrics = 0
+        if l2r_val_scores["Bleu_4"]  > best_val_scores["Bleu_4"] : n_better_metrics += 1
+        if l2r_val_scores["METEOR"]  > best_val_scores["METEOR"] : n_better_metrics += 1
+        if l2r_val_scores["ROUGE_L"] > best_val_scores["ROUGE_L"]: n_better_metrics += 1
+        if l2r_val_scores["CIDEr"]   > best_val_scores["CIDEr"]  : n_better_metrics += 1
+        
+        if (l2r_val_scores['CIDEr'] > best_val_CIDEr) and (n_better_metrics >= 3):
             best_epoch = e
-            best_val_CIDEr = l2r_val_scores['CIDEr']
+            best_val_CIDEr  = l2r_val_scores['CIDEr']
+            best_val_scores = l2r_val_scores
             best_ckpt_fpath = ckpt_fpath
 
-            print(f">> Saving checkpoint to {ckpt_fpath.split('/')[-1]}")
+            # print(f">> Saving checkpoint to {ckpt_fpath.split('/')[-1]}")
             save_checkpoint(model=model, ckpt_fpath=ckpt_fpath)
-            print(f">> New best model at epoch {e} | CIDEr: {best_val_CIDEr}")
+            print(f">> New best model at epoch {e} | N_Metrics: {n_better_metrics} | CIDEr: {best_val_CIDEr}")
 
     """ Test with Best Model """
     gc.collect()
@@ -237,18 +245,18 @@ def main():
     
     _test_start_time = time.time()
     r2l_best_scores, l2r_best_scores = evaluate(
-        data_iter=test_iter, 
-        model=best_model, 
-        vocab=vocab, 
-        beam_size=C.beam_size, 
+        data_iter=test_iter,
+        model=best_model,
+        vocab=vocab,
+        beam_size=C.beam_size,
         max_len=C.loader.max_caption_len
     )
     _test_end_time = time.time()
     _test_time_taken = _test_end_time - _test_start_time
     
     test_summary = log_test(
-        r2l_scores=r2l_best_scores, 
-        l2r_scores=l2r_best_scores, 
+        r2l_scores=r2l_best_scores,
+        l2r_scores=l2r_best_scores,
         time_taken=_test_time_taken
     )
     
@@ -263,7 +271,7 @@ def main():
     return
 
 
-def print_gpu_info():
+def print_gpu_info() -> None:
     if not torch.cuda.is_available():
         print("Không có GPU CUDA khả dụng.")
         return
@@ -279,18 +287,6 @@ def print_gpu_info():
         print(f"  MultiProcessor count: {props.multi_processor_count}")
         print(f"  Major.Minor: {props.major}.{props.minor}")
         print(f"  Max threads per block: {props.max_threads_per_multi_processor}")
-        # PyTorch memory APIs
-        reserved = torch.cuda.memory_reserved(i)
-        allocated = torch.cuda.memory_allocated(i)
-        print(f"  Memory reserved bytes: {reserved}")
-        print(f"  Memory allocated bytes: {allocated}")
-        print(f"  Free inside reserved bytes: {reserved - allocated}")
-        # Detailed stats (may be heavy)
-        try:
-            stats = torch.cuda.memory_stats(i)
-            print(f"  Active allocations: {stats.get('active.all.allocated', 'N/A')}")
-        except Exception:
-            pass
         print("=" * 40)
 
 

@@ -1,10 +1,9 @@
 # coding=utf-8
 import os
-
 import torch
 from tqdm import tqdm
-from collections import defaultdict
 from typing import Dict
+from collections import defaultdict
 from models.abd_transformer import pad_mask
 from models.label_smoothing import LabelSmoothing
 from config import TrainConfig as C

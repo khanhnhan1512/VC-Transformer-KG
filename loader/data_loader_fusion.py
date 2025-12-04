@@ -1,20 +1,19 @@
 from __future__ import print_function, division
 
-from collections import defaultdict
 
-from tqdm import tqdm
+import random
 import h5py
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader, RandomSampler
+from tqdm import tqdm
+from typing import List, Dict
+from collections import defaultdict
 from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader, RandomSampler
 
 from loader.transform import UniformSample, RandomSample, ToTensor, TrimExceptAscii, Lowercase, \
     RemovePunctuation, SplitWithWhiteSpace, Truncate, PadFirst, PadLast, PadToLength, \
     ToIndex
-
-import random
-from typing import List, Dict
 
 
 def seed_worker(worker_id):
@@ -90,7 +89,7 @@ class CustomDataset(Dataset):
             for vid in tqdm(fin.keys()):
                 feature: np.ndarray = fin[vid][()]
                 if feature.size == 0: raise ValueError("[CustomDataset.load_video_feats] Feature size is zero!")
-
+                
                 if len(feature) < num_tokens: # zero padding
                     num_padding = num_tokens - feature.shape[0]
                     pad_tokens = np.zeros((num_padding, feature.shape[1]), dtype=feature.dtype)
@@ -99,9 +98,9 @@ class CustomDataset(Dataset):
                     sampled_idxs = np.linspace(0, len(feature) - 1, num_tokens, dtype=int)  # return evenly sapced number within the specified
                     feature = feature[sampled_idxs]
                 assert len(feature) == num_tokens
-
+                
                 self.video_features[vid].append(feature)
-                    
+            
             fin.close()
 
     def build_video_caption_pairs(self):

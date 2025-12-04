@@ -189,3 +189,5 @@ video_feature_extractor/*
 notebooks/*
 report/*
 qformer*
+logs/*
+README.md

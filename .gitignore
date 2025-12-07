@@ -163,31 +163,12 @@ cython_debug/
 data/*
 # .vscode settings
 .vscode/
-# secret files
-secrets/*
-
-# LICENSE files
-LICENSE
-# .gitignore files
-.gitignore
-# .gitattributes files
-.gitattributes
 
 # Exclude all .zip files
 *.zip
 # Exclude cache files
 .vector_cache/*
 cache/*
+
 # Exclude development files
-development/*
-_old_source/*
-video_feature_extractor/*
 # Exclude some helper files
-*.ipynb
-*.avi
-*.csv
-notebooks/*
-report/*
-qformer*
-logs/*
-README.md

@@ -1,81 +1,151 @@
 __background|
-person|man#person#guy#woman#lady#she#child#baby#girl#people#batman#superman#lincoln#pedestrian#coach#kid#band#musician#president#obama#gentleman#doctor#speaker#medalist#hero#boy#rhett#somebody#runner#messi#pinata#blonde#singer#police#murder#player#he#coach#bonnie#couple#female#scientist#cameraman#youtuber#chef#dj#vet#boyfriend#student#actress#actor#mom#military#freddy#caprio#leonardo#reporter#elvis#human#pitcher#nurse#stranger#celebrity#father#infant#announcer#politician#wrestler#magician#assistant#krueger#adult#grandma#referee#guest#swimmer#narrator#american#performer#teenager#beachgoer#naturalist#shania#britney#researcher#junkie#friend#worker#toddler#alady#addict#adventurer#bryant#surgeon#santa#mcilroy#michael#hottie#letterman#cher#bruce#cillian#williams#racer#driver#character#paleontologist#worker#reader#stephen#clinton#barrett#acrobat#chld#professor#tyson#loki#rider#catwoman#smith#bride#killer#newsreader#cowboy#parent#daughter#broadcaster#hiker#jordan#jackson#maher#gymnast#gymnist#william#shopper#cruz#senator#husband#wife#saleswomen#surfer#clerk#rapper#popstar#poeople#sawyer#asian#conan#sprinter#jimmy#tourist#lesner#elder#ellen#angela#forensic#patient#jogger#girls
-bicycle|bike#cycle#pushbike
-car|car#vehicle#automobile#truck#van#tractor#bulldozer#sedan#audi#racecar#eldorado#sedan#mustang#lamborghinus#ambulance#sportscar#firetruck#volkswagen
-motorcycle|motorcycle#bike#mini-bike#motorbike
-airplane|airplane#helicopter#plane#airport#zeppelin#blimp#aircraft
-bus|
-train|
-truck|
-boat|boat#ski#ship
-traffic light|
-fire hydrant|
-stop sign|
-parking meter|
-bench|bench
-bird|bird#parrot#parakeet#owl
-cat|animal#cat#kitten#kitt#van
-dog|animal#dog#puppy#hound#bulldog
-horse|animal#horse#pony
-sheep|animal
-cow|animal#buffalo#cow
-elephant|animal#elephant
-bear|
-zebra|
-giraffe|
-backpack|travelbag
-umbrella|
-handbag|bag
-tie|scarf#tie
-suitcase|
-frisbee|
-skis|
-snowboard|
-sports ball|ball#soccer#baseball#football#basketball#rugby#volleyball#hockey#badminton#tennise
-kite|
-baseball bat|
-baseball glove|
-skateboard|skateboard#skate
-surfboard|
-tennis racket|tennis#racket
-bottle|
-wine glass|
-cup|
-fork|
-knife|kniof#knife
-spoon|chopstick#spoon
-bowl|pot#dish#pan#plate#bowl
-banana|fruit
-apple|fruit
-sandwich|sandwich#hamburger
-orange|orange#lemon#fruit
-broccoli|
-carrot|
-hot dog|hotdog
-pizza|pizza
-donut|donut#doughnut
-cake|cake
-chair|chair
-couch|couch#sofa
-potted plant|
-bed|
-dining table|table
-toilet|bathroom#toilet
-tv|tv#mtv#television
-laptop|laptop#pc#computer#coputer#conputer
-mouse|
-remote|
-keyboard|keyboard
-cell phone|phone#speakerphone#smartphone#iphone#cellphone#handset
-microwave|
-oven|
-toaster|
-sink|sink
-refrigerator|
-book|
-clock|
-vase|
-scissors|clipper
-teddy bear|toy#doll
-hair drier|
-toothbrush|brush#toothbrush
+man|arm man#arm mans#arm s man#back s man#background the in man#bag man#bag s man#behind s man#belly mans#bench man#bike the on man#body s man#book search man#bottle water slash man#bread slice man#broccoli stirring man#bullet fire be gun a hold man#butter belt man#carrot slice man#cat a nudge pole a use man#chest s man#clothing s man#cook man#dance man#dish make man#diving man#dog man#drive be man#dust man#eye s man#face he lather brush a use man#face s man#figure s man#finger man#finger mans#finger s man#fishing ice man#fishing man#food cook man#food man#foot man#foot s man#friend good s man#fries man#gettin man#hack man#hand man#hand mans#hand s man#head man#head s man#himself shooting man#hole drill man#horse man#it beneath stand man#karate man#leg s man#man#man clean man#mans#meat slice man#method cooking man#microphone a with stand man#motorcycle s man#mouth s man#muscule bulding man#news report be mike a hold man#palm s man#pants mans#pen s man#phone the on man#pistol with man#practice man#puppet man#rice cook man#rope slice man#rowing man#seat man#series break man#she beside sit man#shoulder s man#sis man#slice man#spray man#stomach s man#street the in dance man#suit hazmat a in man#thumb man#top the slice man#tric play man#trick do be scooter a ride man#woman man#world show man
+woman|arm s woman#artist woman#athlete woman#back he on woman#back s woman#back she on woman#back the on woman#bag s woman#bathing woman#beach a on woman#bench a on woman#bottle woman#bridge the on woman#car womans#chicken shred woman#chop woman#cigarette s woman#cigarette woman#coat woman#cold the in woman#comb woman#compilation drivers women#cook woman#crack woman#curl woman#dance woman#desk s woman#egg cook woman#enjoy woman#exercise woman#findertip s woman#finger s woman#finger woman#fire rapid woman#floor the on lie woman#flour the knead woman#forearm s woman#fries woman#fruit slice women#ground the on lie woman#ground the on woman#hair s woman#hair womans#hair women#hand s woman#hand woman#he put baby a carry woman#head s woman#knife witha woman#meat cook woman#motorcycle a on woman#onion choping woman#package woman#passenger woman#phone the on woman#picture s woman#place outdoor a in stand woman#purse s woman#rice sushi mold woman#screen computer a on woman#seat woman#shoulder woman#shred woman#shrimp fries woman#sidewalk a on woman#slice woman#speake woman#street the down walk woman#street the on woman#strip chop woman#sunbather woman#target woman#tofu slice woman#up woman#wash woman#watch woman#woman#womans#women#wrist s woman
+person|arm person#arm s person#backyard s person#brush person#cook person#dirt person#drink a person#dust person#egg cook person#egg season person#fine person#finger index s person#finger person#finger s person#fishing ice person#hand person#hand s person#id person#karate person#kennel he in person#lap s person#makeup person#mask with person#numbchuk sling person#person#sea person#slice person#stretcher a on lie person#stuff person#thing person#thing s person#wine person#writting person
+cat|bag toy cat#bush the in hiding cat#cat#floor the on cat#floor the on lie cat#gate cat#head s cat#hiding cat#jumping cat#licking cat#meow s cat#perfect cat#puppet cat#shitting cat#sleep cat#tap repeatedly cat#toy cat#tunnel toy cat
+dog|angry dog#attack dog#back he on dog#bark be dog#dog#dogs#doll dog#fishing dog#hair dog#hair s dog#head dog#house dog#jump dog#kennel s dog#lap s woman a in sit dog#opening door dog#puppy s dog#race dog#shoulder he in dog#shoulder he on dog#show dog#side one on dog#sit be dog#sled dog#sledding dog#splash dog#swam dog#swimming dog#tail dog#tail dogs#tail s dog#team dog#team sled dog#walk dog#water drinking dog
+girl|arm s girl#belly girl#child girl#dance girl#dancing girl#enjoyin girl#fighting girl#foot run s girl#girl#girls#hair girl#hand girl#hand s girl#jump girl#kite she lose kite a fly girl#music conduct girl#product place girl#rocker girl#running girl#shot girl#singing girl#spaghetti eat toddler girl#target girl#walking girl
+boy|bike a ride helmet a wear boy#boy#dead boy#dincing boy#face s boy#finger boy#finger s boy#food eat boy#gane in boy#head s boy#noodle eat boy#play boy#skateboard boy#song boy#stunt boy
+two|anchor news two#animal baby two#animal furry small two#animal loris baby two#animal small two#animal small very two#animal stange two#animal two#arena a around run horse two#baby cute two#baby two#barrier road two#bear polar two#beer polar two#biker two#bird two#bowl a in egg two#box man two#boxer two#boxing man two#boxing player two#boy bespectacled two#boy little two#boy two#bus story two#cake two#camera two#car control remote two#car controlled remote two#car rc two#car toy two#car two#cat two#chick baby two#child male two#child two#cord two#couple two#couple young two#cowboy little two#cowboy short two#crash helicopter two#cuple two#dachshund two#dance girl two#dance idiot two#dance kid two#diving boy two#dog two#dog wiener two#dogsled two#dough pizza of round two#drum two#duck baby two#duck yellow small two#duckling two#duckling young two#egg raw two#egg two#elephant two#en two#female two#ferret two#fighting from midget two#fighting sumo two#fistfight man two#fox two#frag two#friend two#frog two#giraffe two#girl little two#girl small two#girl teenage two#girl two#girl young two#group two#gunman two#guy two#guy young two#hand two#hand with piece two#helcopter two#helicopter two#hood the on stripe black two#horse run two#horse two#idiot two#individual two#inside person two#it in person two#keyboard two#kid little two#kid two#lady two#ledy two#leg two#leopard snow two#leopard two#lion two#lori small two#loris baby two#loris pygmy baby two#loris pygmy two#loris slow two#loris two#lorise baby two#lorise pygmy baby two#lorise small two#loriss slow two#male two#mammal baby two#man asian two#man black two#man little two#man military two#man seated two#man short two#man two#man young two#mean two#men two#mime two#monkey two#moving trains toy two#musician other two#newscaster two#one frog two#other two#oxen two#panda small two#panda two#pandas two#peice two#person anchor two#person two#person young two#piano two#piece big two#piece two#pizza different two#pizza large two#pizza two#player two#post two#pratic player two#puppy two#puppy young two#race man two#racing guy two#reader news two#reporter news two#rhino two#riding the on harse two#robot two#rock two#rodeo the in horse two#rope two#runner female two#runner two#singer asian two#sled two#slice rectangular two#snack chicken stick two#string two#strip equal two#sumo fat two#sunflower dry two#sunflower two#talk man two#team football two#team two#tiger two#toaster two#towel paper two#train model two#train toy two#traveler two#twin chinese two#two#vehicle two#wand bubble two#wheeler two#woman asian two#woman chinese two#woman japanese two#woman two#woman young two#women two#wrestler sumo two#zebra two
+lady|arm s lady#belly lady#chef lady#clothes washing lady#cooking lady#dancing lady#desk the at lady#diving lady#finger s lady#foot s lady#gas lady#hair s lady#hand s lady#jumping lady#lady#salmon prepare lady#skater lady#smoke lady#stir lady#stire lady#tap lady
+guitar|bathroom at guitar#floor the on guitar#guitar#guitar some#man a behind guitar#room bed he in guitar#singing alongwith guitar#stage on guitar#top roof on stand guitar
+water|below water#bike water#boarding water#bottle water#bowl water#bubble water#buffalo water#dish water#drum water#faucet kitchen the from water#fountain water#gun water#head shower the from water#hose water#hydrant water#jet water#jug water#lake a on skiing water#melon water#millon water#milon water#ocean the in water#pan the into water#park in ride splash water#park water#plant watering#pool a into slide water#pool family a at slide water#pool the into slide water#pot water#pump water#ride splash water#ride water#riding water#scooter water#shower the in jet water#sink a from water#sink the from water#skating water#ski water#skiing water#slide water#tap kitchen the from water#thing pour water#tray water#tub water#water#watering
+pan|barbecue the on pan#butter with pan#cake pan#flour white with pan#food of pan#fry pan#fryer pan#garlic of clove stew to pan#grill a on pan#grill barbecue a of top on pan#grill bbq the on pan#ingredient of pan#oven the inside pan#pan#rice of full pan#rice of pan#rice with fill pan#rice with pan#stove the on pan#vegetable chop of full pan#vegetable chop of pan
+bowl|batter of bowl#beef of bowl#bowl#bowling#broth of bowl#cereal of bowl#chili of bowl#clean bowl#cooking for bowl#egg beat of bowl#egg of bowl#egg raw of bowl#food of bowl#fowl small of full bowl#ingredient of bowl#meat of full bowl#meat raw of bowl#meat uncooked of bowl#pea of bowl#pickle of bowl#pot bowling#powder of bowl#pudding rice of bowl#quail of bowl#rice of bowl#rim bowl#sink the in bowl#soup of bowl#stew of bowl#stuff of bowl#use bowl#vegetable of bowl#water bowl#water cold of bowl#water ice of bowl#water of bowl#wisk a with bowl
+baby|animal baby#baby#bathing baby#bear baby#bear polar baby#bottle a baby#boy baby#bunny baby#care baby#cat baby#dog baby#duck baby#face s baby#fox baby#gate baby#giraffe baby#girl baby#goose baby#heart s panda baby#heartbeat s panda baby#husky baby#husky mother and baby#kangaroo baby#kitten baby#kola baby#leg s baby#lemur baby#leopard baby#leopard snow baby#lion baby#loris slow baby#monkey baby#mouth s baby#otter baby#otter sea baby#panda baby#rabbit baby#ramp first duck baby#rhino baby#seat baby#sloth baby#standing husky baby#tiger baby#tortoise baby#turtle baby#turtle sea baby#wallaby baby
+horse|banjo horse#beach the on horse#horse#horsing#jungle trough horse#ocean the in playing horse#outside horse#playing horse#psycho horse#race horse#racing horse#raiding horse#ride horse#rider horse#riding horse#rise horse#scene raid horse#stable horse
+car|car#come car#drive car#driving car#girl walk a to talk car#laugh car#model car#onroad drive car#race car#racing car#riding car#talk car#tank car#tank fuel s car#travel car#tyre car#wheel car
+pot|bean of pot#bowl a into pot#broth of pot#burner gas a over pot#chili of pot#chillus of pot#food of pot#hand he with pot#leg with pot#liquid simmer of pot#milk of pot#mush of pot#oil of pot#pie pot#plant potted#pot#potted#pudding of pot#rice of pot#rice with pot#soup of pot#stew of pot#stove a on pot#stove a on vegetable of pot#stove the on pot#vegetable of pot#water boil of pot#water cold with pot#water hot of pot#water of full pot#water of pot#water with pot
+potato|curry potato#inorder potato#it on stand potato#knife large a with potato#peel potato#peeler potato#peeler with potato#potato#potatoes#recipe potato#salad potato#skin s potato#slicing potato#tofu potato#wedge potato
+piece|band a with wood of piece#band piece#beef of piece#bread of piece#cake bundt of piece#cake of piece#cancy chocolate of piece#candy of piece#carrot of piece#chicken fry of piece#chicken grill of piece#chicken of piece#chocolate of piece#cucumber of piece#dough of piece#equipment of piece#fat of piece#fish of piece#fish raw of piece#food of piece#fruit of piece#garlic of piece#ginger of piece#i to cake of piece#knife a with piece#knife with piece#leaf a of piece#machinery of piece#mail of piece#meat of piece#meat raw of piece#octopus of piece#of piece#oil hot in meat of piece#onion of piece#paper fold of piece#paper notebook of piece#paper of piece#paper pink of piece#paper wax of piece#piece#pizza of piece#plastic of piece#pole a of piece#pork of piece#pot into chicken of piece#quail of piece#salmon of piece#shoot bamboo of piece#skin of piece#something of piece#spaghetti of piece#stick of piece#string of piece#tofu of piece#tree a of piece#wood of piece
+stage|coach stage#music stage#outside stage#performance stage#program stage#show stage#stage
+small|aeroplane small#animal furry small#animal pet small#animal small#antenna small#baby small#bag paper small#ball small#barricade small#bed the on toy small#bicycle small#boat small#boat windsurfing small#bottle small#bowl glass small#bowl small#boy small#broccoli piece small#bunny small#butter of piece small#cabinet wooden small#camera small#car red small#car small#cat brown small#cat small#child small#circle small#cone orange small#container plastic small#creature furry small#critter small#cub lion small#cub small#cut small#cycle small#dish glass small#dish small#dog pet brown small#dog puppy small#dog small#dog white small#dolphin small#door small#driver screw small#fish small#flour of part small#food green small#gate mesh small#gate small#ginger of piece small#girl baby small#girl small#grass the on container small#grill indoor small#grill small#guitar small#guy small#hedgehog animal small#hedgehog white small#house small#kangaroo small#kid dog small#kid small#kitten furry small#kitten small#kitten white cute small#knife a with piece small#ladder small#lantern o jack small#mammal small#meat of piece a in cut small#monkey small#motorbike small#motorcycle small#nose s animal small#onion small#outside bucket small#pan small#paper of piece pink small#pea of bowl small#pencil small#piece small#plane small#plant watering girl small#pot small#potato small#primate small#puppy small#rabbit small#rat small#refigerator small#road on bike small#scooter motor small#scooter small#seat baby small#semicircle small#sheet pink small#slice small#small#squirrel small#stage small#standing girl small#stick celery small#stick wooden a with pot small#tin small#tree small#tub bath small#tub plastic small#tub water small#tunnel small#turtle small#wall small#water a on run boy small#water of tub small
+onion|chop for piece onion#crusher onion#dish a for onion#finger they with onion#inorder onion#kitchen the in onion#knife with onion#leaf onion#oil in onion#onion#piece onion#ring onion#skin onion#slice onion
+knife|blade knife#circle in knife#dog she with knife#knife#metal on knife#slice knife#target a at knife#target round a at knife#tree on knife
+piano|bench piano#key piano#keyboard piano#piano#recital piano#repeatedly key piano#righ piano#toy piano
+young|batting man young#boy black young#boy young#cat young#chap young#child young#couple young#girl beautiful young#girl young#guy young#hand s woman young#kangaroo young#kitten young#lady young#man asian young#man young#person young#practice boy young#toddler male young#woman business young#woman young#young#zebra young
+egg|amulet egg#beating egg#bowl a in egg#bowl a of side the on egg#countertop a on egg#curry katsu egg#dish egg#dog she with egg#egg#eggs#face he in throw egg#face he on egg#food make for egg#fry egg#mix egg#mixer the for egg#mixture egg#omelet egg#omelette egg#open egg#pan the in egg#plant egg#receipe egg#recipe egg#recipe eggs#role egg#shell egg#shell s egg#skillet a in egg#skillet deep a in mixture egg#water iced into egg#whites egg
+ball|air the in ball#ball#balls#beak its in ball#dough of ball#goal score ball#mouth he in ball#mouth its in ball#patato n ball#person many a as ball#prop ball#rice of ball#yarn of ball
+monkey|doll monkey#dress monkey#fighting monkey#game monkey#monkey#pit arm s monkey
+phone|beak its with call phone#button phone#call phone#conversation phone#number phone#phone#phone cell she on call phone#room storage a from call phone#speaker phone#standing phone
+guy|guy#hand the in guy#shooting guy
+puppy|abuse puppy#bathing puppy#dog puppy#girl a of lap the on sit puppy#puppy
+little|angel little#armpit s monkey little#baby little#basketball little#beak he in basketball little#bowl small a to water little#boy little#camera the for dance little#cat little#cat white little#child little#dance girl little#dog little#duck baby little#emotion little#finger boy little#finger s boy little#frog green little#gate little#girl little#head s boy little#kangaroo little#kid little#kitten little#kitty little#little#man little#monkey little#oil little#person little#piece little#poodle white little#puppy little#rodent little#scooter little#scooter motorize little#slipper little#spaghetti eat girl baby little#table little#turtle little#water girl little#water little
+chef|butter spread chef#cap chef#chef#food cook chef#hat s chef#john chef#knife s chef#outfit s chef#place chef#slicing chef
+cook|autumn cooking#beef ground cooking#bowl cook#bowl cooking#breast chicken cook#chicken cook#chicken cooking#cook#cook a#cooking#dog she with cook#dog she with pork cook#egg cook#fish cook#food fresh garden cooking#grill a on beef ground cooking#hamburger browned cook#lab cooking#man cooking#meat cook#meat cooking#meat ground cooking#meat hamburger cooking#method cooking#mussel cooking#octopus cook#oil cook#pan cooking#pasta cook#pasta recipe cooking#pat cook#pizza cooking#pot the in rice cook#pot the in vegetable cook#pot the in vegetable cooking#potato cook#potatoe cook#prawn cook#pudding rice of cooking#range cooking#recipe cook#recipe cooking#rice cook#show cooking#shrimp cook#something cooking#steak hamburger cooking#tentacle octopus cook#tip cooking#vegetable cook#vegetable cooking#wok a in meat ground cooking
+vegetable|batter patty vegetable#brush vegetable#culte vegetable#dish vegetable#food vegetable#knife a with vegetable#mixture vegetable#nimono tofu vegetable#oil vegetable#peeler vegetable#pie pot vegetable#pot the in vegetable#skin vegetable#soup vegetable#stalk vegetable#vegetable#vegetable some#wok the in vegetable
+meat|dish meat#loff meat#meat#meat some#meats#meats some#oil hot in meat#pan the in meat#slice big into meat#strip meat#tray a on meat
+food|animal the to food#broccoli beef food#cloth a in wrap food#cooking show food#cover food#dish food#food#food some#ingredient food#item food#making food#material food#mixture food#oil hot in food#pan the in food#preparation food#processor food#spaise food#store food#symptom allergy food
+flute|flute#instrument like flute
+carrot|carrot#cutter carrot#julienne carrot#strip carrot#strip thin into carrot#stroke single in carrot
+chicken|breast chicken#broth chicken#casserole tortilla chicken#chicken#curry chicken#dance chicken#dish chicken#drumstick chicken#fat chicken#leg chicken#meat chicken#piece chicken#recepie lemon roasted chicken#reciepe chicken#rice chicken#rice chicken for piece chicken#roast chicken#skewer chicken#soup chicken#soup noodle chicken#tortilla chicken#wing chicken
+grind|around look ground#beef ground#ground#hit ground#meat ground#mud wet of ground#she behind crack ground
+floor|clean floor#floor#house the of floor#mat floor#polisher floor
+road|bicycle he with road#city the in road#field green lush near road#field near road#field the near road#motion slow with road#motorcycle a on road#race marathon a in road#rally road#road#side road#sign road#trip road
+bread|bread#chop pork bread#crumb bread#dish bread#dough bread#flour bread#knife bread#knife with bread#piece bread#pizza bread#plate bread#ring onion bread#slice bread
+kitten|belly s kitten#feeling kitten#kitten
+motorcycle|boy a with motorcycle#car a over motorcycle#crash motorcycle#highway the on motorcycle#motorcycle#ride motorcycle#rider motorcycle#rider stunt motorcycle#street the down motorcycle#street the in motorcycle#stunt motorcycle#tire front the on motorcycle#trick motorcycle#water the into motorcycle#wheel front its on motorcycle#wheel front the on motorcycle
+gun|barrel gun#gun#point gun#range gun
+grass|clearing grass#field grass#grass#grass some#hoper grass#hopper grass#land grass#music to grass
+kid|finger kid#finger s kid#head the in kid#kid#over kid#playing kid#tuto bass kid
+beach|beach#ocean the at look beach#side beach#watchint beach
+fish|actor fish#bone fish#cook that fish#curry fish#fish#fishing#fry fish#it in fish#knife a with fish#line fishing a on fish#meat fish#mouth he in fish#open fish#piece fish#pond fish#recipe burger fish#setting tank fish#skin fish
+child|child#children#cowboy child#dancing child#face s child#gate security s child#singing child
+large|animal eared long large#artist martial of group large#bag large#ball blue large#ball green large#ball inflatable large#ball large#bear large#bowl large#box cardboard corrugated large#branch large#branch tree large#bubble bubblegum large#bubble gum bubble large#bubble large#bubble soap large#bug white large#building large#bus large#cake tier three large#can aluminum of bag large#can of bag large#cat furry grey large#cat large#chunk large#crowd large#crowd outside large#dog black large#dog large#dough of piece large#dragon chinese large#eat tummy large#fish colored black large#flute large#gun large#hill large#husky large#instrument like flute large#jet large#knife large#knife of size large#large#limb tree large#liquid dark of bucket large#log large#man other of group large#meadow green large#meat large#meat of portion large#meat raw of slab large#meat red fatty of chunk large#onion white large#outside ball large#outside pan large#outside water of basin large#pan fry large#pan large#pickle large#piece large#potato large#puppet dragon chinese large#recyclable of bag large#roar large#saucepan large#shrimp uncooked of piece large#skillet large#snake large#snow of pile large#steak large#strip large#turtle large#turtle snap large#vacuum large#wand large#watering large#watermelon large#waterslide large#wave large#wave oceanic large#wine of tub large#wok large#wood of piece large
+be|abulance a into put be be#apart pull be be#apart rip be be#arm the under scratch be be#arm the under tickle be be#attack be be#ball the by hit be be#bath be be#be#bed the on pet be be#blanch be be#blender a in blend be be#blender a in mix be be#blender a in prepare be be#blender a in put be be#blender a to add be be#blowtorch be be#board cutting a on slice be be#boil be be#boil in stir be be#bone the from cut be be#bowl a in mix be be#bowl a in stir be be#bowl a into put be be#bowl mix a in season be be#bowl plastic a into put be be#boy of group a by chase be be#bread on sprinkle be be#bucket a in stir be be#channel tv a on present be be#chase be be#check be be#cheese with sprinkle be be#chicken by chase be be#chili in dip be be#chop be be#chunk into cut be be#city japan in waiter a be be#cook be be#cool be be#cougar a by chase be be#crew new by interview be be#cut be#cut be be#decontaminate be be#dip be be#dish baking a in place be be#do be be#doctor a by check be be#dog a by drag be be#dog by pull be be#dog by snow the in pull be be#dough bread on put be be#dramatic be be#drive be be#fast drive be be#feed be be#fire be be#floor the around slide be be#flour be be#flour into mix be be#forest the through chase be be#fry be be#grill a in burn be be#grill a on cook be be#grill be be#half in rip be be#hand by roll be be#hand one in hold be be#head man a into put be be#hold be be#horse a on around lead be be#hose a with water be be#hospital the into wheel be be#interview be be#kick be be#knead be be#knife a with chop be be#knife a with mash be be#knife by cut be be#lathe a by sharpen be be#lazy be be#lion mountain a by chase be be#livestock by pull be be#machine a by cut be be#machine a by sharpen be be#make be be#man a by play be be#man a by take be be#mandolin a with slice be be#meal a for prepare be be#meat onto pour be be#mix be be#mixer a into put be be#mixture the to add be be#monster a by chase be be#oil in fry be be#other by chase be be#pan a in boil be be#pan a in cook be be#pan a in fry be be#pan a in melt be be#pan a in scramble be be#pan a in stir be be#pan a into put be be#pan a into shift be be#pan sauce a in fry be be#parade be be#peel be be#person a by hold be be#pet be be#photograph be be#pie pot the for chop be be#piece many into slice be be#piece small into chop be be#pitcher a into fill be be#place be be#plate a on lay be be#play be be#police the by chase be be#pot a in boil be be#pot a in melt be be#pot a in steam be be#pot a in stir be be#pot a into pour be be#pour be be#prepare be be#press be be#press the by interview be be#pudding rice on sprinkle be be#pull be be#put be be#quail onto sprinkle be be#race be be#rack a on flip be be#rice of pot a to add be be#ride be be#rip be be#road a on drive be be#road on drive be be#sauce with bowl a in mix be be#scramble be be#season be be#serve be be#shape be be#sharpen be be#sharpner a by sharpen be be#shuffle be be#skillet a in cook be be#skillet a in sear be be#skillet a in toss be be#skillet a into pour be be#skillet a into put be be#skin be be#slice be be#slice hand be be#slice thin into chop be be#slicer a with slice be be#slime be be#smash be be#someone by make be be#sprinkle be be#stage the on perform be be#start be be#stick a with hit be be#stir be be#stove a on make be be#street the on whip be be#stretcher a on wheel be be#stretcher on transport be be#stroke be be#tear be be#tickle be be#tracer with fire be be#track a on race be be#transport be be#vet the by check be be#waiter a be be#water boil in cook be be#water in blanch be be#water in cool be be#water of bowl a in place be be#water of bowl a into put be be#water with fill be be#whale a by eat be be#whisk be be#wind heavy by blow be be#wok a in cook be be#woman a by slice be be#woman by piece be be
+box|arena boxing#barehand with match boxing#bottle the from box#bout boxing#box#boxing#cake of box#court boxing#dog fan boxing#dummy boxing#lid box#lobster of box#match boxing#outside box#ring boxing#round boxing#tv on boxing#tv on match boxing
+three|bacon minute three#board three#boy teenage three#boy three#child three#chop pork three#dance girl teenage three#dance woman three#dancer three#driver three#ferret three#girl teenage three#girl three#girla three#guy three#kid three#lady indian three#lady three#leaf cabbage three#man computerized three#man three#man young three#mess person three#motorbike three#motorcycle three#person three#piece three#puppy three#rider motorcycle three#strawberry three#student three#three#toy three#woman animated three#woman indian three#woman three
+rope|beach the on rope#ceiling the to attach rope#garage a inside rope#garage he in rope#garage the in rope#rope#stage rope#walikg rope
+toy|aeroplane toy#airplane toy#beaver toy#car toy#craft air toy#fish toy#flight toy#gun toy#house toy#it in toy#keyboard toy#ladder toy#mouse toy#move train toy#music s toy#peyano toy#phone toy#piano toy#plane toy#pumpkin toy#rat toy#string toy#synthesizer toy#telephone toy#toy#train toy
+field|field#journalist field
+animal|animal#animal some#animals#animals some#baby animal#breath animal#palying bailey animal#run animal#setting animal
+paper|bag paper#bookshelf a in paper#box paper#cup paper#napkin paper#paper#piece paper#plate paper#roll paper#sheet paper#towel paper#tube paper
+rice|aroni rice#ball rice#bowl rice#bowl the in rice#cooker rice#food rice#mixture rice#pot a in mixture rice#pudding rice#rice#water the in rice
+soccer|ball soccer#beach the on soccer#exhibition a at soccer#field mid from soccer#field soccer#game ball soccer#game soccer#goal a towar ball soccer#goal soccer#match soccer#player soccer#soccer#team soccer#teammate s player soccer#toy of game soccer#trick ball soccer#uniform soccer
+street|bike street#convertible a in street#fighter street#hawker street#motorcycle on street#onlooker of street#parade street#race street#sign street#singing street#street
+keyboard|cat keyboard#computer a of keyboard#computer she of keyboard#fastly keyboard#instrument keyboard#keyboard#laptop she to attach keyboard#piano keyboard#toy keyboard#tumble keyboard
+tree|branch tree#fox tree#he of ahead trunk tree#limb tree#street line tree#tree#tree to tree
+bike|accident bike#bike#crash deadly rider bike#man bike#racer bike#racing bike#ride bike#rider bike#riding bike#road the on bike#street the on bike#stunt bike#stunts bike some#thief bike#trining racing bike#woman a with road the on bike
+snow|dog snow#drift snow#fall snow#game leopard snow#hill cover snow#hill snow#kitten leopard snow#rain snow#region snow#riding snow#skiing snow#slope a down skiing snow#slope cover snow#snow
+sword|act sword#fight sword#fighting sword#slice sword#sword
+fry|chicken fry#egg fried#food fry#fried#fries#fry#meat fry#onion fry#pan fry#piece fry#range cooking the on pan fry#rice fry#sauce like look pan fry#stove a on pan fry#stove the on pan fry#video egg fry
+band|band#costume band#group band#profile s band#saw band#team band#troop band
+cucumber|cucumber#half cucumber#piece cucumber#seed cucumber#slice cucumber
+skillet|beef of skillet#butter with skillet#grill a on skillet#rice of full skillet#rice of skillet#roni rice hot over skillet#shrimp with fill skillet#skillet#stove the on skillet#substance white a with skillet#tong with skillet
+sing|man singing#sing#singing#song a singing#song singing
+dough|baking for ready dough#ball dough#dough#plate a of dough#powder dough
+garlic|bread garlic#bread on garlic#clove garlic#garlic#paste garlic#potato mash garlic
+music|band music#bonfire a near stand music#field in music#grass the on music#group music#instrument music#kit music#music#outdoor music#show concert music#show music#troop music#video music
+lion|cub lion#grass the on lion#lion#lions#roar lion
+elephant|elephant#shop elephant#shopping elephant
+green|ball green#bean green#bird green#board chalk green#board green#cabbage green#capsicum green#chili green#chilli green#chilly green#colouring green#field green#goo green#grass green#green#leaf green#mohawk green#onion green#pea green#pepper bell green#pepper chili green#pepper green#piece green#ride shirt green#slime green#substance green#vegetable green
+shrimp|shrimp
+dish|chef lady a with dish#dish#egg of dish#fish with dish#food of dish#milk of dish#paw its with water of dish#sauce of dish#water of dish
+pizza|base pizza#bread garlic and pizza#bread pizza#crust pizza#dough pizza#kitchen pizza#oven pizza#pizza#pizza two on sous pizza#slice pizza#war pizza
+camera|camera#ledge the on sit camera#man camera#meow camera#modeling woman a of camera#person camera#tripod camera
+plastic|bag plastic#bottle plastic#bottle water plastic#bowl plastic#box plastic#bucket plastic#container plastic#container storage plastic#cover plastic#cup plastic#dish plastic#drawer plastic#drum plastic#grass the in container plastic#jug plastic#mouth he in container plastic#nipple plastic#paper plastic#plastic#pole plastic#recycable of bag plastic#sheet plastic#sink a in container plastic#spoon plastic#tub plastic#vessel plastic#water tap with jug plastic#water with container plastic#water with jug plastic#wrap plastic
+apple|apple#board cutting a over apple#food of pan a over apple#half in apple#hand bare they with open apple#kitchen the in apple#knife a with apple#knife s chef a with apple#knife sharp a with apple#knife the out with apple#knife with apple#pan the in apple#peeler vegetable a with apple#sauce to apple#skin s apple
+bicycle|bicycle#dog a with bicycle#grass the on speedily bicycle#park the in bicycle#riding bicycle#stunt bicycle#trick bicycle
+microphone|microphone#studio the in microphone
+glass|alcohol of glass#bowl glass#box glass#cage glass#cup glass#enclosure glass#flour of bowl glass#glass#jar glass#spoon a with glass#table glass#wall glass#water of glass#window glass
+wood|floor wood#lid box wood#log wood#material wood#piece small in wood#piece wood#wood
+plate|food of plate#plate#spaghetti of plate
+tiger|club tiger#cub tiger#footage tiger#pup tiger#shark tiger#tiger
+bed|bed#phone the on talk bed#room bed#salt of bed#sheet bed#spread bed
+drum|drum#kit drum#set drum
+stair|case stair#pool a of stair#stair
+slice|apple of slice#beef slice#bowl a in potato slice#bread french of slice#bread garlic of slice#bread of slice#bread slice#bun of slice#carefully carrot slicing#carrot of slice#carrot slice#cheeese of slice#chill of slice#cucumber of slice#cucumber slice#fish of slice#food a slicing#here slice#knife a with mushroom slicing#knife with something of slice#meat of slice#meat red slicing#mushroom slicing#onion of slice#onion slice#pepper of slice#piece into potato a slicing#pineapple of slice#pizza of slice#potato of slice#potato slice#ppeper of slice#radish of slice#slice#slicing#something a of slice#something of slice#something slicing#through right slice#tomaato of slice#tomato of slice#vegetable some slicing
+white|baby white#bear white#board white#bread white#bulldog french white#bunny white#car white#cat white#chat white#cheese of piece white#cheetah white#chihuahua white#cow white#cub bear polar white#dog white#donkey white#dress white#feather white#ferret white#flour white#food white#goose white#hold top white#horse white#iron pump man white#kitten white#lady white#man haired white#onion white#piano grand white#piano white#plate white#pony white#puppy bulldog white#puppy white#rabbit baby white#rabbit white#rice white#robbit white#sand white#sheet white#shirt t white#shirt white#shoe tennis white#substance white#truck white#try white#vegetable peel white#water with fill tub white#white
+tomato|blade the at tomato#cut tomato#plant from tomato#plant tomato#salad tomato#sauce tomato#slice tomato#soup tomato#supe tomato#tomato
+wall|ceiling the to wall#wall
+air|adventurously air#advertisment tel air#air#craft air#jet air#plane air#port air#show air#toy a with play air
+pool|beneath pool#cue pool#pool#shark a with pool#wall pool#water of pool
+scissor|music of beat the to scissors#scissor#scissors
+track|curve the around slide track#race track#track
+bag|bag#beef ground of bag#bottle empty of bag#bottle plastic of bag#can of bag#can of full bag#food of bag#head its on bag#recyclable of bag#something of bag#woman a by hold bag
+window|room a of window#room of window#window
+several|animal several#boy several#cart several#child several#couple different several#couple several#cow black several#creature several#creature strange several#dragon chinese several#ferret several#firearm of type several#girl several#girl teenage several#guest several#gun a of round several#gun several#gun with man several#guy other several#horse several#ingredient several#instrument several#jockey several#kid several#kiss couple different several#mail of piece several#man other several#man several#microphone several#mushroom several#musician several#other several#otter baby several#otter several#performer dragon several#person several#person young several#pose yoga several#puppy several#raccoon several#round tracer several#seed several#seed sunflower several#several#shrimp of piece several#slam man several#stair of flight several#surgeon several#time several#tree several#up push several#woman several#zebra several
+pineapple|fruit pineapple#pineapple#ring pineapple#slice pineapple
+frog|finger he with frog#frog
+old|boy old#firearm school old#lady old#man old#movie hollywood old#old#song old#woman old
+bird|bird#feeder bird
+oven|oven
+to|away get to#ball a with play to#bathtub a from back come to#bed she in sleep to#bed the from get to#bed the in sleep to#bike a with escape to#bite to#blender the in put to#box the inside to#box the inside to go to#boxing be to#camera the at look to#container cake a into get to#cook be to#cook to#cry to#dance to#dead be to#die to#do to#dog a with play to#downstairs climb to#downstairs come to#downstairs go to#drunken be to#eat to#eat to s cheese e chuck to#fence the over get to#fight a into get to#fight to#finger a on climb to#finger the onto latch to#flip to#fly to#foot he on slipper in walk to#gate the over climb to#gather to#gun a with shoot to#hair he to#hand she with hair he to#hit to#hole a be to#jump to#land be to#land the till to#mantis pray a to talk to#mat the over flip to#panda a like look to#peacefully sleep to#play to#pool a from drink to#range cooking a on boil to#rope a on balance to#rope a on walk to#rope suspend a on walk to#run to#scare to#shocked be to#shoot to#side be it to#sit to#skate to#sleep to#smile to#smoke to#sometime shoot to#stair down walk to#stair the down walk to#stand to#think be to#tin a from eat to#to#toy same the with play to#uphill drive to#van move a into jump to#walk to#wall a over climb to#washbasin the from come to#waste to#water the in urinate to
+forest|forest#tree of forest
+football|fan football#field football#fight football#fighting player football#finger football#food finger football#football#game football#match football#player football#practise football#team football#video hiting football
+kitchen|bow kitchen#counter kitchen#kitchen#room kitchen#sink kitchen#table kitchen#tool a against knife kitchen#work kitchen
+cow|cow#dance cow#grazing cow#vehicle cow
+snake|cooking for snake#head s snake#inorder head snake#snake
+fire|accident fire#dancing fire#fire#firing#fox fire#hydrant fire#proof fire#range firing#stick fire#suit fire#twine of bundle a with fire#twine with fire
+while|around run they while#back he on lay while#beach the on sit while#bike from jump while#booth food fast a in sit while#camera the into talk he while#chair a in sit while#chair a on sit while#chair a on stand while#chair high he in sit while#couch a on sit while#dance pole to pretend while#dirt in sit while#drive be pin while#eat while#fall while#floor on sit while#floor the on lie while#floor the on sit while#flore a on sit while#fly while#food on chew while#ground the on lie while#guitar play while#it into drive be pin while#job the on while#jump while#land to about be it while#listen another while#man a with speak while#microphone a into sing while#mobile she to listen while#move robot other while#passenger he at smile while#phone the on talk while#pole a on hang while#pole a with dance while#roof a on stand while#roof a on while#seat while#sing lady the while#sing woman a while#singing be another while#singing be man the while#sit while#sleep while#stool a on sit while#swimming while#tire back on only while#walk while#while#window a against lean while#work while
+goal|area goal#field mid from soccer in goal#football froma goal#game football a in goal#game soccer in goal#goal#midfield from goal#post goal#shot goal
+basketball|away far from shot basketball#basketball#court basketball#dunk basketball#game basketball#hoop basketball#net basketball#player basketball#practice basketball#shot basketball
+kangaroo|kangaroo
+instrument|instrument#instrument some#top roof the on instrument
+table|carrot with table#eating table#man several by occupy table#table#top table
+room|broom a with room#floor room#room#something at bark room#student karate of full room#vacuum large a with room
+fence|area fence#fence#pen fence#rail fence#yard fence
+sky|sky
+machine|gun machine#machine
+container|chili of container#container#grass the on container#meat of container#pan fry to container#pasta of container#pasta of full container#sink a over container#sink the in container#sink the into container#water of container#water with fill container
+plane|plane#something plane
+finger|baby other finger#baby other of finger#boy a of finger#boy other of finger#boy other the of finger#finger#food finger#fries finger#frog lickin finger#lady a of finger#person a of finger#ring thick finger#trick finger
+hand|beater hand#boy a of hand#gun hand#hand#man a of hand#puppet hand#signal hand#sushi roll hand
+in|bag a to in#bowl a to in#bowl glass a to in#bowl the to in#dough the to in#grill the to in#in#mouth be it in#oil the to in#pan the to in#piece small to in#piece to in#piece two to in#pudding rice the to in#vessel the to in#water boiling the to in#water the to in#water to in#yard be it in
+cage|cage#dance cage#together cage
+watermelon|floor a on watermelon#watermelon
+mirror|bathroom the in mirror#hair she on work mirror#it at look mirror#mirror
+dance|compitation for dance#dance#dancing#dragon dance#floor dance#hall dance#move dance#movement dance#practice dance#rehearsal dance#routine dance#scene dancing#sequence dance#show dance#stage a on move dance#step dance#television on dance#tree the of fron in dancing#troupe dance#video dance
+river|bed river#dancing river#rafting river#river
+skateboard|jump skateboard#rink skateboard#skateboard#skateboarding#street the along skateboard#stunt skateboard#trick skateboard#trick skateboarding
+video|baby a video#camera video#computer he on video#control game video#game video#man lazy video#man rugby game video#parrot a video#telephone the on video#tour video#video#waking raino a video
+polar|bear polar#bears polar#beer polar#cub bear polar#playing polar#polar#pup bear polar
+jet|fighter jet#fly plane jet#jet#ocean the in ski jet#plane fighter jet#plane jet#sailing jet#ski jet#skiis jet#sky the in jet
+tv|channel tv#control remote tv#dancing about program tv#host tv#journalist tv#reporter news tv#reporter tv#room news tv#screen tv#show tv#tv
+panda|baby panda#bear panda#dog look panda#dog panda#marking like panda#panda#tale panda
+tortilla|dough tortilla#tortilla
+house|house#wife house
+chair|chair#phone the on talk chair
+violin|roof a of top the on violin#roof the on violin#violin
+target|distance the in target#long yard of target#practice target#range long from target#range target#shooting target#target#tree a on hang target
+half|half#omelet egg bake half#onion a of half#piece inch half#pipe half#sandwich he of half#shape moon half

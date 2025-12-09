@@ -32,8 +32,8 @@ REPORT_PATH = os.path.join(OUTPUT_DIR, 'analysis_report.txt')
 # Thresholds
 MIN_ENTITY_FREQ = 10      # Entity xuất hiện ít nhất 10 lần
 MIN_RELATION_FREQ = 20    # Relation xuất hiện ít nhất 20 lần
-TOP_ENTITIES = 150        # Lấy top 150 entities
-TOP_RELATIONS = 50        # Lấy top 50 relations
+TOP_ENTITIES = None        # Lấy tối đa entities
+TOP_RELATIONS = None        # Lấy tối đa relations
 
 # ============== HELPER FUNCTIONS ==============
 lemmatizer = WordNetLemmatizer()
@@ -162,10 +162,11 @@ def create_entity_file(
     lemma_to_variants: Dict[str, Set[str]],
     output_path: str,
     min_freq: int = 10,
-    top_n: int = 150
+    top_n: int = None
 ) -> List[str]:
     """Tạo file ent_msvd.txt"""
-    
+    if top_n is None:
+        top_n = len(entity_counter)
     # Lọc và sắp xếp entities
     filtered = [(lemma, count) for lemma, count in entity_counter.items() 
                 if count >= min_freq and is_valid_entity(lemma)]
@@ -207,10 +208,11 @@ def create_relation_file(
     lemma_to_variants: Dict[str, Set[str]],
     output_path: str,
     min_freq: int = 20,
-    top_n: int = 50
+    top_n: int = None
 ) -> List[str]:
     """Tạo file rel_msvd.txt"""
-    
+    if top_n is None:
+        top_n = len(relation_counter)
     # Lọc và sắp xếp relations
     filtered = [(lemma, count) for lemma, count in relation_counter.items()
                 if count >= min_freq and is_valid_relation(lemma)]

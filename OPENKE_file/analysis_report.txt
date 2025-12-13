@@ -1,0 +1,95 @@
+============================================================
+MSVD KNOWLEDGE GRAPH ANALYSIS REPORT
+============================================================
+
+Total triples: 64087
+Unique entities (lemmatized): 4980
+Unique relations (lemmatized): 114
+
+----------------------------------------
+TOP 30 ENTITIES
+----------------------------------------
+  man: 6024
+  woman: 3042
+  dog: 2530
+  cat: 2159
+  horse: 1829
+  dance: 1771
+  slice: 1524
+  guitar: 1472
+  water: 1311
+  cook: 1301
+  eightyfour: 1235
+  girl: 1221
+  car: 1177
+  ball: 1144
+  boy: 1122
+  egg: 1122
+  play: 1119
+  pan: 863
+  potato: 856
+  food: 839
+  baby: 799
+  orwell: 795
+  cut: 793
+  peel: 777
+  onion: 751
+  bowl: 740
+  knife: 730
+  piano: 703
+  meat: 688
+  bike: 626
+
+----------------------------------------
+TOP 30 RELATIONS
+----------------------------------------
+  use: 24229
+  have: 5480
+  subclass: 5123
+  part: 4445
+  practice: 2937
+  facet: 2329
+  product: 2207
+  participant: 1689
+  instance: 1640
+  depict: 1475
+  sport: 1331
+  opposite: 970
+  field: 953
+  spouse: 839
+  main: 792
+  different: 706
+  item: 610
+  author: 564
+  notable: 490
+  follow: 467
+  say: 437
+  location: 381
+  character: 363
+  own: 318
+  present: 278
+  country: 244
+  locate: 218
+  owner: 201
+  instrument: 192
+  occupant: 173
+
+----------------------------------------
+FREQUENCY DISTRIBUTION
+----------------------------------------
+
+Entity frequency distribution:
+  1000+: 17 entities
+  500-1000: 24 entities
+  100-500: 205 entities
+  50-100: 190 entities
+  10-50: 782 entities
+  1-10: 3762 entities
+
+Relation frequency distribution:
+  1000+: 11 relations
+  500-1000: 7 relations
+  100-500: 18 relations
+  50-100: 9 relations
+  10-50: 19 relations
+  1-10: 50 relations

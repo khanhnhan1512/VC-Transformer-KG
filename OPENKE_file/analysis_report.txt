@@ -2,94 +2,94 @@
 MSVD KNOWLEDGE GRAPH ANALYSIS REPORT
 ============================================================
 
-Total triples: 64087
-Unique entities (lemmatized): 4980
-Unique relations (lemmatized): 114
+Total triples: 35676
+Unique entities (lemmatized): 3100
+Unique relations (lemmatized): 912
 
 ----------------------------------------
 TOP 30 ENTITIES
 ----------------------------------------
-  man: 6024
-  woman: 3042
-  dog: 2530
-  cat: 2159
-  horse: 1829
-  dance: 1771
-  slice: 1524
-  guitar: 1472
-  water: 1311
-  cook: 1301
-  eightyfour: 1235
-  girl: 1221
-  car: 1177
-  ball: 1144
-  boy: 1122
-  egg: 1122
-  play: 1119
-  pan: 863
-  potato: 856
-  food: 839
-  baby: 799
-  orwell: 795
-  cut: 793
-  peel: 777
-  onion: 751
-  bowl: 740
-  knife: 730
-  piano: 703
-  meat: 688
-  bike: 626
+  man: 10276
+  woman: 5167
+  person: 2786
+  girl: 1578
+  cat: 1512
+  dog: 1460
+  boy: 1281
+  guitar: 1077
+  lady: 956
+  water: 711
+  horse: 634
+  car: 562
+  pan: 506
+  potato: 505
+  onion: 500
+  baby: 471
+  ball: 441
+  egg: 415
+  bowl: 413
+  piano: 390
+  food: 374
+  meat: 361
+  hand: 342
+  knife: 340
+  monkey: 337
+  flute: 314
+  bread: 310
+  guy: 300
+  puppy: 295
+  phone: 293
 
 ----------------------------------------
 TOP 30 RELATIONS
 ----------------------------------------
-  use: 24229
-  have: 5480
-  subclass: 5123
-  part: 4445
-  practice: 2937
-  facet: 2329
-  product: 2207
-  participant: 1689
-  instance: 1640
-  depict: 1475
-  sport: 1331
-  opposite: 970
-  field: 953
-  spouse: 839
-  main: 792
-  different: 706
-  item: 610
-  author: 564
-  notable: 490
-  follow: 467
-  say: 437
-  location: 381
-  character: 363
-  own: 318
-  present: 278
-  country: 244
-  locate: 218
-  owner: 201
-  instrument: 192
-  occupant: 173
+  be: 20954
+  play: 1199
+  in: 1003
+  with: 612
+  cut: 483
+  make: 393
+  ride: 369
+  cook: 288
+  put: 265
+  jump: 230
+  run: 202
+  walk: 198
+  slice: 196
+  pour: 176
+  eat: 175
+  get: 138
+  take: 136
+  peel: 126
+  dance: 126
+  prepare: 121
+  sing: 103
+  shoot: 102
+  chop: 97
+  perform: 90
+  talk: 89
+  fall: 88
+  climb: 88
+  do: 87
+  kick: 83
+  show: 78
 
 ----------------------------------------
 FREQUENCY DISTRIBUTION
 ----------------------------------------
 
 Entity frequency distribution:
-  1000+: 17 entities
-  500-1000: 24 entities
-  100-500: 205 entities
-  50-100: 190 entities
-  10-50: 782 entities
-  1-10: 3762 entities
+  1000+: 8 entities
+  500-1000: 7 entities
+  100-500: 91 entities
+  50-100: 89 entities
+  10-50: 448 entities
+  1-10: 2457 entities
 
 Relation frequency distribution:
-  1000+: 11 relations
-  500-1000: 7 relations
+  1000+: 3 relations
+  500-1000: 1 relations
   100-500: 18 relations
-  50-100: 9 relations
-  10-50: 19 relations
-  1-10: 50 relations
+  50-100: 30 relations
+  10-50: 111 relations
+  1-10: 749 relations

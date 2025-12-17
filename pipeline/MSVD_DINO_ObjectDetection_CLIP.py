@@ -31,8 +31,8 @@ KEYFRAME_META = "../data/MSVD_raw/MSVD_keyframe_counts.csv"
 # Hyperparameters
 CLIP_MODEL_NAME = "ViT-B/32"  # Nhẹ và nhanh, đủ dùng để lọc nhãn
 CLIP_TOP_K = 35               # Số lượng nhãn tối đa đưa vào DINO cho mỗi ảnh (giảm xuống 20-30 nếu OOM)
-BOX_THRESHOLD = 0.35
-TEXT_THRESHOLD = 0.25
+BOX_THRESHOLD = 0.1 # 0.35
+TEXT_THRESHOLD = 0.1 # 0.25
 
 # Time limit for cluster jobs (e.g., 20 hours)
 TIME_LIMIT_SECONDS = 20 * 3600 - 300 

@@ -11,3 +11,5 @@ dependencies:
   - pycocoevalcap==1.2
   - opencv==4.10.0
   - joblib==1.4.2
+  - av==14.4.0
+  - pathlib

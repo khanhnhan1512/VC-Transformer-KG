@@ -1,0 +1,123 @@
+# =============================================================================
+# Requirements cho Grounded SAM 2 Detection Pipeline
+# =============================================================================
+# Environment: grounded_sam2 (Python 3.10+)
+#
+# HƯỚNG DẪN CÀI ĐẶT:
+# ===================
+#
+# 1. Tạo Conda Environment mới:
+#    conda create -n grounded_sam2 python=3.10 -y
+#    conda activate grounded_sam2
+#
+# 2. Cài PyTorch với CUDA 12.1 (khuyến nghị):
+#    pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+#
+#    Hoặc với CUDA 11.8:
+#    pip install torch==2.5.1 torchvision==0.20.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu118
+#
+# 3. Clone và cài SAM 2:
+#    git clone https://github.com/facebookresearch/sam2.git
+#    cd sam2
+#    pip install -e .
+#    cd ..
+#
+# 4. Download SAM 2.1 Hiera Large checkpoint:
+#    mkdir -p pipeline/checkpoints
+#    wget https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt -P pipeline/checkpoints/
+#
+# 5. Cài các dependencies còn lại:
+#    pip install -r pipeline/requirements_sam2.txt
+#
+# =============================================================================
+
+# Core ML Framework (đã cài ở bước 2)
+# torch>=2.5.1
+# torchvision>=0.20.1
+
+# Grounding DINO (HuggingFace)
+transformers>=4.40.0
+
+# CLIP (OpenAI) - cho label filtering
+git+https://github.com/openai/CLIP.git
+
+# Video Processing
+av>=10.0.0                # PyAV for video decoding
+
+# Data Storage & Processing
+h5py>=3.0.0               # HDF5 file format
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Image Processing
+Pillow>=10.0.0
+opencv-python>=4.8.0
+
+# Visualization & Utilities
+matplotlib>=3.7.0
+tqdm>=4.65.0
+
+# Supervision (optional - for visualization)
+supervision>=0.20.0
+
+# =============================================================================
+# SAM 2 (cài từ source - xem bước 3 ở trên)
+# =============================================================================
+# SAM 2 KHÔNG có trên PyPI, phải cài từ GitHub:
+# git clone https://github.com/facebookresearch/sam2.git
+# cd sam2 && pip install -e .
+#
+# SAM 2 checkpoints:
+# - sam2.1_hiera_tiny.pt    (38.9M params, 91.2 FPS)
+# - sam2.1_hiera_small.pt   (46M params, 84.8 FPS)
+# - sam2.1_hiera_base_plus.pt (80.8M params, 64.1 FPS)
+# - sam2.1_hiera_large.pt   (224.4M params, 39.5 FPS) <- KHUYẾN NGHỊ
+#
+# Download link:
+# wget https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt
+
+# =============================================================================
+# OPTIONAL: Grounding DINO 1.5/1.6 Pro (Cloud API)
+# =============================================================================
+# Nếu cần độ chính xác cao hơn Grounding DINO Base, có thể dùng API:
+# pip install dds-cloudapi-sdk --upgrade
+# Đăng ký API key tại: https://deepdataspace.com/request_api
+
+# =============================================================================
+# GPU REQUIREMENTS
+# =============================================================================
+# Minimum: 10GB VRAM (RTX 3080/A10)
+# Recommended: 16GB+ VRAM (RTX 4090/A100)
+#
+# Memory optimization tips:
+# - Batch size = 1 (mặc định trong config)
+# - Sử dụng bfloat16 (mặc định)
+# - Clear CUDA cache định kỳ (đã có trong code)
+
+# =============================================================================
+# QUICK TEST
+# =============================================================================
+# Sau khi cài đặt, chạy test:
+#
+# cd pipeline
+# python -c "
+# import torch
+# print(f'PyTorch: {torch.__version__}')
+# print(f'CUDA available: {torch.cuda.is_available()}')
+# print(f'CUDA version: {torch.version.cuda}')
+#
+# from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
+# print('Grounding DINO: OK')
+#
+# try:
+#     from sam2.build_sam import build_sam2
+#     print('SAM 2: OK')
+# except ImportError:
+#     print('SAM 2: NOT INSTALLED (install from source)')
+#
+# try:
+#     import clip
+#     print('CLIP: OK')
+# except ImportError:
+#     print('CLIP: NOT INSTALLED')
+# "

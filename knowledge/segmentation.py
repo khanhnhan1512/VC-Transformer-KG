@@ -1,44 +1,54 @@
 import os
 import random
 
+# Set random seed for reproducibility
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+
 # Tạo thư mục output nếu chưa tồn tại
 if not os.path.exists('/kaggle/working/OPENKE_file'):
     os.makedirs('/kaggle/working/OPENKE_file')
 
 
 def ReadFileDatas(original_filename):
-    file = open(original_filename, 'r+')
-    FileNameList = file.readlines()
+    with open(original_filename, 'r', encoding='utf-8') as file:
+        FileNameList = file.readlines()
     random.shuffle(FileNameList)
-    file.close()
-    print("Nmber of dataset:", len(FileNameList))
+    print(f"Number of dataset: {len(FileNameList)}")
     return FileNameList
 
 
-def TrainValTestFile(FileNameList):
-    i = 0
-    j = len(FileNameList)
-    l_train, l_val, l_test = [], [], []
-    for line in FileNameList:
-        if i < (j * 0.6):
-            i += 1
-            l_train.append(line)
-        elif i < (j * 0.8):
-            i += 1
-            l_val.append(line)
-        else:
-            i += 1
-            l_test.append(line)
-    print("total number:%d, now has create train,val,test dataset" % i)
+def TrainValTestFile(FileNameList, train_ratio=0.6, val_ratio=0.2):
+    """
+    Split data into train/val/test sets.
+    Default: 60% train, 20% val, 20% test
+    """
+    total = len(FileNameList)
+    train_end = int(total * train_ratio)
+    val_end = int(total * (train_ratio + val_ratio))
+    
+    l_train = FileNameList[:train_end]
+    l_val = FileNameList[train_end:val_end]
+    l_test = FileNameList[val_end:]
+    
+    print(f"Total: {total}, Train: {len(l_train)}, Val: {len(l_val)}, Test: {len(l_test)}")
     return l_train, l_val, l_test
 
 
 def WriteDatasToFile(listInfo, new_filename):
-    file_handle = open(new_filename, 'w')
-    for str_Result in listInfo:
-        file_handle.write(str_Result)
-    file_handle.close()
-    print('write %s file successes!' % new_filename)
+    """
+    Write triples to file with count header (OpenKE format).
+    Format: First line is count, then each line is a triple.
+    """
+    with open(new_filename, 'w', encoding='utf-8') as file_handle:
+        # Write count header (required by OpenKE)
+        file_handle.write(f"{len(listInfo)}\n")
+        for str_Result in listInfo:
+            # Ensure line doesn't already have newline at end
+            str_Result = str_Result.strip()
+            if str_Result:
+                file_handle.write(str_Result + '\n')
+    print(f'Write {new_filename} success! ({len(listInfo)} triples)')
 
 
 if __name__ == "__main__":

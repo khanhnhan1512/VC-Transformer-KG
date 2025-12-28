@@ -222,12 +222,15 @@ def calc_scores(ref, hypo):
     return final_scores
 
 
-def evaluate(data_iter, model, vocab, beam_size, max_len):
+def evaluate(data_iter, model, vocab, beam_size, max_len, return_captions):
     r2l_vid2pred, l2r_vid2pred = get_predicted_captions(data_iter, model, beam_size, max_len)
     r2l_vid2GTs, l2r_vid2GTs = get_groundtruth_captions(data_iter, vocab)
     r2l_scores = score(r2l_vid2pred, r2l_vid2GTs)
     l2r_scores = score(l2r_vid2pred, l2r_vid2GTs)
-    return r2l_scores, l2r_scores
+    if return_captions: # return scores and captions
+        return r2l_scores, l2r_scores, l2r_vid2pred, l2r_vid2GTs
+    else:               # just return scores
+        return r2l_scores, l2r_scores
 
 
 def idxs_to_sentence(idxs, idx2word, EOS_idx):

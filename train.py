@@ -7,7 +7,7 @@ import time
 import numpy as np
 import json
 import os
-from typing import Dict
+from typing import Dict, List
 from loader.MSVD import MSVD
 from loader.MSRVTT import MSRVTT
 from loader.VATEX import VATEX
@@ -107,6 +107,26 @@ def save_log_summary(train_summary, val_summary, test_summary, log_folder):
         json.dump(test_summary, f, indent=4)
 
 
+def save_test_qualitative_results(vid2pred: Dict, vid2GTs: Dict, log_folder: str) -> None:
+    assert set(vid2pred.keys()) == set(vid2GTs.keys())
+    
+    # Format result
+    results: List[Dict] = []
+    vids = vid2pred.keys()
+    for vid in vids:
+        results.append({
+            "videoID": vid,
+            "predCap": vid2pred[vid],
+            "gtCap": vid2GTs[vid]
+        })
+    
+    # Save result to JSON file
+    if not os.path.exists(log_folder):
+        os.makedirs(log_folder)
+    with open(os.path.join(log_folder, 'test_caption_comparison.json'), 'w') as f:
+        json.dump(results, f, indent=4)
+
+
 def get_parameter_number(net):
     total_num = sum(p.numel() for p in net.parameters())
     trainable_num = sum(p.numel() for p in net.parameters() if p.requires_grad)
@@ -201,7 +221,8 @@ def main():
             model=model,
             vocab=vocab,
             beam_size=C.beam_size,
-            max_len=C.loader.max_caption_len
+            max_len=C.loader.max_caption_len,
+            return_captions=False
         )
         _val_end_time = time.time()
         _val_time_taken = _val_end_time - _val_start_time
@@ -244,19 +265,20 @@ def main():
     best_model = load_checkpoint(model=model, ckpt_fpath=best_ckpt_fpath)
     
     _test_start_time = time.time()
-    r2l_best_scores, l2r_best_scores = evaluate(
+    r2l_test_scores, l2r_test_scores, l2r_test_vid2pred, l2r_test_vid2GTs = evaluate(
         data_iter=test_iter,
         model=best_model,
         vocab=vocab,
         beam_size=C.beam_size,
-        max_len=C.loader.max_caption_len
+        max_len=C.loader.max_caption_len,
+        return_captions=True
     )
     _test_end_time = time.time()
     _test_time_taken = _test_end_time - _test_start_time
     
     test_summary = log_test(
-        r2l_scores=r2l_best_scores,
-        l2r_scores=l2r_best_scores,
+        r2l_scores=r2l_test_scores,
+        l2r_scores=l2r_test_scores,
         time_taken=_test_time_taken
     )
     
@@ -264,8 +286,11 @@ def main():
                      val_summary=val_summary,
                      test_summary=test_summary,
                      log_folder=C.log_folder)
+    save_test_qualitative_results(vid2pred=l2r_test_vid2pred,
+                                  vid2GTs=l2r_test_vid2GTs,
+                                  log_folder=C.log_folder)
     
-    print("-"*40)
+    print("-"*64)
     print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
     print(f">> [Val time] Total: {total_val_time:.2f} seconds => Per epoch: {total_val_time / C.epochs:.2f} seconds")
     return
@@ -287,7 +312,7 @@ def print_gpu_info() -> None:
         print(f"  MultiProcessor count: {props.multi_processor_count}")
         print(f"  Major.Minor: {props.major}.{props.minor}")
         print(f"  Max threads per block: {props.max_threads_per_multi_processor}")
-        print("=" * 40)
+        print("=" * 64)
 
 
 if __name__ == "__main__":

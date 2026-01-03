@@ -17,6 +17,7 @@ import argparse
 import os
 import sys
 
+import numpy as np
 import torch
 import openke
 from openke.config import Trainer, Tester
@@ -44,6 +45,8 @@ def parse_args() -> argparse.Namespace:
         help="Directory containing OpenKE formatted data.",
     )
     parser.add_argument("--save_dir", default="./openke_rotate_ckpt", help="Where to write checkpoints.")
+    parser.add_argument("--init_emb_path", default=None,
+                        help="Path to pre-trained entity embeddings (e.g., entity_init_emb.npy from GloVe)")
     
     # Optimized hyperparameters for small datasets
     parser.add_argument("--dim", type=int, default=128, 
@@ -103,6 +106,7 @@ def main() -> None:
     print(f"[config] data_dir: {in_path}")
     print(f"[config] save_dir: {args.save_dir}")
     print(f"[config] use_gpu: {use_gpu}")
+    print(f"[config] init_emb: {args.init_emb_path or 'None (random)'}")
     print(f"[config] dim: {args.dim} (smaller for small data)")
     print(f"[config] margin (gamma): {args.gamma} (higher for better separation)")
     print(f"[config] neg_ent: {args.neg_ent} (more negatives for small data)")
@@ -152,6 +156,29 @@ def main() -> None:
         margin=args.gamma,
         epsilon=args.epsilon,
     )
+    
+    # Load pre-trained embeddings if provided
+    if args.init_emb_path and os.path.exists(args.init_emb_path):
+        print(f"[init] Loading pre-trained entity embeddings from {args.init_emb_path}")
+        try:
+            init_emb = np.load(args.init_emb_path)
+            print(f"[init] Loaded shape: {init_emb.shape}")
+            
+            if init_emb.shape[0] != ent_tot:
+                print(f"[warn] Embedding count mismatch: file has {init_emb.shape[0]}, expected {ent_tot}")
+            if init_emb.shape[1] != args.dim:
+                print(f"[warn] Dimension mismatch: file has {init_emb.shape[1]}d, model uses {args.dim}d")
+                print(f"[warn] Skipping pre-trained embeddings")
+            else:
+                # Initialize entity embeddings with GloVe
+                with torch.no_grad():
+                    rotate.ent_embeddings.weight.data.copy_(torch.from_numpy(init_emb).float())
+                print(f"[init] ✓ Entity embeddings initialized with GloVe")
+        except Exception as e:
+            print(f"[error] Failed to load embeddings: {e}")
+            print(f"[info] Continuing with random initialization")
+    else:
+        print("[init] Using random initialization (no --init_emb_path provided)")
 
     # Loss with adversarial temperature
     loss = SigmoidLoss(adv_temperature=args.adv_temp)

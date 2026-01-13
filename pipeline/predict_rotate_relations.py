@@ -23,15 +23,29 @@ from openke.module.model import RotatE
 
 
 def load_id_map(path: str) -> Dict[str, int]:
-    """Load a name->id map; accepts tab or space separated lines."""
+    """Load a name->id map from OpenKE-style files.
+
+    Supports both formats:
+    - With header count on the first line
+    - Without header
+    Lines are typically: <name>\t<id>
+    """
     mp: Dict[str, int] = {}
     with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split()
-            if len(parts) != 2:
-                continue
-            name, idx = parts[0], int(parts[1])
-            mp[name] = idx
+        lines = [ln.strip() for ln in f.readlines() if ln.strip()]
+
+    if lines and lines[0].isdigit():
+        lines = lines[1:]
+
+    for line in lines:
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        name, idx_str = parts[0], parts[1]
+        try:
+            mp[name] = int(idx_str)
+        except ValueError:
+            continue
     return mp
 
 
@@ -114,7 +128,9 @@ def score_relations(
     }
 
     with torch.no_grad():
-        scores = -model.forward(data)  # RotatE forward returns negative scores; negate for higher=better
+        # OpenKE RotatE.forward returns: margin - distance, so HIGHER is BETTER.
+        scores = model.forward(data)
+
     k = min(topk, rel_tot)
     top_scores, top_indices = torch.topk(scores, k=k)
 
@@ -218,7 +234,15 @@ def main() -> None:
         args.hdf5_path, ent2id, args.score_threshold, permutations=args.permutations
     ):
         total_pairs += 1
-        top_rels = score_relations(model, device, ent2id, rel2id, head_lbl, tail_lbl, args.topk)
+        top_rels = score_relations(
+            model,
+            device,
+            ent2id,
+            rel2id,
+            head_lbl,
+            tail_lbl,
+            args.topk,
+        )
         for rel, score in top_rels:
             if vid in rel_store and frame_idx < len(rel_store[vid]):
                 rel_store[vid][frame_idx].append(

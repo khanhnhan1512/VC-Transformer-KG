@@ -9,15 +9,30 @@ from typing import Dict, List, Tuple
 
 
 def load_id_map(path: str) -> Dict[str, int]:
-    """Load a name->id map; accepts tab or space separated lines."""
+    """Load a name->id map from OpenKE-style files.
+
+    Supports both formats:
+    - With header count on the first line (common in OpenKE benchmarks)
+    - Without header
+    Lines are typically: <name>\t<id>
+    """
     mp: Dict[str, int] = {}
     with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split()
-            if len(parts) != 2:
-                continue
-            name, idx = parts[0], int(parts[1])
-            mp[name] = idx
+        lines = [ln.strip() for ln in f.readlines() if ln.strip()]
+
+    # Drop an optional first-line count
+    if lines and lines[0].isdigit():
+        lines = lines[1:]
+
+    for line in lines:
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        name, idx_str = parts[0], parts[1]
+        try:
+            mp[name] = int(idx_str)
+        except ValueError:
+            continue
     return mp
 
 
@@ -51,7 +66,9 @@ def score_relations(
     }
 
     with torch.no_grad():
-        scores = -model.forward(data)  # RotatE forward returns negative scores; negate for higher=better
+        # OpenKE RotatE.forward returns: margin - distance, so HIGHER is BETTER.
+        scores = model.forward(data)
+
     k = min(topk, rel_tot)
     top_scores, top_indices = torch.topk(scores, k=k)
 
@@ -136,10 +153,30 @@ def main() -> None:
     tail_label = args.tail
 
     if head_label not in ent2id or tail_label not in ent2id:
-        print(f"[warn] Skipping pair ({head_label}, {tail_label}) - not found in entity2id")
+        missing = []
+        if head_label not in ent2id:
+            missing.append(f"head='{head_label}'")
+        if tail_label not in ent2id:
+            missing.append(f"tail='{tail_label}'")
+        print(f"[error] Entity not found in entity2id: {', '.join(missing)}")
+        # Quick suggestions
+        q = (head_label if head_label not in ent2id else tail_label).lower()
+        candidates = [e for e in ent2id.keys() if q in e.lower()]
+        if candidates:
+            print("[hint] Similar entities:")
+            for e in candidates[:20]:
+                print("  -", e)
         return
     
-    top_rels = score_relations(model, device, ent2id, rel2id, head_label, tail_label, args.topk)
+    top_rels = score_relations(
+        model,
+        device,
+        ent2id,
+        rel2id,
+        head_label,
+        tail_label,
+        args.topk,
+    )
     print(f"\nTop relations for ({head_label}, {tail_label}):")
     for rel, score in top_rels:
         print(f"  {rel}: {score:.4f}")

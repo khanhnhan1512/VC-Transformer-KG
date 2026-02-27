@@ -1,0 +1,15 @@
+### 3. Phương pháp đề xuất: Bidirectional Decoder Transformer (BiDecT)
+
+Bây giờ bạn hãy giúp tôi đề xuất, thảo luận, chỉnh sửa những chỗ mà tôi viết sai và phát triển các ý tưởng để tôi có thể hoàn thành bản phác thảo cho paper của mình. Bạn hãy giúp tôi trình bày bằng tiếng Việt một cách mạch lạc, chi tiết, súc tích. Đối với một số từ tiếng Anh đặc thù, chuyên ngành thì bạn có thể trình bày bằng tiếng Anh để không làm mất ngữ nghĩa của từ đó.
+
+Dưới đây là bản phác thảo các ý tưởng mà tôi muốn trình bày trong paper của mình:
+
+- Phương pháp Bidirectional Decoder Transformer (BiDecT)
+- Phương pháp mà chúng ta đề xuất sẽ tận dụng lại ý tưởng chính đã được đề xuất trong paper "BiTransformer: augmenting semantic context in video captioning via bidirectional decoder". Nhưng trong kiến trúc của chúng ta, chúng ta sẽ chỉ sử dụng hai decoder (backward decoder và forward decoder) và không sử dụng thêm bất kỳ encoder nào.
+- Đồng thời, chúng ta sẽ tách biệt quá trình tạo vector embedding cho các đặc trưng được đưa vào mỗi decoder. Do đó, chúng ta cũng sẽ xây dựng hai module mutlimodal feature embedding riêng biệt cho cả backward decoder và forward decoder. Tuy nhiên, về mặt bản chất thì hai module mutlimodal feature embedding sẽ được cài đặt hoàn toàn tương tự nhau.
+	- Về lý thuyết, trong kiến trúc mà chúng ta đang xây dựng, ta sẽ phải huấn luyện đồng thời cả hai mô hình Transformer khác nhau: một mô hình để sinh ra caption theo chiều ngược (right-to-left) và một mô hình để sinh ra caption theo chiều xuôi (left-to-right).
+	- Việc tách biệt trọng số (independent weights) của hai module embedding này có mục đích là để luồng thông tin ngược (backward) không can thiệp vào luồng thông tin xuôi (forward). Điều này sẽ giúp cả hai decoder có thể thực sự học trong quá trình huấn luyện.
+- The core idea of the bidirectional decoder model is to exploit bidirectional semantic context instead of only the left-to-right style of context, based on the observation that the right-to-left style of context can further augment the semantic context.
+	- Ý tưởng cốt lõi của BiDecT không chỉ dừng lại ở việc khai thác bidirectional semantic context (ngữ cảnh ngữ nghĩa hai chiều), mà còn chứng minh rằng việc kết hợp trực tiếp các đặc trưng đa phương thức (multimodal features) vào thẳng các module giải mã (decoders) mà không cần thông qua một module Encoder phức tạp vẫn mang lại hiệu quả cao, đồng thời tối ưu hóa được khối lượng tính toán.
+- Module backward decoder sẽ sử dụng các đặc trưng đã được rút trích trước đó làm đầu vào để tạo ra một vector context giàu ngữ nghĩa. Vector context này một mặt giúp tạo ra reverse predicted caption, mặt khác cũng là một loại đặc trưng quan trọng để cung cấp cho forward decoder. Kết quả cuối cùng là một context vector D chứa ngữ cảnh từ phải sang trái (right-to-left style of context).
+- Module Forward Decoder sẽ sử dụng các đặc trưng được rút trích từ video và vector context từ backward decoder để tạo ra caption thực sự cho video. Sự kết hợp này giúp Forward Decoder có được cái nhìn toàn cục: vừa hiểu được video (qua features), vừa biết được định hướng của câu (qua backward context)

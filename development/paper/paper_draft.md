@@ -83,6 +83,7 @@ Module này đóng vai trò là **interface layer** giữa quá trình trích xu
 <!-- 4.1. Chiếu tuyến tính và Đồng bộ hóa số chiều (Linear Projection) -->
 
 Do các pretrained models có cấu trúc khác nhau, nên các đặc trưng đầu vào $F_V$, $F_S$ và $F_M$ thường có số chiều không đồng nhất. Chúng ta sẽ áp dụng các phép biến đổi tuyến tính (linear transformation) riêng biệt cho từng loại đặc trưng để đưa chúng về cùng một không gian vector có kích thước $d_{model}$:
+
 $$
 \begin{align}
 F'_V &= F_V * W_V + b_V \\

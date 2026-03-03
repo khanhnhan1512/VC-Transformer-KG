@@ -33,7 +33,7 @@ class VocabConfig:
 class MSVDLoaderConfig:
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-msvd-dataset"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msvd-dataset"
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
@@ -54,7 +54,7 @@ class MSVDLoaderConfig:
 class MSRVTTLoaderConfig(object):
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-msrvtt-dataset"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msrvtt-dataset"
     
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/train.json")
     val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/val.json")
@@ -72,7 +72,7 @@ class MSRVTTLoaderConfig(object):
 class VATEXLoaderConfig(object):
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-vatex-dataset"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-vatex-dataset"
 
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "VATEX/metadata/vatex_train_english_v1.0_privacy_limited.json")
     val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "VATEX/metadata/vatex_val_english_v1.0_privacy_limited.json")

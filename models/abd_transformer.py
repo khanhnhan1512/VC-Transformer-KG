@@ -179,13 +179,12 @@ class SublayerConnection(nn.Module):
 
     def __init__(self, size: int, dropout: float):
         super(SublayerConnection, self).__init__()
-        self.norm_1 = nn.LayerNorm(size)
         self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
         # return self.dropout(self.layer_norm(x + sublayer(x)))
-        return self.dropout(x + self.norm_2(sublayer(self.norm_1(x))))
+        return self.dropout(self.norm_2(x + sublayer(x)))
 
 
 class SkipConnectionAfterLN(nn.Module):
@@ -196,7 +195,7 @@ class SkipConnectionAfterLN(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
-        return self.dropout(x + self.norm(sublayer(x)))
+        return self.dropout(self.norm(x + sublayer(x)))
 
 
 # ╭────────────────────────────────────────────────────────────╮
@@ -255,8 +254,6 @@ class R2L_Decoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(R2L_Decoder, self).__init__()
-        self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
             R2LDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=3, 
                             dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
@@ -264,10 +261,8 @@ class R2L_Decoder(nn.Module):
         ])
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
-        x = self.norm_1(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, r2l_trg_mask)
-        x = self.norm_2(x)
         return x
 
 
@@ -275,8 +270,6 @@ class L2R_Decoder(nn.Module):
 
     def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
         super(L2R_Decoder, self).__init__()
-        self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
             L2RDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=4, 
                             dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
@@ -284,10 +277,8 @@ class L2R_Decoder(nn.Module):
         ])
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-        x = self.norm_1(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
-        x = self.norm_2(x)
         return x
 
 
@@ -356,11 +347,9 @@ class ABDTransformer(nn.Module):
         # --- Feature Embeddings ---
         self.r2l_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
         self.r2l_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
-        self.r2l_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
         
         self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
         self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
-        self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
         
         # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -389,7 +378,6 @@ class ABDTransformer(nn.Module):
                 feat = self.r2l_src_embed[i](feat)
                 feat = self.r2l_seg_embed(feat, seg_id)
                 feat = self.pos_embed(feat)
-                feat = self.r2l_feat_norm[i](feat)
                 final_feats.append(feat)
             
             B, _, D  = final_feats[0].shape
@@ -407,7 +395,6 @@ class ABDTransformer(nn.Module):
                 feat = self.l2r_src_embed[i](feat)
                 feat = self.l2r_seg_embed(feat, seg_id)
                 feat = self.pos_embed(feat)
-                feat = self.l2r_feat_norm[i](feat)
                 final_feats.append(feat)
             
             B, _, D  = final_feats[0].shape

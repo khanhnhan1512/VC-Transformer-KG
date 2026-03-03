@@ -1,17 +1,29 @@
 import numpy as np
 import pandas as pd
 import h5py
-import av
 import torch
 from tqdm import tqdm
 from pathlib import Path
 from torchvision import io
 from torchvision.models.video import mvit_v2_s, MViT_V2_S_Weights
+from typing import List, Dict
 import os
-import numpy as np
 os.environ["TORCH_HOME"] = "/media02/lnthanh01/vmphat/raw_data/cache"
 
 
+# --- Constants for loading ---
+KEYINT: int = 40
+CORPUS: str = "vatex"
+RESIZE: int = 240
+EXTENSION: str = "mp4"
+TOTAL_VIDEOS: int = 34_793
+# --- Constants for processing ---
+CHUNK_SIZE: int = 16
+STACK_SIZE: int = KEYINT
+STEP_SIZE : int = KEYINT
+
+
+# --- Helper functions ---
 def resample_fixed(frames, chunk_size):
     C, T, H, W = frames.shape
     idxs = np.linspace(0, T-1, chunk_size).astype(int)
@@ -39,22 +51,33 @@ def chunk_frames(inputs, chunk_size, stack_size, step_size):
         num_frames = end_idx - start_idx
         # print(f"Chunk {i}, from {start_idx} to {end_idx} => num_frames={num_frames}")
 
-        if num_frames < chunk_size:
-            break  # Not enough frames left for a full chunk
+        if num_frames < stack_size:  # last batch
+            chunk = inputs[:, -(stack_size):, :, :]
+        else:
+            chunk = inputs[:, start_idx:end_idx, :, :]
 
-        chunk = inputs[:, start_idx:end_idx, :, :]
         # Resample chunk to have exactly chunk_size frames
         chunk = resample_fixed(chunk, chunk_size=chunk_size)
         chunked_inputs.append(chunk)
 
+    # Sanity check
     if len(chunked_inputs) == 0:
         raise ValueError("No chunks created from input frames")
+
+    num_gop_target = inputs[:, ::KEYINT, :, :].shape[1] + 1
+    # ***** Add last chunk for the last frame *****
+    if len(chunked_inputs) < num_gop_target:
+        last_chunk = inputs[:, -(stack_size):, :, :]
+        last_chunk = resample_fixed(last_chunk, chunk_size=chunk_size)
+        chunked_inputs.append(last_chunk)
+    # *********************************************
+    assert len(chunked_inputs) == num_gop_target, f"{len(chunked_inputs)} vs {num_gop_target}"
 
     return chunked_inputs
 
 
 def extract_features_for_video(video_path,
-                               preprocess,  chunk_size, stack_size, step_size,
+                               preprocess, chunk_size, stack_size, step_size,
                                model, device, batch_size):
     """Extract features from a video file.
 
@@ -87,11 +110,12 @@ def extract_features_for_video(video_path,
     assert inputs.shape[0] == 3  # C=3
 
     # --- chunk frames ---
-    chunked_inputs = chunk_frames(inputs,
-                                  chunk_size=chunk_size,
-                                  stack_size=stack_size,
-                                  step_size=step_size)
-    assert len(chunked_inputs) > 0
+    chunked_inputs = chunk_frames(
+        inputs,
+        chunk_size=chunk_size,
+        stack_size=stack_size,
+        step_size=step_size
+    )
 
     # --- extract features in batches ---
     all_feats = []
@@ -117,8 +141,14 @@ def extract_features_for_video(video_path,
     return feats
 
 
+# --- Get path to all videos ---
+print("Loading video paths...")
+video_paths: List[str] = list(Path(f"./{CORPUS.lower()}/videos_{RESIZE}_h264_keyint_{KEYINT}/").glob(f"*.{EXTENSION}"))
+print(f">> Found {len(video_paths)} videos.")
+assert len(video_paths) == TOTAL_VIDEOS, f"Expected {TOTAL_VIDEOS} videos, but found {len(video_paths)}."
+
 # --- load pretrained model + transforms ---
-print(f">> Loading model...")
+print(f"Loading model...")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 weights = MViT_V2_S_Weights.DEFAULT
 preprocess = weights.transforms()
@@ -128,55 +158,36 @@ model.head = torch.nn.Identity()
 model.norm = torch.nn.Identity()
 model.eval()
 
+# --- extract features for all videos ---
+vid_to_gop_count: Dict[str, int] = {}
+mot_emb_hdf5 = h5py.File(f"./{CORPUS.upper()}_newMViTv2.hdf5", "a")
 
-# --- get all video paths ---
-video_paths = sorted(Path("./raw_video/").glob("*.avi"))
-assert len(video_paths) == 1970
-
-
-# --- open HDF5 and process videos ---
-feature_file_path = "./MSVD_MViTv2.hdf5"
-chunk_size = 16
-stack_size = 40
-step_size = 32
-print(f">> Extracting feature...")
-with h5py.File(feature_file_path, "w") as hf:
-    for vp in tqdm(video_paths, desc="Videos"):
+print(f"Extracting feature...")
+for video_path in tqdm(video_paths, desc="Videos"):
+    if video_path.stem not in mot_emb_hdf5:
         # extract features
         feats = extract_features_for_video(
-            video_path=str(vp),
+            video_path=str(video_path),
             preprocess=preprocess,
-            chunk_size=chunk_size,
-            stack_size=stack_size,
-            step_size=step_size,
+            chunk_size=CHUNK_SIZE,
+            stack_size=STACK_SIZE,
+            step_size=STEP_SIZE,
             model=model,
             device=device,
             batch_size=8
         )  # (N_chunks, feature_dim)
 
-        # save to HDF5
-        hf.create_dataset(vp.stem, data=feats)
-print("Done.")
+        # save feature to HDF5
+        mot_emb_hdf5.create_dataset(video_path.stem, data=feats)
+        # save gop count
+        vid_to_gop_count[video_path.stem] = feats.shape[0]
 
-# --- verification ---
-print(f">> Verifying saved HDF5 file...")
-with h5py.File(feature_file_path, "r") as f:
-    # liệt kê các key
-    keys = list(f.keys())
-    print("#keys:", len(keys))
-    assert len(keys) == 1970
+# Close HDF5 file
+mot_emb_hdf5.close()
 
-    # lấy một key (ví dụ key đầu tiên)
-    key = keys[0]
+# Save GOP count to CSV
+df = pd.DataFrame(list(vid_to_gop_count.items()),
+                  columns=["video_id", "gop_count"])
+df.to_csv(f"./{CORPUS.lower()}_new_gop_counts.csv", index=False)
 
-    # dataset object (không đọc toàn bộ vào nhớ)
-    dset = f[key]
-    print("shape:", dset.shape, "dtype:", dset.dtype)
-
-    # đọc toàn bộ vào numpy array
-    arr = dset[:]          # hoặc np.array(dset)
-    print("arr shape:", arr.shape)
-
-    for key in tqdm(keys):
-        assert len(f[key].shape) == 2
-print("Done!")
+print(">> Done.")

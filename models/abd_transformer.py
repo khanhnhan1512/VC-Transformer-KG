@@ -180,23 +180,21 @@ class SublayerConnection(nn.Module):
     def __init__(self, size: int, dropout: float):
         super(SublayerConnection, self).__init__()
         self.norm_1 = nn.LayerNorm(size)
-        self.norm_2 = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
         # return self.dropout(self.layer_norm(x + sublayer(x)))
-        return self.dropout(x + self.norm_2(sublayer(self.norm_1(x))))
+        return self.dropout(x + sublayer(self.norm_1(x)))
 
 
 class SkipConnectionAfterLN(nn.Module):
 
     def __init__(self, size: int, dropout: float):
         super(SkipConnectionAfterLN, self).__init__()
-        self.norm = nn.LayerNorm(size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
-        return self.dropout(x + self.norm(sublayer(x)))
+        return self.dropout(x + sublayer(x))
 
 
 # ╭────────────────────────────────────────────────────────────╮

@@ -33,7 +33,7 @@ class VocabConfig:
 class MSVDLoaderConfig:
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/btkg-msvd-dataset"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-msvd-dataset"
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
@@ -52,10 +52,14 @@ class MSVDLoaderConfig:
 
 
 class MSRVTTLoaderConfig(object):
-    train_caption_fpath = "./data/MSRVTT/metadata/train.json"
-    val_caption_fpath   = "./data/MSRVTT/metadata/val.json"
-    test_caption_fpath  = "./data/MSRVTT/metadata/test.json"
-    phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
+    # Flexible to change the path to data folder when run on Kaggle
+    DATA_FOLDER_PATH = "./data"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-msrvtt-dataset"
+    
+    train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/train.json")
+    val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/val.json")
+    test_caption_fpath  = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/test.json")
+    phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     min_count   = 3
     num_workers = 4
@@ -66,10 +70,14 @@ class MSRVTTLoaderConfig(object):
 
 
 class VATEXLoaderConfig(object):
-    train_caption_fpath = "./data/VATEX/metadata/vatex_train_english_v1.0_privacy_limited.json"
-    val_caption_fpath   = "./data/VATEX/metadata/vatex_val_english_v1.0_privacy_limited.json"
-    test_caption_fpath  = "./data/VATEX/metadata/vatex_public_test_english_v1.1_privacy_limited.json"
-    phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
+    # Flexible to change the path to data folder when run on Kaggle
+    DATA_FOLDER_PATH = "./data"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/bidect-vatex-dataset"
+
+    train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "VATEX/metadata/vatex_train_english_v1.0_privacy_limited.json")
+    val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "VATEX/metadata/vatex_val_english_v1.0_privacy_limited.json")
+    test_caption_fpath  = os.path.join(DATA_FOLDER_PATH, "VATEX/metadata/vatex_public_test_english_v1.1_privacy_limited.json")
+    phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     min_count   = 3
     num_workers = 4
@@ -91,8 +99,8 @@ class TransformerConfig:
 
 class TrainConfig:
     # corpus = "MSVD"
-    # corpus = "MSRVTT"
-    corpus = "VATEX"
+    corpus = "MSRVTT"
+    # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
     elif corpus == "VATEX" : loader = VATEXLoaderConfig

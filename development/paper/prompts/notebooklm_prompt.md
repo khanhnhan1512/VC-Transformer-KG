@@ -1,0 +1,7 @@
+Bây giờ bạn hãy giúp tôi đề xuất, thảo luận, chỉnh sửa những chỗ mà tôi viết sai và phát triển các ý tưởng để tôi có thể hoàn thành bản phác thảo cho paper của mình. Dưới đây tôi sẽ liệt kê một vài ghi chú quan trọng để bạn có thể tạo ra nội dung phù hợp với kết quả mà tôi mong đợi:
+- **Quan trọng nhất là ở chất lượng của nội dung:** Bạn hãy giúp tôi trình bày nội dung một cách mạch lạc, chi tiết, súc tích, nhấn mạnh vào những thông tin quan trọng nhất.
+- **Về phần thảo luận dựa trên nội dung tôi cung cấp:** Nếu có thể thì bạn hãy ưu tiên trình bày những nội dung phân tích và đề xuất chỉnh sửa bằng tiếng Việt để tôi có thể hiểu rõ hơn. Trong trường hợp có từ nào đó trong tiếng Anh mà khi dịch sang tiếng Việt có thể làm mất ngữ nghĩa chính xác của từ đó, thì bạn hãy bổ sung thêm từ tiếng Anh vào dấu ngoặc `()`. 
+- **Về phần bản thảo được tinh chỉnh:** Trong bản phác thảo đã được tinh chỉnh thì bạn có thể sử dụng tiếng Anh. Bạn nên ưu tiên sử dụng các từ tiếng Anh thông dụng, phổ biến để người đọc có thể dễ dàng hiểu được. Đối với những thuật ngữ tiếng Anh chuyên ngành và đặc thù, thì bạn có thể trình bày từ ngữ đó hoàn toàn bằng tiếng Anh để không làm mất ngữ nghĩa của từ đó.
+- **Về các ký hiệu riêng của tôi:** Các ký hiệu `<cite>` được dùng để gợi ý tôi thêm citation trong paper chính thức, bạn có thể giữ nguyên các ký hiệu này mà không cần chỉnh sửa gì nhiều.
+
+Dưới đây là bản phác thảo các ý tưởng và nội dung mà tôi muốn trình bày trong paper của mình:

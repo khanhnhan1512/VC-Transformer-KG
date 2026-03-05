@@ -44,6 +44,7 @@ To mitigate the heavy computational burden of real-time feature extraction, we p
 
 **Inference and Hardware.** During the inference phase, we employ a beam search strategy with a beam size of 4 for both decoders to generate high-quality captions. All experiments are conducted on NVIDIA A100 GPUs.
 
+<!-- Vietnamese version of section 5.3.3
 ```
 - Preprocessing raw video + feature extraction on GOP
 - Transformer model configuration
@@ -63,3 +64,16 @@ To mitigate the heavy computational burden of real-time feature extraction, we p
     - In the decoder module, we remove punctuation in every caption and filter words whose counts are less than `3` for all datasets. The maximum length of caption is set as `20` for all three datasets. In order to generate a better caption, we leverage the beam search with a size of `4` for both decoders.
     - All experiments were run on the `NVIDIA A100` GPUs.
 ```
+-->
+
+## 5.4. Comparison with State-of-the-Art Methods
+
+To demonstrate the effectiveness of our proposed approach, we compare BiDecT with recent state-of-the-art (SOTA) video captioning methods on the MSVD, MSR-VTT, and VATEX datasets. The results are summarized in `Table -???` and `Table -???`. Following the standard evaluation protocol, we adopt BLEU@4 (B4), METEOR (M), ROUGE-L (R), and CIDEr (C) as the evaluation metrics.
+
+**Results on MSVD and MSR-VTT.** As shown in `Table -???`, the proposed BiDecT model demonstrates highly competitive performance across both the MSVD and MSR-VTT benchmarks. Notably, we prioritize the consensus-based CIDEr metric, which is widely regarded as the most aligned with human judgment for captioning tasks. On the MSVD dataset, BiDecT achieves the highest CIDEr score of 138.0, performing favorably against recent strong baselines such as STOA-VLP `<cite>` and CoCap `<cite>`. A similar trend is observed on the MSR-VTT dataset, where our model attains a leading CIDEr score of 64.3. 
+
+While STOA-VLP obtains the highest ROUGE-L scores on both MSVD and MSR-VTT datasets (83.9 and 68.4, respectively), our BiDecT model yields closely comparable results, ranking second in this metric (82.9 and 65.2, respectively) while consistently securing the top position in BLEU@4 and METEOR. This suggests that the bidirectional decoding strategy effectively balances the fluency of generated n-grams (BLEU@4) and semantic richness (METEOR, CIDEr), even without relying on highly complex intermediate encoder structures.
+
+**Results on VATEX.** `Table -???` presents the evaluation results on the public test set of the VATEX dataset, which is known for its large-scale and linguistically complex content. Our BiDecT model maintains its robust generalization capability, achieving the highest scores in BLEU@4 (40.9), METEOR (27.0), and ROUGE-L (54.6). Regarding the CIDEr metric, our model obtains a score of 77.7, which is highly comparable to the top-performing VideoCoCa model (77.8) `<cite>`. Considering that VideoCoCa heavily relies on large-scale foundational pre-training, the ability of our BiDecT to match its performance further validates the efficiency of our core architectural design.
+
+**Discussion.** Overall, the empirical results consistently show that BiDecT ranks within the top two across almost all metrics on the three datasets. We attribute this success to our proposed architecture, which directly integrates multimodal features (visual, semantic, and motion) into a Bidirectional Decoder. By capturing both left-to-right and right-to-left semantic contexts without the bottleneck of an intermediate encoder, the model is capable of generating accurate, natural, and highly descriptive video captions.

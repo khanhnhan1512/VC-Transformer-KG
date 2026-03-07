@@ -429,7 +429,7 @@ class ABDTransformer(nn.Module):
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-        bool_mask = torch.full(src_mask.shape, True)
+        bool_mask = torch.full(src_mask.shape, True).to(self.device)
         bool_mask[:,:,2::3] = False
         src_mask = torch.masked_select(src_mask, bool_mask)\
                     .reshape(src_mask.size(0),1,-1)

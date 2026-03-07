@@ -291,6 +291,46 @@ class L2R_Decoder(nn.Module):
 
 
 # ╭────────────────────────────────────────────────────────────╮
+# │                       Action Encoder                       │
+# ╰────────────────────────────────────────────────────────────╯
+class ActionEncoderLayer(nn.Module):
+
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool, first_layer: bool):
+        super(ActionEncoderLayer, self).__init__()
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
+        if first_layer: self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:           self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
+        self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
+        self.sublayer_connection_3 = SublayerConnection(size=d_model, dropout=dropout)
+
+    def forward(self, mot_feat, vis_feat, mot_mask, vis_mask):
+        x = self.sublayer_connection_1(mot_feat, lambda x: self.attn_1(x, x, mot_mask))
+        x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, vis_feat, vis_mask))
+        x = self.sublayer_connection_3(x, self.feed_forward)
+        return x
+
+
+class ActionEncoder(nn.Module):
+
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
+        super(ActionEncoder, self).__init__()
+        self.norm_1 = nn.LayerNorm(d_model)
+        self.encoder_layers = nn.ModuleList([
+            ActionEncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads,
+                               dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            for i in range(num_layers)
+        ])
+
+    def forward(self, mot_feat, vis_feat, mot_mask, vis_mask):
+        mot_feat = self.norm_1(mot_feat)
+        for layer in self.encoder_layers:
+            mot_feat = layer(mot_feat, vis_feat, mot_mask, vis_mask)
+        return mot_feat
+
+
+# ╭────────────────────────────────────────────────────────────╮
 # │                 Mask Generation Functions                  │
 # ╰────────────────────────────────────────────────────────────╯
 def pad_mask(src, r2l_trg, trg, pad_idx):
@@ -365,6 +405,9 @@ class ABDTransformer(nn.Module):
         self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat[:-1]), d_model=d_model)
         self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat[:-1]])
         
+        # --- Action Encoder ---
+        self.l2r_act_encoder = ActionEncoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=1, dropout=dropout, use_rope=False)
+
         # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -413,8 +456,16 @@ class ABDTransformer(nn.Module):
                 seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
                 
                 feat = self.l2r_src_embed[i](feat)
+                
                 feat = self.l2r_seg_embed(feat, seg_id)
                 feat = self.pos_embed(feat)
+
+                if i == 1:
+                    # def forward(self, mot_feat, vis_feat, mot_mask, vis_mask):
+                    feat = self.l2r_act_encoder(feat, final_feats[0], src_mask[:,:,1::3], src_mask[:,:,0::3])
+                    feat = self.l2r_seg_embed(feat, seg_id)
+                    feat = self.pos_embed(feat)
+
                 feat = self.l2r_feat_norm[i](feat)
                 final_feats.append(feat)
             

@@ -98,8 +98,8 @@ class TransformerConfig:
 
 
 class TrainConfig:
-    corpus = "MSVD"
-    # corpus = "MSRVTT"
+    # corpus = "MSVD"
+    corpus = "MSRVTT"
     # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
@@ -111,7 +111,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 20
+    epochs = 18
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

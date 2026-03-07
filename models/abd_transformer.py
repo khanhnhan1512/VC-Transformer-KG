@@ -163,6 +163,7 @@ class FFN(nn.Module):
         self.transform = nn.Sequential(
             nn.Linear(d_model, d_ff),
             NewGELUActivation(),
+            nn.Dropout(dropout),
             nn.Linear(d_ff, d_model),
             nn.Dropout(dropout)
         )

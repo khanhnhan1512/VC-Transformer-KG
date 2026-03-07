@@ -353,13 +353,17 @@ class ABDTransformer(nn.Module):
         multiple_of = 128
         
         # --- Feature Embeddings ---
+        """
         self.r2l_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
         self.r2l_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
         self.r2l_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
+        """
+        self.r2l_sem_embed = FeatEmbedding(d_feat[-1], d_model, dropout)
+        self.r2l_sem_norm  = nn.LayerNorm(d_model)
         
-        self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
-        self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
+        self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat[:-1]])
+        self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat[:-1]), d_model=d_model)
+        self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat[:-1]])
         
         # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -379,6 +383,7 @@ class ABDTransformer(nn.Module):
     def encode(self, src, src_mask, r2l_encode=False):
         # ============== Right-to-Left Encoding ==============
         if r2l_encode:
+            """
             batch_size  = src[0].size(0)
             final_feats = []
             for i in range(len(src)):
@@ -394,12 +399,16 @@ class ABDTransformer(nn.Module):
             B, _, D  = final_feats[0].shape
             _stacked = torch.stack(final_feats, dim=2)
             return _stacked.reshape(B, -1, D)
+            """
+            x = self.r2l_sem_embed(src[-1])
+            x = self.pos_embed(x)
+            return self.r2l_sem_norm(x)
         
         # ============== Left-to-Right Encoding ==============
         else:
             batch_size  = src[0].size(0)
             final_feats = []
-            for i in range(len(src)):
+            for i in range(len(src)-1):
                 feat   = src[i]
                 seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
                 
@@ -414,11 +423,16 @@ class ABDTransformer(nn.Module):
             return _stacked.reshape(B, -1, D)
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
+        src_mask = src_mask[:,:,2::3]
         x = self.r2l_trg_embed(r2l_trg)
         x = self.pos_embed(x)
         return self.r2l_decoder(x, memory, src_mask, r2l_trg_mask)
 
     def l2r_decode(self, trg, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        bool_mask = torch.full(src_mask.shape, True)
+        bool_mask[:,:,2::3] = False
+        src_mask = torch.masked_select(src_mask, bool_mask)\
+                    .reshape(src_mask.size(0),1,-1)
         x = self.l2r_trg_embed(trg)
         x = self.pos_embed(x)
         return self.l2r_decoder(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)

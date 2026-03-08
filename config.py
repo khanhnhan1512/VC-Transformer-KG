@@ -111,7 +111,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 18
+    epochs = 16
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4

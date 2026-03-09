@@ -102,7 +102,7 @@ In our Transformer-based architecture for video captioning, rather than processi
 
 To ensure both representativeness and computational efficiency, we employ a uniform sampling method to extract (tối đa) $N$ GOPs from each video (Giá trị tối ưu của $N$ sẽ được lựa chọn trong quá trình thực nghiệm). The internal structure of each GOP is determined by the $\text{KeyInt}$ hyperparameter (the distance between I-frames) during the encoding process.
 
-Specifically, each GOP comprises $M$ frames, where: the first frame is always an I-frame and the remaining $\text{KeyInt} - 1$ frames are P/B-frames. By controlling the parameters $N$ and $\text{KeyInt}$, we can achieve an optimal balance between the granularity of the extracted features and the model's overall execution speed.
+Specifically, each GOP comprises $\text{KeyInt}$ frames, where: the first frame is always an I-frame and the remaining $\text{KeyInt} - 1$ frames are P/B-frames. By controlling the parameters $N$ and $\text{KeyInt}$, we can achieve an optimal balance between the granularity of the extracted features and the model's overall execution speed.
 
 ## 4.2. Multimodal Feature Extraction
 

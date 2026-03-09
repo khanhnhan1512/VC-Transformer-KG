@@ -50,7 +50,7 @@ class PositionalEncoding(nn.Module):
         pe[:, 0::2] = torch.sin(position.float() * div_term)
         pe[:, 1::2] = torch.cos(position.float() * div_term)
         self.register_buffer('pe', pe)
-        assert self.pe.ndim == 2
+        assert self.pe.ndim == 2 # torch.Size([max_len, dim])
         
         self.drop_out = nn.Dropout(p=dropout)
 
@@ -58,6 +58,19 @@ class PositionalEncoding(nn.Module):
         emb = emb + self.pe[:emb.size(1), :]
         emb = self.drop_out(emb)
         return emb
+
+
+class LearnedPositionalEmbedding(nn.Module):
+
+    def __init__(self, d_model: int, dropout: float, max_len: int=5000) -> None:
+        super(LearnedPositionalEmbedding, self).__init__()
+        self.position_embeddings = nn.Parameter(torch.randn(1, max_len, d_model))
+        self.drop_out = nn.Dropout(p=dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = x + self.position_embeddings[:, :x.size(1), :]
+        x = self.drop_out(x)
+        return x
 
 
 class SegmentEmbedding(nn.Module):
@@ -416,6 +429,8 @@ class ABDTransformer(nn.Module):
         
         # --- Positional Encoding ---
         self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=256)
+        self.r2l_pos_embed = LearnedPositionalEmbedding(d_model=d_model, dropout=dropout, max_len=32)
+        self.l2r_pos_embed = LearnedPositionalEmbedding(d_model=d_model, dropout=dropout, max_len=32)
         
         # --- Decoders ---
         self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
@@ -436,13 +451,13 @@ class ABDTransformer(nn.Module):
                 
                 feat = self.r2l_src_embed[i](feat)
                 feat = self.r2l_seg_embed(feat, seg_id)
-                feat = self.pos_embed(feat)
+                feat = self.r2l_pos_embed(feat)
 
                 if i == 1:
                     # def forward(self, mot_feat, vis_feat, mot_mask, vis_mask):
                     feat = self.r2l_act_encoder(feat, final_feats[0], src_mask[:,:,1::3], src_mask[:,:,0::3])
                     feat = self.r2l_seg_embed(feat, seg_id)
-                    feat = self.pos_embed(feat)
+                    feat = self.r2l_pos_embed(feat)
 
                 feat = self.r2l_feat_norm[i](feat)
                 final_feats.append(feat)
@@ -452,7 +467,7 @@ class ABDTransformer(nn.Module):
             return _stacked.reshape(B, -1, D)
             """
             x = self.r2l_sem_embed(src[-1])
-            x = self.pos_embed(x)
+            x = self.r2l_pos_embed(x)
             return self.r2l_sem_norm(x)
             """;
         
@@ -466,13 +481,13 @@ class ABDTransformer(nn.Module):
                 
                 feat = self.l2r_src_embed[i](feat)
                 feat = self.l2r_seg_embed(feat, seg_id)
-                feat = self.pos_embed(feat)
+                feat = self.l2r_pos_embed(feat)
 
                 if i == 1:
                     # def forward(self, mot_feat, vis_feat, mot_mask, vis_mask):
                     feat = self.l2r_act_encoder(feat, final_feats[0], src_mask[:,:,1::3], src_mask[:,:,0::3])
                     feat = self.l2r_seg_embed(feat, seg_id)
-                    feat = self.pos_embed(feat)
+                    feat = self.l2r_pos_embed(feat)
 
                 feat = self.l2r_feat_norm[i](feat)
                 final_feats.append(feat)

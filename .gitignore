@@ -172,3 +172,4 @@ cache/*
 
 # Exclude development files
 # Exclude some helper files
+test.ipynb

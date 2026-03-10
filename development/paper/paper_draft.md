@@ -115,11 +115,11 @@ Quá trình trích xuất đặc trưng được **thực hiện đồng nhất*
 
 <!-- Đặc trưng diện mạo và Ngữ nghĩa từ I-frame -->
 
-Trong mỗi GOP, I-frame đóng vai trò là anchor point chứa đựng lượng thông tin thị giác phong phú nhất. Thay vì phải trích xuất đặc trưng cho toàn bộ khung hình (có thể gây ra sự dư thừa về dữ liệu và không thực sự đóng góp quá nhiều vào hiệu suất tổng thể), chúng ta chỉ tập trung vào việc trích xuất đặc trưng từ I-frame. Chúng ta sẽ xây dựng một pipeline đơn giản, tận dụng sức mạnh của hai pre-trained models BLIP-2 và all-RoBERTa-large-v1, để thu thập hai loại đặc trưng: visual feature và semantic feature.
+Trong mỗi GOP, I-frame đóng vai trò là anchor point chứa đựng lượng thông tin thị giác phong phú nhất. Thay vì phải trích xuất đặc trưng cho toàn bộ khung hình (có thể gây ra sự dư thừa về dữ liệu và không thực sự đóng góp quá nhiều vào hiệu suất tổng thể), chúng ta chỉ tập trung vào việc trích xuất đặc trưng từ I-frame. Chúng ta sẽ xây dựng một pipeline đơn giản, tận dụng sức mạnh của hai pre-trained models BLIP-2 và SRoBERTa, để thu thập hai loại đặc trưng: visual feature và semantic feature.
 
 **Visual feature** được trích xuất từ $[\text{CLS}]$ token của Image Encoder trong BLIP-2. Mỗi $[\text{CLS}]$ token là một vector cung cấp thông tin thô về các đối tượng và bối cảnh không gian.
 
-Đồng thời, chúng ta cũng tận dụng khả năng sinh ngôn ngữ của BLIP-2 để tạo ra một câu mô tả ngắn (caption) cho I-frame. Để chuyển đổi thông tin văn bản (sentence or sequence of words) này thành một vector trong - Embedding space (mà mô hình có thể hiểu được), câu mô tả này được đưa qua mô hình all-RoBERTa-large-v1 để thu được một vector sentence embedding. Vector này cung cấp một lớp dẫn dắt ngữ nghĩa cấp cao, giúp mô hình nắm bắt được các khái niệm trừu tượng có trong khung hình và chúng ta gọi đây là **semantic feature**.
+Đồng thời, chúng ta cũng tận dụng khả năng sinh ngôn ngữ của BLIP-2 để tạo ra một câu mô tả ngắn (caption) cho I-frame. Để chuyển đổi thông tin văn bản (sentence or sequence of words) này thành một vector trong embedding space (mà mô hình có thể hiểu được), câu mô tả này được đưa qua mô hình SRoBERTa để thu được một vector sentence embedding. Vector này cung cấp một lớp dẫn dắt ngữ nghĩa cấp cao, giúp mô hình nắm bắt được các khái niệm trừu tượng có trong khung hình và chúng ta gọi đây là **semantic feature**.
 
 <!-- Đặc trưng chuyển động không gian - thời gian -->
 

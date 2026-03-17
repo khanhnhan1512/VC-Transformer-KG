@@ -71,14 +71,7 @@ Thiết kế của Peri-LN hợp nhất cả pre-normalization và output-normal
 
 Through in-depth analysis, Peri-LN đã được chứng minh có khả năng liên tục đạt được sự tăng trưởng phương sai cân bằng hơn (more balanced variance growth), luồng gradient ổn định hơn (steadier gradient flow), và cải thiện độ ổn định hội tụ (convergence stability) so với cả Post-LN và Pre-LN. Do đó, our proposed Transformer architecture will use Peri-LN strategy.
 
-# 4. Methods
-
-- structure of compressed video
-- multimodal features extraction: blip2 + mvitv2 + sentence-transfomer
-- Bidirectional Decoder Transformer: multimodal feature embedding + backward decoder + forward decoder
-- Optimization and Inference
-
-## 4.1. Cấu trúc của các digital video hiện đại
+## 3.3. GOP structure
 
 <!-- #### ba loại khung hình cơ bản của 1 video -->
 
@@ -103,6 +96,33 @@ In our Transformer-based architecture for video captioning, rather than processi
 To ensure both representativeness and computational efficiency, we employ a uniform sampling method to extract (tối đa) $N$ GOPs from each video (Giá trị tối ưu của $N$ sẽ được lựa chọn trong quá trình thực nghiệm). The internal structure of each GOP is determined by the $\text{KeyInt}$ hyperparameter (the distance between I-frames) during the encoding process.
 
 Specifically, each GOP comprises $\text{KeyInt}$ frames, where: the first frame is always an I-frame and the remaining $\text{KeyInt} - 1$ frames are P/B-frames. By controlling the parameters $N$ and $\text{KeyInt}$, we can achieve an optimal balance between the granularity of the extracted features and the model's overall execution speed.
+
+# 4. Methods: Bidirectional Decoder Transformer (BiDecT)
+
+- structure of compressed video
+- multimodal features extraction: blip2 + mvitv2 + sentence-transfomer
+- Bidirectional Decoder Transformer: multimodal feature embedding + backward decoder + forward decoder
+- Optimization and Inference
+
+## 4.1. Overview
+
+Kiến trúc Bidirectional Decoder Transformer (BiDecT) của chúng ta sẽ sử dụng hướng tiếp cận tập trung vào việc khai thác tối đa ngữ cảnh hai chiều trong quá trình sinh mô tả (caption) cho video. Điểm khác biệt cốt lõi của BiDecT so với các nghiên cứu trước đây là việc loại bỏ hoàn toàn khối Encoder trung gian, thay vào đó trực tiếp tích hợp các đặc trưng đa phương thức (multimodal feature) vào hệ thống Bidirectional Decoder.
+
+<!-- Triết lý thiết kế kiến trúc -->
+
+Khác với các mô hình Bidirectional transformer truyền thống vốn dựa trên cấu trúc Encoder-Decoder phức tạp, kiến trúc BiDecT được tinh gọn để chỉ bao gồm hai thành phần chính: Backward Decoder (giải mã ngược) và Forward Decoder (giải mã xuôi).
+
+Lý do cho việc loại bỏ hoàn toàn module Encoder là dựa trên giả thuyết rằng các đặc trưng đa phương thức được trích xuất từ các mô hình SOTA đã mang đủ hàm lượng thông tin biểu diễn (representation power). Do đó, việc đưa trực tiếp các đặc trưng này vào khối Decoder thông qua cơ chế Cross-Attention không chỉ giúp giảm bớt khối lượng tính toán mà còn hạn chế việc mất mát thông tin khi phải đi qua quá nhiều tầng (layer) biến đổi của Encoder.
+
+<!-- Module Multimodal Feature Embedding tách biệt -->
+
+Để đảm bảo tính độc lập và khả năng học đặc thù cho từng chiều giải mã, chúng ta xây dựng hai module Multimodal Feature Embedding riêng biệt. Mặc dù hai module này có cấu trúc tương tự nhau, việc cài đặt bộ trọng số riêng biệt là cực kỳ quan trọng. Điều này giúp luồng thông tin ngược (backward flow) không bị lẫn lộn với luồng thông tin xuôi (forward flow), cho phép mỗi Decoder tối ưu hóa việc học theo đặc thù của chiều dữ liệu tương ứng.
+
+<!-- Cơ chế học hai chiều (Bidirectional Learning Mechanism) -->
+
+Module **Backward Decoder (BD)** đảm nhận việc sinh ra câu mô tả theo chiều từ phải sang trái (Right-to-Left - R2L) $Y_{BD}$ cho video. Đặc biệt, trong quá trình này, Backward Decoder không chỉ học cách dự đoán từ tiếp theo (theo chiều ngược) mà còn nén toàn bộ thông tin ngữ nghĩa của video thành một context feature $\overleftarrow{H}$. Đặc trưng này đại diện cho cái nhìn "tổng quan từ phía sau", giúp định hình cấu trúc câu và ý tưởng cốt lõi trước khi quá trình giải mã chính diễn ra.
+
+Module **Forward Decoder** (FD) nhận đầu vào là: Các đặc trưng đa phương thức trích xuất từ video và context feature $\overleftarrow{H}$ thu được từ Backward Decoder để tạo ra caption cuối cùng theo chiều từ trái sang phải (Left-to-Right - L2R) $Y_{FD}$, đây chính là caption thực sự cho video. Sự kết hợp này tạo ra một cơ chế dẫn dắt kép: đặc trưng video cung cấp nội dung thị giác, trong khi $\overleftarrow{H}$ cung cấp định hướng ngữ nghĩa. Kết quả là Forward Decoder có thể sinh ra các câu mô tả có tính mạch lạc cao, bám sát diễn biến thời gian và mang cấu trúc ngôn ngữ tự nhiên hơn.
 
 ## 4.2. Multimodal Feature Extraction
 
@@ -129,29 +149,7 @@ Trong mỗi GOP, I-frame đóng vai trò là anchor point chứa đựng lượn
 
 Như vậy, đối với mỗi video, sau khi kết thúc quá trình trích xuất multimodal feature cho tất cả $N$ GOP, chúng ta sẽ thu được ba loại đặc trưng là: (1) visual feature $F_V = [v^{(1)},\dots, v^{(N)}]$ where $v^{(n)} \in \mathbb{R}^{d_V}$ and $F_V \in \mathbb{R}^{N \times d_V}$; (2) semantic feature $F_S = [s^{(1)},\dots, s^{(N)}]$ where $s^{(n)} \in \mathbb{R}^{d_S}$ and $F_S \in \mathbb{R}^{N \times d_S}$; và (3) motion feature $F_M = [m^{(1)},\dots, m^{(N)}]$ where $m^{(n)} \in \mathbb{R}^{d_M}$ and $F_M \in \mathbb{R}^{N \times d_M}$. Trong đó, $d_V$, $d_S$, và $d_M$ lần lượt là kích thước (dimension) của không gian đặc trưng, và giá trị cụ thể của chúng phụ thuộc vào kiến trúc của các mô hình pre-trained mà chúng ta sử dụng. Chúng ta sẽ đề cập đến các giá trị này trong phần thực nghiệm.
 
-## 4.3. Phương pháp đề xuất: Bidirectional Decoder Transformer (BiDecT)
-
-### 4.3.1. Overview
-
-Kiến trúc Bidirectional Decoder Transformer (BiDecT) của chúng ta sẽ sử dụng hướng tiếp cận tập trung vào việc khai thác tối đa ngữ cảnh hai chiều trong quá trình sinh mô tả (caption) cho video. Điểm khác biệt cốt lõi của BiDecT so với các nghiên cứu trước đây là việc loại bỏ hoàn toàn khối Encoder trung gian, thay vào đó trực tiếp tích hợp các đặc trưng đa phương thức (multimodal feature) vào hệ thống Bidirectional Decoder.
-
-<!-- Triết lý thiết kế kiến trúc -->
-
-Khác với các mô hình Bidirectional transformer truyền thống vốn dựa trên cấu trúc Encoder-Decoder phức tạp, kiến trúc BiDecT được tinh gọn để chỉ bao gồm hai thành phần chính: Backward Decoder (giải mã ngược) và Forward Decoder (giải mã xuôi).
-
-Lý do cho việc loại bỏ hoàn toàn module Encoder là dựa trên giả thuyết rằng các đặc trưng đa phương thức được trích xuất từ các mô hình SOTA đã mang đủ hàm lượng thông tin biểu diễn (representation power). Do đó, việc đưa trực tiếp các đặc trưng này vào khối Decoder thông qua cơ chế Cross-Attention không chỉ giúp giảm bớt khối lượng tính toán mà còn hạn chế việc mất mát thông tin khi phải đi qua quá nhiều tầng (layer) biến đổi của Encoder.
-
-<!-- Module Multimodal Feature Embedding tách biệt -->
-
-Để đảm bảo tính độc lập và khả năng học đặc thù cho từng chiều giải mã, chúng ta xây dựng hai module Multimodal Feature Embedding riêng biệt. Mặc dù hai module này có cấu trúc tương tự nhau, việc cài đặt bộ trọng số riêng biệt là cực kỳ quan trọng. Điều này giúp luồng thông tin ngược (backward flow) không bị lẫn lộn với luồng thông tin xuôi (forward flow), cho phép mỗi Decoder tối ưu hóa việc học theo đặc thù của chiều dữ liệu tương ứng.
-
-<!-- Cơ chế học hai chiều (Bidirectional Learning Mechanism) -->
-
-Module **Backward Decoder (BD)** đảm nhận việc sinh ra câu mô tả theo chiều từ phải sang trái (Right-to-Left - R2L) $Y_{BD}$ cho video. Đặc biệt, trong quá trình này, Backward Decoder không chỉ học cách dự đoán từ tiếp theo (theo chiều ngược) mà còn nén toàn bộ thông tin ngữ nghĩa của video thành một context feature $\overleftarrow{H}$. Đặc trưng này đại diện cho cái nhìn "tổng quan từ phía sau", giúp định hình cấu trúc câu và ý tưởng cốt lõi trước khi quá trình giải mã chính diễn ra.
-
-Module **Forward Decoder** (FD) nhận đầu vào là: Các đặc trưng đa phương thức trích xuất từ video và context feature $\overleftarrow{H}$ thu được từ Backward Decoder để tạo ra caption cuối cùng theo chiều từ trái sang phải (Left-to-Right - L2R) $Y_{FD}$, đây chính là caption thực sự cho video. Sự kết hợp này tạo ra một cơ chế dẫn dắt kép: đặc trưng video cung cấp nội dung thị giác, trong khi $\overleftarrow{H}$ cung cấp định hướng ngữ nghĩa. Kết quả là Forward Decoder có thể sinh ra các câu mô tả có tính mạch lạc cao, bám sát diễn biến thời gian và mang cấu trúc ngôn ngữ tự nhiên hơn.
-
-### 4.3.2. Multimodal features Embedding
+## 4.3. Multimodal features Embedding
 
 Module này đóng vai trò là **interface layer** giữa quá trình trích xuất đặc trưng thô và khối Transformer Decoder. Nhiệm vụ chính của module là ánh xạ các đặc trưng từ các không gian vector khác nhau về một không gian biểu diễn chung (Common Representation Space) có số chiều (dimension) là $d_{model}$, đồng thời tích hợp các thông tin về ngữ cảnh thời gian và loại dữ liệu.
 
@@ -216,7 +214,7 @@ $$
 
 Cấu trúc này đảm bảo rằng với mỗi GOP, Decoder sẽ nhận được đầy đủ các thông tin từ diện mạo, ngữ nghĩa đến chuyển động. Quy trình này được cài đặt độc lập cho cả Backward Decoder ($\overleftarrow{E}$) và Forward Decoder ($\overrightarrow{E}$) với các bộ trọng số riêng biệt, giúp tối ưu hóa việc học theo từng chiều giải mã cụ thể.
 
-### 4.3.3. Backward decoder (BD)
+## 4.4. Backward decoder (BD)
 
 The Backward Decoder (BD) follows the standard Transformer decoder architecture but taking the reference caption presented in reverse order as a part of input to capture the right-to-left context.
 
@@ -244,7 +242,7 @@ $$
 
 When the predicted word is the end marker $\langle \text{S} \rangle$, the generation of the reverse caption terminates. More importantly, the backward decoder produces the final hidden state $\overleftarrow{H}$, which encodes semantic context in a right-to-left manner. This hidden representation is subsequently utilized by the forward decoder.
 
-### 4.3.4. Forward decoder (FD)
+## 4.5. Forward decoder (FD)
 
 The forward decoder in our model is adapted from the conventional Transformer decoder, operating in a left-to-right manner. Its decoding process is guided by both the multimodal feature representation $\overrightarrow{E}$ and the right-to-left semantic context $\overleftarrow{H}$. Compared to the backward decoder, the forward decoder incorporates an additional cross-attention module that attends to the hidden states generated by the backward decoder. This design allows the forward decoder to leverage the semantic context of the ground-truth caption every time it predicts the next word.
 
@@ -274,7 +272,7 @@ $$
 
 When the predicted word is the end marker $\langle \text{S} \rangle$, the generation of the caption terminates. The forward decoder produces the final caption, which is expected to be more accurate and fluent than the one generated by the backward decoder alone, as it benefits from both the multimodal feature representation and the robust semantic context provided by the backward decoder.
 
-## 4.4. Optimization and Inference
+## 4.6. Optimization and Inference
 
 We train the BiDecT model using the cross-entropy losses on both decoders. The training process is designed to optimize the parameters of both decoders simultaneously, allowing them to generate high-quality captions in both directions.
 

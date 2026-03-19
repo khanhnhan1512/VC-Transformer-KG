@@ -1,0 +1,28 @@
+# Checklist
+
+- [ ] Abstract
+- [ ] 1. Introduction
+    - [ ] Paper outline (đặt cuối introduction)
+- [ ] 2. Related Work
+- [ ] 3. Background
+    - [ ] *.1. Basic modules in transformer architecture (attention + ffn)
+    - [ ] *.2. Peri-LN strategy
+    - [ ] *.3. Group-of-Picture (GOP) structure
+- [ ] 4. Method
+    - [ ] *.1. Overview (encoder-free bidirectional transformer; multimodal feature extraction -> multimodal feature embedding -> backward decoder -> forward decoder -> optimization)
+    - [ ] *.2. Multimodal Feature Extraction
+    - [ ] *.3. Multimodal Feature Embedding
+    - [ ] *.4. Backward Decoder
+    - [ ] *.5. Forward Decoder
+    - [ ] *.6. Optimization (nhấn mạnh vào pseudo reverse caption, kẻ 1 bảng để cho ví dụ minh họa **reverse word order in each pair** -> **randomize reverse captions to create new pairs**)
+- [ ] 5. Experiments
+    - [ ] *.1. Datasets
+    - [ ] *.2. Evaluation metrics (trình bày công thức của mỗi metric)
+    - [ ] *.3. Implementation Details (kẻ bảng để thể hiện giá trị của mỗi biến; trình bày từ preprocessing -> feature extraction -> model config -> training config -> hardware)
+    - [ ] *.4. Performance Comparison with SOTA Methods
+    - [ ] *.5. Ablation Study
+    - [ ] *.6. Hyperparameter Analysis (trình bày các bảng biểu trình bày lý do vì sao chúng ta chọn các siêu tham số như thế này)
+    - [ ] *.7. Qualitative Results (trình bày những case mình mạnh và cả những case mình yếu để làm future work)
+- [ ] 6. Conclusion
+    - [ ] Hướng phát triển trong tương lai phải dựa trên những kết quả không tốt từ phần **Qualitative Results**
+- [ ] References

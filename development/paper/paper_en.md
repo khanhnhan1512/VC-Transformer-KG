@@ -29,7 +29,7 @@ The standard Transformer architecture was originally designed with an encoder bl
 
 $$
 \begin{align}
-\text{Attention}(Q, K, V) &= \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V, 
+\text{Attention}(Q, K, V) = \text{Softmax}\left(\frac{Q K^T}{\sqrt{d_k}}\right) V, 
 \end{align}
 $$
 
@@ -39,13 +39,13 @@ where $\sqrt{d_k}$ is a scaling factor based on the dimension of the keys. As $d
 
 $$ 
 \begin{align}
-\text{MultiHead}(Q, K, V) &= \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O, 
+\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \dots, \text{head}_h) W^O, 
 \end{align}
 $$
 
 $$ 
 \begin{align}
-\text{where } \text{head}_i &= \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V),
+\text{where } \text{head}_i = \text{Attention}(Q W_i^Q, K W_i^K, V W_i^V),
 \end{align}
 $$
 
@@ -61,7 +61,7 @@ The second crucial component in each Transformer layer is the position-wise feed
 
 $$
 \begin{align}
-\text{FFN}(X) &= \text{GELU}(X W_1 + b_1) W_2 + b_2,
+\text{FFN}(X) = \text{GELU}(X W_1 + b_1) W_2 + b_2,
 \end{align}
 $$
 
@@ -69,7 +69,7 @@ where $W_1$, $W_2$, $b_1$, and $b_2$ are learnable parameters. GELU is defined a
 
 $$
 \begin{align}
-\text{GELU}(x) &= x\Phi(x),
+\text{GELU}(x) = x\Phi(x),
 \end{align}
 $$
 

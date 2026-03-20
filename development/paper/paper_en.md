@@ -10,10 +10,10 @@ In modern video compression standards, such as H.264 and H.265, leveraging tempo
 
 **Group of Pictures (GOP) Structure.** The I-frames, P-frames, and B-frames are not arranged randomly; rather, they follow a periodic, repeating pattern known as the Group of Pictures (GOP) structure. As illustrated in Figure [$\sout{???}$](), each GOP strictly begins with an I-frame and encompasses all subsequent P-frames and B-frames until the next I-frame appears. 
 
-<div style="align: left; text-align:center;">
-    <img src="figures/GOP-Structure.svg" />
-    <div class="caption">Figure 1. The Group of Pictures (GOP) structure in compressed video. In each GOP, the first frame is always an I-frame, which is then followed by several P/B-frames until the next I-frame appears.</div>
-</div>
+<figure style="align: left; text-align:center;">
+    <img src="figures/GOP-Structure.svg" >
+    <figcaption>Figure 1. The Group of Pictures (GOP) structure in compressed video. In each GOP, the first frame is always an I-frame, which is then followed by several P/B-frames until the next I-frame appears.</figcaption>
+</figure>
 
 Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural autonomy, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic "unit of information".
 

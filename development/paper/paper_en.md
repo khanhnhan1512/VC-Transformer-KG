@@ -21,7 +21,7 @@ Typically, a GOP serves as an independently decodable unit within the video bits
 
 ## 3.2. Transformer Building Blocks
 
-The standard Transformer architecture was originally designed with an encoder block and a decoder block, each composed of a stack of identical layers. However, in many modern variants, this architecture can be flexibly adapted (e.g., employing a decoder-only structure) to suit specific tasks. The core components within these layers are the attention mechanism and the position-wise feed-forward network (FFN), along with residual connections and layer normalization.
+The standard Transformer architecture was originally designed with an encoder block and a decoder block, each composed of a stack of identical layers. However, in many modern variants, this architecture can be flexibly adapted (e.g., using a decoder-only structure) to suit specific tasks. The core components within these layers are the attention mechanism and the position-wise feed-forward network (FFN), along with residual connections and layer normalization.
 
 ### 3.2.1. Attention Mechanism
 
@@ -33,9 +33,9 @@ $$
 \end{align}
 $$
 
-where $\sqrt{d_k}$ is a scaling factor based on the dimension of the keys. As $d_k$ increases, the variance of the dot products between $Q$ and $K$ tends to grow, resulting in excessively large values. These large values push the $\text{Softmax}$ function into saturated regions with extremely small gradients. By scaling down the raw attention scores by $\sqrt{d_k}$, we effectively normalize the inputs to a reasonable range, thereby preventing softmax saturation and ensuring stable gradients during the training process.
+where $\sqrt{d_k}$ is a scaling factor based on the dimension of the keys. As $d_k$ increases, the variance of the dot products between $Q$ and $K$ tends to grow, resulting in extremely large values. These large values push the $\text{Softmax}$ function into saturated regions with extremely small gradients. By scaling down the raw attention scores by $\sqrt{d_k}$, we effectively normalize the inputs to a reasonable range, which prevents softmax saturation and ensures stable gradients during the training process.
 
-**Multi-Head Attention.** Instead of performing a single attention function, Transformer models typically employ Multi-Head Attention (MHA). This mechanism allows the model to jointly attend to information from different representation subspaces. The MHA is computed as follows:
+**Multi-Head Attention.** Instead of performing a single attention function, Transformer models typically use Multi-Head Attention (MHA). This mechanism allows the model to jointly attend to information from different representation subspaces. The MHA is computed as follows:
 
 $$ 
 \begin{align}
@@ -49,15 +49,15 @@ $$
 \end{align}
 $$
 
-where $W_i^Q$, $W_i^K$, $W_i^V$ are learned projection matrices for each head $i$, $W^O$ is the learned output projection matrix to aggregate the gathered information, and $h$ is the number of heads. Multiple heads enable the model to capture different types of relationships in parallel.
+where $W_i^Q$, $W_i^K$, $W_i^V$ are learned projection matrices for each head $i$, $W^O$ is the learned output projection matrix to combine the gathered information, and $h$ is the number of heads. Multiple heads enable the model to capture different types of relationships in parallel.
 
 **Self-Attention and Cross-Attention.** Based on the origin of $Q$, $K$, $V$, attention modules in the Transformer can be categorized into two primary types: self‑attention and cross‑attention.
 *   **Self-Attention:** In a self‑attention mechanism, $Q$, $K$, $V$ are all derived from the same input sequence (e.g., the hidden states of previously generated tokens). Self‑attention enables the model to effectively capture internal dependencies among elements within the same sequence.
-*   **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention intrinsically acts as a routing mechanism that helps the attention module gather necessary semantic context from various information sources.
+*   **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention naturally acts as a routing mechanism that helps the attention module gather necessary semantic context from various information sources.
 
 ### 3.2.2. Feed-Forward Network
 
-The second crucial component in each Transformer layer is the position-wise feed-forward network (FFN). This network typically consists of two linear transformations separated by a non-linear activation function. In traditional Transformer architectures, the most commonly used activation function is ReLU. However, in this study, we replace ReLU with the Gaussian Error Linear Unit (GELU) [$\sout{CITE}$-GAUSSIAN ERROR LINEAR UNITS]() activation, following the successful practices of well-known models like Google BERT [$\sout{CITE}$-BERT]() and OpenAI GPT. The computation of the FFN with a GELU activation is as follows:
+The second key component in each Transformer layer is the position-wise feed-forward network (FFN). This network typically consists of two linear transformations separated by a non-linear activation function. In traditional Transformer architectures, the most commonly used activation function is ReLU. However, in this study, we replace ReLU with the Gaussian Error Linear Unit (GELU) [$\sout{CITE}$-GAUSSIAN ERROR LINEAR UNITS]() activation, following the successful practices of well-known models like Google BERT [$\sout{CITE}$-BERT]() and OpenAI GPT. The computation of the FFN with a GELU activation is as follows:
 
 $$
 \begin{align}

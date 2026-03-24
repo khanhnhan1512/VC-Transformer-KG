@@ -10,10 +10,12 @@ In modern video compression standards, such as H.264 and H.265, reducing tempora
 
 **Group of Pictures (GOP) Structure.** The I-frames, P-frames, and B-frames are not arranged randomly; rather, they follow a periodic, repeating pattern known as the Group of Pictures (GOP) structure. As illustrated in Figure [$\sout{???}$](), each GOP strictly begins with an I-frame and includes all subsequent P-frames and B-frames until the next I-frame appears. 
 
+<br>
 <figure style="align: left; text-align:center;">
     <img src="figures/New-GOP-Structure.svg" >
     <figcaption>Figure 1. The Group of Pictures (GOP) structure in compressed video. In each GOP, the first frame is always an I-frame, which is then followed by several P/B-frames until the next I-frame appears. The arrows indicate the reference dependencies for motion compensation.</figcaption>
 </figure>
+<br>
 
 Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic "unit of information".
 
@@ -97,7 +99,7 @@ Although Post-LN effectively limits the variance of the hidden states, it often 
 
 $$y_l = x_l + \text{Module}\big(\text{Norm}(x_l)\big). $$
 
-Although Pre-LN significantly improves gradient propagation during early training, it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across layers, causing "massive activations" that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
+Although Pre-LN significantly improves gradient propagation during early training [$\sout{CITE}$-On layer normalization in the transformer architecture](), it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across layers, causing "massive activations" that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
 
 **Peri-LN: An Enhanced Normalization Strategy.** To overcome the main weaknesses of both Post-LN and Pre-LN, recent studies have begun to adopt a third strategy termed **Peri-LN** [$\sout{CITE}$-Peri-LN: Revisiting Normalization Layer in the Transformer Architecture](). Essentially, Peri-LN can be viewed as an improved version of Pre-LN, where an additional normalization layer (Output-LN) is placed immediately after the module's output. The mathematical formulation is defined as:
 
@@ -105,11 +107,17 @@ $$y_l = x_l + \text{Norm}\Big(\text{Module}\big(\text{Norm}(x_l)\big)\Big). $$
 
 For clarity, the placements of the normalization layers in the Post-LN, Pre-LN, and Peri-LN architectures are visually compared in Figure [$\sout{???}$](). By normalizing both the inputs and the outputs of the Attention and FFN modules, Peri-LN acts as a robust self-regularizing mechanism. It regulates the variance from both ends of the module, effectively introducing a damping factor that prevents sudden spikes in gradients even when the module produces extremely large activation values. 
 
+<br>
 <figure style="align: left; text-align:center;">
     <img src="figures/New-LN-Strategies.svg" >
     <figcaption>Figure 2. The placements of normalization layers in a Transformer sub-layer. From left to right: the Post-LN, Pre-LN, and Peri-LN strategies.</figcaption>
 </figure>
+<br>
 
-By achieving a more balanced variance growth and a more stable gradient flow, Peri-LN continuously guarantees high convergence stability. Driven by these clear benefits, we directly apply the Peri-LN strategy across all Transformer building blocks in our proposed video captioning model. 
+By achieving a more balanced variance growth and a more stable gradient flow, Peri-LN continuously guarantees high convergence stability. Driven by these clear benefits, we directly apply the Peri-LN strategy across all Transformer building blocks in our proposed video captioning model.
 
-**Implementation Note.** Because the Peri-LN strategy and residual connections are applied consistently to every Attention and FFN module, we omit them from both the mathematical formulas and the overall architecture diagram in the subsequent methodology sections. This simplification helps avoid unnecessary repetition and keeps the model description clear and easy to follow.
+**Implementation Note.** Because the Peri-LN strategy and residual connections are applied consistently to every Attention and FFN module, we omit them from both the mathematical formulas and the overall architecture diagram in the subsequent method sections. This simplification helps avoid unnecessary repetition and keeps the model description clear and easy to follow.
+
+# 4. Method
+
+## 4.1. Overview

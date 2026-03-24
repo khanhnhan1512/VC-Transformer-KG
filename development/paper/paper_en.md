@@ -15,7 +15,7 @@ In modern video compression standards, such as H.264 and H.265, reducing tempora
     <img src="figures/New-GOP-Structure.svg" >
     <figcaption>Figure 1. The Group of Pictures (GOP) structure in compressed video. In each GOP, the first frame is always an I-frame, which is then followed by several P/B-frames until the next I-frame appears. The arrows indicate the reference dependencies for motion compensation.</figcaption>
 </figure>
-<br>
+<br><br>
 
 Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic "unit of information".
 
@@ -112,7 +112,7 @@ For clarity, the placements of the normalization layers in the Post-LN, Pre-LN, 
     <img src="figures/New-LN-Strategies.svg" >
     <figcaption>Figure 2. The placements of normalization layers in a Transformer sub-layer. From left to right: the Post-LN, Pre-LN, and Peri-LN strategies.</figcaption>
 </figure>
-<br>
+<br><br>
 
 By achieving a more balanced variance growth and a more stable gradient flow, Peri-LN continuously guarantees high convergence stability. Driven by these clear benefits, we directly apply the Peri-LN strategy across all Transformer building blocks in our proposed video captioning model.
 

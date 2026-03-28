@@ -130,4 +130,12 @@ As shown in Figure [$\sout{???}$](), instead of processing individual video fram
 <br>Figure 3. An overview of the proposed BiDecT architecture for video captioning. To reduce the computational cost, we treat the input video as a sequence of GOPs and extract multimodal features (appearance, semantic, and motion) from each GOP. These features are then combined into a unified representation through the Multimodal Feature Embedding module. Next, the Backward Decoder (BD) generates a backward context $\overleftarrow{H}$ by predicting the caption from right to left. Finally, the Forward Decoder (FD) uses both the unified multimodal features and the backward context $\overleftarrow{H}$ to generate the final caption from left to right.
 <br><br>
 
-## 4.2. Section
+## 4.2. Multimodal Feature Extraction
+
+## 4.3. Multimodal Feature Embedding
+
+## 4.4. Backward Decoder (BD)
+
+## 4.5. Forward Decoder (FD)
+
+## 4.6. Optimization

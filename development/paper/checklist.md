@@ -5,11 +5,13 @@
     - [ ] Paper outline (đặt cuối introduction)
 - [ ] 2. Related Work
 - [ ] 3. Background
+    - [ ] Outline
     - [x] *.1. Group-of-Picture (GOP) structure (ở hình minh họa, frame cuối cùng trong Closed GOP là P-frame) => **#TODO: Vẽ lại hình minh họa**
     - [x] *.2. Basic modules in transformer architecture (attention + ffn)
     - [x] *.3. Peri-LN strategy => **#TODO: Vẽ lại hình minh họa**
 - [ ] 4. Method
-    - [ ] *.1. Overview (encoder-free bidirectional transformer; multimodal feature extraction -> multimodal feature embedding -> backward decoder -> forward decoder -> optimization) => **#TODO: Vẽ lại hình minh họa**
+    - [ ] Outline (encoder-free bidirectional transformer overview; multimodal feature extraction -> multimodal feature embedding -> backward decoder -> forward decoder -> optimization)
+    - [x] *.1. Overview => **#TODO: Vẽ lại hình minh họa**
     - [ ] *.2. Multimodal Feature Extraction
     - [ ] *.3. Multimodal Feature Embedding
     - [ ] *.4. Backward Decoder

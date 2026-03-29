@@ -17,7 +17,7 @@ In modern video compression standards, such as H.264 and H.265, reducing tempora
 </figure>
 <br><br>
 
-Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic "unit of information".
+Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic “unit of information”.
 
 **Discussion.** In traditional video captioning frameworks, models often process densely sampled individual frames. However, this dense sampling strategy is highly computationally expensive and often introduces massive redundant visual information, which can easily overwhelm the video captioning network. By shifting the perspective and utilizing the GOP structure as the fundamental input unit, we can effectively eliminate temporal redundancy while preserving the most critical spatio-temporal dynamics required to generate accurate captions.
 
@@ -87,7 +87,7 @@ $$
 
 During the training of deep Transformer models, the choice of Layer Normalization (LN) placement plays a critical role in controlling gradient stability and convergence speed. Historically, two main strategies, Post-LN and Pre-LN, have been widely adopted despite their limitations in large-scale training.
 
-**Post-LN.** In this strategy, normalization is applied after adding the module's output to the residual stream [$\sout{CITE}$-Attention is all you need]().
+**Post-LN.** In this strategy, normalization is applied after adding the module’s output to the residual stream [$\sout{CITE}$-Attention is all you need]().
 
 $$y_l = \text{Norm} \big(x_l + \text{Module}(x_l)\big), $$
 
@@ -99,9 +99,9 @@ Although Post-LN effectively limits the variance of the hidden states, it often 
 
 $$y_l = x_l + \text{Module}\big(\text{Norm}(x_l)\big). $$
 
-Although Pre-LN significantly improves gradient propagation during early training [$\sout{CITE}$-On layer normalization in the transformer architecture](), it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across layers, causing "massive activations" that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
+Although Pre-LN significantly improves gradient propagation during early training [$\sout{CITE}$-On layer normalization in the transformer architecture](), it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across layers, causing “massive activations” that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
 
-**Peri-LN: An Enhanced Normalization Strategy.** To overcome the main weaknesses of both Post-LN and Pre-LN, recent studies have begun to adopt a third strategy termed **Peri-LN** [$\sout{CITE}$-Peri-LN: Revisiting Normalization Layer in the Transformer Architecture](). Essentially, Peri-LN can be viewed as an improved version of Pre-LN, where an additional normalization layer (Output-LN) is placed immediately after the module's output. The mathematical formulation is defined as:
+**Peri-LN: An Enhanced Normalization Strategy.** To overcome the main weaknesses of both Post-LN and Pre-LN, recent studies have begun to adopt a third strategy termed **Peri-LN** [$\sout{CITE}$-Peri-LN: Revisiting Normalization Layer in the Transformer Architecture](). Essentially, Peri-LN can be viewed as an improved version of Pre-LN, where an additional normalization layer (Output-LN) is placed immediately after the module’s output. The mathematical formulation is defined as:
 
 $$y_l = x_l + \text{Norm}\Big(\text{Module}\big(\text{Norm}(x_l)\big)\Big). $$
 
@@ -142,11 +142,11 @@ $$\text{GOP}^{(g)} = \left[\text{I}^{(g)}, \text{P/B}^{(g, 1)}, \dots, \text{P/B
 
 Here, $\text{KeyInt}$ (Keyframe Interval) is a hyperparameter defining the maximum distance between two consecutive I-frames during the video compression process. Therefore, a single GOP contains at most $\text{KeyInt}-1$ consecutive P/B-frames.
 
-**Feature Extraction Process.** After segmenting the video into GOPs, the next critical step is extracting robust feature representations from each GOP. Historically, using appearance and motion features has been the standard and widespread practice for building multimodal video representations. While effective, relying only on these visual signals often leaves a "semantic gap" between low-level visual content and high-level natural language descriptions. To bridge this gap and enhance semantic understanding, we introduce a third modality: the semantic feature.
+**Feature Extraction Process.** After segmenting the video into GOPs, the next critical step is extracting robust feature representations from each GOP. Historically, using appearance and motion features has been the standard and widespread practice for building multimodal video representations. While effective, relying only on these visual signals often leaves a “semantic gap” between low-level visual content and high-level natural language descriptions. To bridge this gap and enhance semantic understanding, we introduce a third modality: the semantic feature.
 
 To ensure data consistency, we apply the feature extraction process uniformly across every GOP. For a given $\text{GOP}^{(g)}$, we extract three different types of information.
 
-**Appearance and Semantic Features (from I-frame).** Because the I-frame contains the most representative static visual information within each GOP, it is the ideal candidate to capture not only the physical appearance but also the high-level semantic meaning of the entire GOP. Therefore, we use the I-frame as the single source to extract both features through a collaborative pipeline using pre-trained BLIP-2 [$\sout{CITE}$]() and SRoBERTa [$\sout{CITE}$](). First, we feed the I-frame into the Image Encoder of BLIP-2 and extract the $\text{[CLS]}$ token to serve as our appearance feature vector $a^{(g)}$. Next, the encoder's outputs are reused in the full BLIP-2 pipeline, passing through its two remaining components — the Querying Transformer and the Large Language Model — to generate a descriptive text caption for that exact I-frame. Finally, this generated caption is processed by SRoBERTa to produce a dense vector, which acts as our semantic feature vector $s^{(g)}$.
+**Appearance and Semantic Features (from I-frame).** Because the I-frame contains the most representative static visual information within each GOP, it is the ideal candidate to capture not only the physical appearance but also the high-level semantic meaning of the entire GOP. Therefore, we use the I-frame as the single source to extract both features through a collaborative pipeline using pre-trained BLIP-2 [$\sout{CITE}$]() and SRoBERTa [$\sout{CITE}$](). First, we feed the I-frame into the Image Encoder of BLIP-2 and extract the $\text{[CLS]}$ token to serve as our appearance feature vector $a^{(g)}$. Next, the encoder’s outputs are reused in the full BLIP-2 pipeline, passing through its two remaining components — the Querying Transformer and the Large Language Model — to generate a descriptive text caption for that exact I-frame. Finally, this generated caption is processed by SRoBERTa to produce a dense vector, which acts as our semantic feature vector $s^{(g)}$.
 
 **Motion Feature (from GOP sequence).** Although the I-frame provides strong static context, it lacks the temporal dynamics necessary to capture motion and short-term temporal transitions within each GOP. To address this limitation, we use a pre-trained MViTv2 [$\sout{CITE}$]() to process the sequence of frames within the $\text{GOP}^{(g)}$. This model captures these dynamics and outputs a motion feature vector $m^{(g)}$.
 

@@ -142,7 +142,7 @@ $$\text{GOP}^{(g)} = \left[\text{I}^{(g)}, \text{P/B}^{(g, 1)}, \dots, \text{P/B
 
 Here, $\text{KeyInt}$ (Keyframe Interval) is a hyperparameter defining the maximum distance between two consecutive I-frames during the video compression process. Therefore, a single GOP contains at most $\text{KeyInt}-1$ consecutive P/B-frames.
 
-**Feature Extraction Process.** After segmenting the video into GOPs, the next critical step is extracting robust feature representations from each GOP. Historically, using 2D appearance and 3D motion features has been the standard and widespread practice for building multimodal video representations. While effective, relying only on these visual signals often leaves a "semantic gap" between low-level visual content and high-level natural language descriptions. To bridge this gap and enhance semantic understanding, we introduce a third modality: the semantic feature.
+**Feature Extraction Process.** After segmenting the video into GOPs, the next critical step is extracting robust feature representations from each GOP. Historically, using appearance and motion features has been the standard and widespread practice for building multimodal video representations. While effective, relying only on these visual signals often leaves a "semantic gap" between low-level visual content and high-level natural language descriptions. To bridge this gap and enhance semantic understanding, we introduce a third modality: the semantic feature.
 
 To ensure data consistency, we apply the feature extraction process uniformly across every GOP. For a given $\text{GOP}^{(g)}$, we extract three different types of information.
 

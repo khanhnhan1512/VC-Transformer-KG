@@ -23,11 +23,11 @@ Typically, a GOP serves as an independently decodable unit within the video bits
 
 ## 3.2. Transformer Building Blocks
 
-The standard Transformer architecture was originally designed with an encoder block and a decoder block, each composed of a stack of identical layers. However, in many modern variants, this architecture can be flexibly adapted (e.g., using a decoder-only structure) to suit specific tasks. The core components within these layers are the attention mechanism and the position-wise feed-forward network (FFN), along with residual connections and layer normalization.
+The standard Transformer architecture was originally designed with an encoder and a decoder, each composed of a stack of identical layers. Each layer typically contains multiple functional sub-layers, each built around either the attention mechanism or the position-wise feed-forward network (FFN), paired with a residual connection and layer normalization.
 
 ### 3.2.1. Attention Mechanism
 
-**Scaled Dot-Product Attention.** At the core of the Transformer is the Scaled Dot-Product Attention mechanism, which computes attention scores by mapping a set of Query $(Q)$, Key $(K)$, and Value $(V)$ representations. The general mathematical formulation is expressed as follows:
+**Scaled Dot-Product Attention.** At the core of the Transformer is the scaled dot-product attention mechanism, which computes attention scores by mapping a set of query $(Q)$, key $(K)$, and value $(V)$ representations. The general mathematical formulation is expressed as follows:
 
 $$
 \begin{align}
@@ -35,9 +35,9 @@ $$
 \end{align}
 $$
 
-where $\sqrt{d_k}$ is a scaling factor based on the dimension of the keys. As $d_k$ increases, the variance of the dot products between $Q$ and $K$ tends to grow, resulting in extremely large values. These large values push the $\text{Softmax}$ function into saturated regions with extremely small gradients. By scaling down the raw attention scores by $\sqrt{d_k}$, we effectively normalize the inputs to a reasonable range, which prevents softmax saturation and ensures stable gradients during the training process.
+where $\sqrt{d_k}$ is a scaling factor based on the dimension of the keys. As $d_k$ increases, the variance of the dot products between $Q$ and $K$ tends to grow, resulting in extremely large values. These large values push the softmax function into saturated regions with extremely small gradients. By scaling down the raw attention scores by $\sqrt{d_k}$, we effectively normalize the inputs to a reasonable range, which prevents “softmax saturation” and ensures stable gradients during the training process.
 
-**Multi-Head Attention.** Instead of performing a single attention function, Transformer models typically use Multi-Head Attention (MHA). This mechanism allows the model to jointly attend to information from different representation subspaces. The MHA is computed as follows:
+**Multi-Head Attention.** Instead of performing a single attention function, Transformer models typically use multi-head attention (MHA). This mechanism allows the model to jointly attend to information from different representation subspaces. The MHA is computed as follows:
 
 $$ 
 \begin{align}
@@ -51,15 +51,15 @@ $$
 \end{align}
 $$
 
-where $W_i^Q$, $W_i^K$, $W_i^V$ are learned projection matrices for each head $i$, $W^O$ is the learned output projection matrix to combine the gathered information, and $h$ is the number of heads. Multiple heads enable the model to capture different types of relationships in parallel.
+where $W_i^Q$, $W_i^K$, and $W_i^V$ are learned projection matrices for each head $i$, $W^O$ is the learned output projection matrix to combine the gathered information, and $h$ is the number of heads. Multiple heads enable the model to capture different types of relationships in parallel.
 
-**Self-Attention and Cross-Attention.** Based on the origin of $Q$, $K$, $V$, attention modules in the Transformer can be categorized into two primary types: self‑attention and cross‑attention.
-*   **Self-Attention:** In a self‑attention mechanism, $Q$, $K$, $V$ are all derived from the same input sequence (e.g., the hidden states of previously generated tokens). Self‑attention enables the model to effectively capture internal dependencies among elements within the same sequence.
-*   **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention naturally acts as a routing mechanism that helps the attention module gather necessary semantic context from various information sources.
+**Self-Attention and Cross-Attention.** Based on the origin of $Q$, $K$, and $V$, attention modules in the Transformer can be categorized into two primary types: self‑attention and cross‑attention.
+- **Self-Attention:** In a self‑attention mechanism, $Q$, $K$, and $V$ are all derived from the same input sequence (e.g., the hidden states of previously generated tokens). Self‑attention enables the model to effectively capture internal dependencies among elements within the same sequence.
+- **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, and $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention naturally acts as a routing mechanism that helps the attention module gather necessary semantic context from various information sources.
 
-### 3.2.2. Feed-Forward Network
+### 3.2.2. Position-Wise Feed-Forward Network (FFN)
 
-The second key component in each Transformer layer is the position-wise feed-forward network (FFN). This network typically consists of two linear transformations separated by a non-linear activation function. In traditional Transformer architectures, the most commonly used activation function is ReLU. However, in this study, we replace ReLU with the Gaussian Error Linear Unit (GELU) [$\sout{CITE}$-GAUSSIAN ERROR LINEAR UNITS]() activation, following the successful practices of well-known models like Google BERT [$\sout{CITE}$-BERT]() and OpenAI GPT. The computation of the FFN with a GELU activation is as follows:
+The position-wise feed-forward network (FFN) typically consists of two linear transformations separated by a non-linear activation function. In traditional Transformer architectures, the most commonly used activation function is ReLU. However, in this study, we replace ReLU with the Gaussian Error Linear Unit (GELU) [$\sout{CITE}$-GAUSSIAN ERROR LINEAR UNITS]() activation, following the successful practices of well-known models like Google BERT [$\sout{CITE}$-BERT]() and OpenAI GPT. The computation of the FFN with a GELU activation is as follows:
 
 $$
 \begin{align}
@@ -75,7 +75,7 @@ $$
 \end{align}
 $$
 
-where $\Phi(x)$ denotes the Cumulative Distribution Function (CDF) of the standard Gaussian distribution. A commonly used practical approximation is
+where $\Phi(x)$ denotes the cumulative distribution function (CDF) of the standard Gaussian distribution. A commonly used practical approximation is
 
 $$
 \begin{align}
@@ -85,9 +85,9 @@ $$
 
 ### 3.2.3. Layer Normalization Strategies
 
-During the training of deep Transformer models, the choice of Layer Normalization (LN) placement plays a critical role in controlling gradient stability and convergence speed. Historically, two main strategies, Post-LN and Pre-LN, have been widely adopted despite their limitations in large-scale training.
+During the training of deep Transformer models, the choice of layer normalization (LN) placement plays a critical role in controlling gradient stability and convergence speed. Historically, two main strategies, Post-LN and Pre-LN, have been widely adopted despite their limitations in large-scale training.
 
-**Post-LN.** In this strategy, normalization is applied after adding the module’s output to the residual stream [$\sout{CITE}$-Attention is all you need]().
+**Post-LN.** In this strategy, normalization is applied after adding the module’s output to the residual stream [$\sout{CITE}$-Attention is all you need]():
 
 $$y_l = \text{Norm} \big(x_l + \text{Module}(x_l)\big), $$
 
@@ -95,17 +95,17 @@ where $x_l$ and $y_l$ represent the input and output hidden states of the $l$-th
 
 Although Post-LN effectively limits the variance of the hidden states, it often weakens gradient signals as they propagate backward. This leads to the vanishing gradient problem in deep networks, resulting in slower and unstable convergence [$\sout{CITE}$-On layer normalization in the transformer architecture | Transformers get stable: An end-to-end signal propagation theory for language models]().
 
-**Pre-LN.** To address the gradient flow issue, Pre-LN applies normalization to the hidden state before it enters the module [$\sout{CITE}$-On layer normalization in the transformer architecture](). 
+**Pre-LN.** To address the gradient flow issue, Pre-LN applies normalization to the hidden state before it enters the module [$\sout{CITE}$-On layer normalization in the transformer architecture]():
 
 $$y_l = x_l + \text{Module}\big(\text{Norm}(x_l)\big). $$
 
-Although Pre-LN significantly improves gradient propagation during early training [$\sout{CITE}$-On layer normalization in the transformer architecture](), it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across layers, causing “massive activations” that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
+Although Pre-LN significantly improves gradient propagation during early training [$\sout{CITE}$-On layer normalization in the transformer architecture](), it leaves the main residual path completely unnormalized. As a result, the variance of hidden states can accumulate exponentially across successive sub-layers, causing “massive activations” that can severely destabilize the optimization process [$\sout{CITE}$-Massive activations in large language models]().
 
-**Peri-LN: An Enhanced Normalization Strategy.** To overcome the main weaknesses of both Post-LN and Pre-LN, recent studies have begun to adopt a third strategy termed **Peri-LN** [$\sout{CITE}$-Peri-LN: Revisiting Normalization Layer in the Transformer Architecture](). Essentially, Peri-LN can be viewed as an improved version of Pre-LN, where an additional normalization layer (Output-LN) is placed immediately after the module’s output. The mathematical formulation is defined as:
+**Peri-LN: An Enhanced Normalization Strategy.** To overcome the main weaknesses of both Post-LN and Pre-LN, recent studies have begun to adopt a third strategy termed **Peri-LN** [$\sout{CITE}$-Peri-LN: Revisiting Normalization Layer in the Transformer Architecture](). Essentially, Peri-LN can be viewed as an improved version of Pre-LN, where an additional normalization layer (Output-LN) is placed immediately after the module’s output:
 
 $$y_l = x_l + \text{Norm}\Big(\text{Module}\big(\text{Norm}(x_l)\big)\Big). $$
 
-For clarity, the placements of the normalization layers in the Post-LN, Pre-LN, and Peri-LN architectures are visually compared in Figure [$\sout{???}$](). By normalizing both the inputs and the outputs of the Attention and FFN modules, Peri-LN acts as a robust self-regularizing mechanism. It regulates the variance from both ends of the module, effectively introducing a damping factor that prevents sudden spikes in gradients even when the module produces extremely large activation values. 
+By simultaneously normalizing both the inputs and the outputs of the core computational module, Peri-LN acts as a robust self-regularizing mechanism. It regulates the variance from both ends of the computation, effectively introducing a damping factor that prevents sudden spikes in gradients even when the module produces extremely large activation values. For clarity, the placements of the normalization layers in the Post-LN, Pre-LN, and Peri-LN architectures are visually compared in Figure [$\sout{???}$]().
 
 <br>
 <figure style="align: left; text-align:center;">
@@ -114,20 +114,18 @@ For clarity, the placements of the normalization layers in the Post-LN, Pre-LN, 
 </figure>
 <br><br>
 
-By achieving a more balanced variance growth and a more stable gradient flow, Peri-LN continuously guarantees high convergence stability. Driven by these clear benefits, we directly apply the Peri-LN strategy across all Transformer building blocks in our proposed video captioning model.
-
-**Implementation Note.** Because the Peri-LN strategy and residual connections are applied consistently to every Attention and FFN module, we omit them from both the mathematical formulas and the overall architecture diagram in the subsequent method sections. This simplification helps avoid unnecessary repetition and keeps the model description clear and easy to follow.
+By achieving balanced variance growth and stable gradient flow, Peri-LN guarantees high convergence stability. Driven by these clear benefits, we universally adopt this normalization strategy, paired with a standard residual connection, across every sub-layer in our proposed video captioning model. As this structural pattern is strictly consistent throughout the entire network, we purposely omit the explicit notation of Peri-LN and residual connections from both the mathematical formulas and the architecture diagrams in subsequent sections. This abstraction helps avoid unnecessary repetition and keeps the model description concise and easy to follow.
 
 # 4. Method
 
 ## 4.1. Overview
 
-Our proposed architecture, named BiDecT, focuses on making full use of bidirectional context during the video caption generation process. The core difference between BiDecT and previous approaches [$\sout{CITE}$-BiTransformer | BTKG]() is its encoder-free design. Specifically, our model completely removes the conventional intermediate encoder block and directly integrates multimodal features into a Transformer-based bidirectional decoder system. The reason for this design is based on the observation that multimodal features extracted from large pre-trained models already have enough representation power. Therefore, passing these features directly into the decoder not only reduces the computational cost but also minimizes the potential information loss that often occurs when features pass through multiple intermediate encoder layers.
+Our proposed architecture, named BiDecT, focuses on fully leveraging bidirectional context during the video caption generation process. The core structural difference between BiDecT and previous approaches [$\sout{CITE}$-BiTransformer | BTKG]() is its encoder-free design. Specifically, our model completely removes the conventional intermediate encoder and directly integrates multimodal features into a Transformer-based bidirectional decoder system. This design is motivated by the observation that multimodal features extracted from large pre-trained models already possess robust representational power. Consequently, passing these features directly into the decoders not only reduces computational overhead but also minimizes the potential information loss typically encountered when propagating features through multiple intermediate encoder layers.
 
-As shown in Figure [$\sout{???}$](), instead of processing individual video frames, we optimize the computational cost by treating the input video as a sequence of GOPs (as mentioned in Section [$\sout{???}$]()). The core processing pipeline of BiDecT consists of four main components. First, the **Multimodal Feature Extraction** module uniformly extracts three types of complementary information (namely appearance, semantic, and motion features) across all GOPs in the video. Next, the **Multimodal Feature Embedding** module transforms these extracted features into the model dimension and effectively combines the three independent streams into one unified representation for the decoders. Then, the **Backward Decoder (BD)** acts as a context predictor. It performs the caption generation process in a reverse direction (from right to left) to establish a supplementary backward context $\overleftarrow{H}$ for the main decoder. Finally, the **Forward Decoder (FD)** serves as the central generation module. It simultaneously uses both the unified multimodal features from the video and the overall backward context $\overleftarrow{H}$ provided by the BD to generate the final video caption in the standard left-to-right direction. The detailed design of each component will be introduced in the following sections.
+As shown in Figure [$\sout{???}$](), instead of processing individual video frames, we optimize the computational cost by treating the input video as a sequence of GOPs (as mentioned in Section [$\sout{???}$]()). The core processing pipeline of BiDecT consists of four main components. First, the **Multimodal Feature Extraction** uniformly obtains three types of complementary information (namely appearance, semantic, and motion features) across all GOPs in the video. Next, the **Multimodal Feature Embedding** transforms these extracted features into the model dimension and effectively combines the three independent streams into one unified representation for the decoders. Then, the **Backward Decoder (BD)** acts as a context predictor. Utilizing the multimodal embedding tokens from the video, it performs the caption generation process in a reverse direction (from right to left) to establish a supplementary backward context $\overleftarrow{H}$ for the main decoder. Finally, the **Forward Decoder (FD)** serves as the primary caption generator. It simultaneously uses both the unified multimodal embeddings from the video and the overall backward context $\overleftarrow{H}$ provided by the BD to generate the final video caption in the standard left-to-right direction. The detailed design of each component will be introduced in the following sections.
 
-![](figures/New-Architecture.svg)
-<br>Figure 3. An overview of the proposed BiDecT architecture for video captioning. To reduce the computational cost, we treat the input video as a sequence of GOPs and extract multimodal features (appearance, semantic, and motion) from each GOP. These features are then projected into a shared dimensional space and combined into a unified representation through the Multimodal Feature Embedding module. Next, the Backward Decoder (BD) generates a backward context $\overleftarrow{H}$ by predicting the caption from right to left. Finally, the Forward Decoder (FD) uses both the unified multimodal features and the backward context $\overleftarrow{H}$ to generate the final caption from left to right.
+![](figures/New-Architecture.svg)<br>
+Figure 3. An overview of the proposed BiDecT architecture for video captioning. To reduce the computational cost, we treat the input video as a sequence of GOPs. From this sequence, the Multimodal Feature Extraction uniformly obtains appearance, semantic, and motion features across all GOPs. These features are then projected into a shared dimensional space and combined into a unified representation through the Multimodal Feature Embedding. Next, leveraging this unified representation, the Backward Decoder (BD) generates a backward context $\overleftarrow{H}$ by predicting the caption from right to left. Finally, the Forward Decoder (FD) uses both the unified multimodal embeddings and the backward context $\overleftarrow{H}$ to generate the final caption from left to right.
 <br><br>
 
 ## 4.2. Video Representation and Multimodal Feature Extraction
@@ -156,11 +154,11 @@ By applying this pipeline to all $G$ GOPs in the video, we successfully collect 
 2. Semantic feature: $F_S = [s^{(1)}, \dots, s^{(G)}]$, where $s^{(g)} \in \mathbb{R}^{d_S}$ and $F_S \in \mathbb{R}^{G \times d_S}$.
 3. Motion feature: $F_M = [m^{(1)}, \dots, m^{(G)}]$, where $m^{(g)} \in \mathbb{R}^{d_M}$ and $F_M \in \mathbb{R}^{G \times d_M}$.
 
-Here, $d_A$, $d_S$, and $d_M$ are the hidden dimensions of the respective pre-trained models. Once extracted, these three distinct features serve as the direct inputs for the subsequent Multimodal Feature Embedding module.
+Here, $d_A$, $d_S$, and $d_M$ are the hidden dimensions of the respective pre-trained models. Once extracted, these three distinct features serve as the direct inputs for the multimodal feature embedding module.
 
 ## 4.3. Multimodal Feature Embedding
 
-The feature extraction process yields three distinct types of features: appearance ($F_A$), semantic ($F_S$), and motion ($F_M$). Because these features are extracted from different pre-trained models, they do not share the same dimensional space. The Multimodal Feature Embedding module serves as an intermediate bridge to project these features into a shared $d_{model}$-dimensional space and enrich them with structural information.
+The feature extraction process yields three distinct types of features: appearance ($F_A$), semantic ($F_S$), and motion ($F_M$). Because these features are extracted from different pre-trained models, they do not share the same dimensional space. The multimodal feature embedding module serves as an intermediate bridge to project these features into a shared $d_{model}$-dimensional space and enrich them with structural information.
 
 **Token Projection.** We apply separate learnable linear projections to map each feature type into the common space $d_{model}$:
 
@@ -170,11 +168,11 @@ $$F'_M = F_M W_M + b_M,$$
 
 where $W_A \in \mathbb{R}^{d_A \times d_{model}}$, $W_S \in \mathbb{R}^{d_S \times d_{model}}$, and $W_M \in \mathbb{R}^{d_M \times d_{model}}$ are the weight matrices, and $b_A, b_S, b_M \in \mathbb{R}^{d_{model}}$ are the bias vectors. Through this projection, we obtain three sets of feature tokens: $F'_A$, $F'_S$, and $F'_M$. All of them now have the same shape of $\mathbb{R}^{G \times d_{model}}$.
 
-**Feature Type and Positional Embeddings.** Inspired by the input representation mechanism in BERT [$\sout{CITE}$](), we introduce two auxiliary components to enrich the projected tokens: learnable feature type embeddings and fixed positional embeddings. During text generation, the decoders will attend to all three types of features at the same time. Therefore, to help the model distinguish the origin of each token, we add a modality-specific feature type embedding $(\text{TE}_A, \text{TE}_S, \text{TE}_M \in \mathbb{R}^{d_{model}})$. Simultaneously, we add a shared fixed positional embedding $(\text{PE} \in \mathbb{R}^{G \times d_{model}})$ to help the model recognize the temporal order of the GOPs. Finally, a modality-specific Layer Normalization is applied to stabilize the training process:
+**Feature Type and Positional Embeddings.** Inspired by the input representation mechanism in BERT [$\sout{CITE}$](), we introduce two auxiliary components to enrich the projected tokens: learnable feature type embeddings and fixed positional embeddings. During text generation, the decoders will attend to all three types of features at the same time. Therefore, to help the model distinguish the origin of each token, we add a modality-specific feature type embedding $(\text{TE}_A, \text{TE}_S, \text{TE}_M \in \mathbb{R}^{d_{model}})$. Simultaneously, we add a shared fixed positional embedding $(\text{PE} \in \mathbb{R}^{G \times d_{model}})$ to help the model recognize the temporal order of the GOPs. Finally, a modality-specific normalization layer is applied to stabilize the training process:
 
-$$E_A = \text{LayerNorm}_A(F'_A + \text{TE}_A + \text{PE}),$$
-$$E_S = \text{LayerNorm}_S(F'_S + \text{TE}_S + \text{PE}),$$
-$$E_M = \text{LayerNorm}_M(F'_M + \text{TE}_M + \text{PE}).$$
+$$E_A = \text{Norm}_A(F'_A + \text{TE}_A + \text{PE}),$$
+$$E_S = \text{Norm}_S(F'_S + \text{TE}_S + \text{PE}),$$
+$$E_M = \text{Norm}_M(F'_M + \text{TE}_M + \text{PE}).$$
 
 After this step, we collect three sets of normalized embedding tokens: $E_A$, $E_S$, and $E_M \in \mathbb{R}^{G \times d_{model}}$.
 
@@ -184,7 +182,7 @@ $$E = [e_A^{(1)}, e_S^{(1)}, e_M^{(1)}, \dots, e_A^{(G)}, e_S^{(G)}, e_M^{(G)}] 
 
 where $e_A^{(g)}, e_S^{(g)}, e_M^{(g)}$ denote the $g$-th token from $E_A, E_S,$ and $E_M$, respectively.
 
-**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a Forward Decoder and a Backward Decoder. Because generating text from left-to-right and right-to-left involves entirely different decoding objectives, we construct two separate Multimodal Feature Embedding modules. These modules share the aforementioned mathematical operations but maintain completely independent learnable weights. This independent design allows each decoder to learn a specialized multimodal representation that is strictly optimized for its specific decoding direction. Consequently, we obtain two distinct multimodal sequences: $\overleftarrow{E}$ (for the Backward Decoder) and $\overrightarrow{E}$ (for the Forward Decoder). 
+**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a forward decoder (FD) and a backward decoder (BD). Because generating text from left-to-right and right-to-left involves entirely different decoding objectives, we construct two separate multimodal feature embedding modules. These modules share the aforementioned mathematical operations but maintain completely independent learnable weights. This independent design allows each decoder to learn a specialized multimodal representation that is strictly optimized for its specific decoding direction. Consequently, this dual strategy yields two distinct sets of multimodal embeddings: $\overleftarrow{E}$ (for the BD) and $\overrightarrow{E}$ (for the FD).
 
 ## 4.4. Backward Decoder (BD)
 

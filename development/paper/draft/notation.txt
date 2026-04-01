@@ -1,0 +1,26 @@
+A appearance
+B B/P-frame
+C
+D dataset
+E embedding
+F feature 
+G num GOP
+H 				final hidden
+I I-frame
+J
+K				ffn
+L loss
+M motion
+N 
+O 
+P B/P-frame
+Q 				cross-attn
+R math
+S semantic
+T time step
+U 				self-attn
+V visual
+W weights
+X input
+Y output
+Z				word vectors

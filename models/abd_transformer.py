@@ -262,6 +262,18 @@ class R2L_Decoder(nn.Module):
         ])
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
+        
+        print(f"+---------------- R2L_Decoder ----------------+")
+        print(f"x.shape: {x.shape}")
+        if r2l_trg_mask is not None: 
+            print(f"r2l_trg_mask.shape: {r2l_trg_mask.shape}")
+        else: 
+            print(f"r2l_trg_mask: None")
+        
+        print(f"memory.shape: {memory.shape}")
+        print(f"src_mask.shape: {src_mask.shape}")
+        print(f"+---------------------------------------------+")
+        
         x = self.norm_1(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, r2l_trg_mask)
@@ -282,6 +294,21 @@ class L2R_Decoder(nn.Module):
         ])
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
+        
+        print(f"+---------------- L2R_Decoder ----------------+")
+        print(f"x.shape: {x.shape}")
+        print(f"trg_mask.shape: {trg_mask.shape}")
+        
+        print(f"memory.shape: {memory.shape}")
+        print(f"src_mask.shape: {src_mask.shape}")
+        
+        print(f"r2l_memory.shape: {r2l_memory.shape}")
+        if r2l_trg_mask is not None: 
+            print(f"r2l_trg_mask.shape: {r2l_trg_mask.shape}")
+        else: 
+            print(f"r2l_trg_mask: None")
+        print(f"+---------------------------------------------+")
+        
         x = self.norm_1(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
@@ -323,7 +350,7 @@ def subsequent_mask(size):
     """Mask out subsequent positions."""
     attn_shape = (1, size, size)
     mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
-    return (torch.from_numpy(mask) == 0).cuda()
+    return (torch.from_numpy(mask) == 0)#.cuda()
 
 
 # ╭────────────────────────────────────────────────────────────╮
@@ -345,10 +372,10 @@ class Generator(nn.Module):
 class ABDTransformer(nn.Module):
 
     def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
-                 n_enc_layers, n_dec_layers, dropout, device='cuda') -> None:
+                 n_enc_layers, n_dec_layers, dropout, ) -> None:
         super(ABDTransformer, self).__init__()
         self.vocab  = vocab
-        self.device = device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         multiple_of = 128
         
         # --- Feature Embeddings ---

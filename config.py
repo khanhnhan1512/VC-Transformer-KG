@@ -94,13 +94,13 @@ class TransformerConfig:
     n_heads_big  = 4
     n_heads      = 4
     n_enc_layers = 0 # Number of encoder layers
-    n_dec_layers = 3 # Number of decoder layers
+    n_dec_layers = 1 # Number of decoder layers
 
 
 class TrainConfig:
-    # corpus = "MSVD"
+    corpus = "MSVD"
     # corpus = "MSRVTT"
-    corpus = "VATEX"
+    # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
     elif corpus == "VATEX" : loader = VATEXLoaderConfig
@@ -111,8 +111,8 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 16
-    batch_size = 64
+    epochs = 1
+    batch_size = 4
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
     lr_decay_start_from = 3
@@ -121,7 +121,7 @@ class TrainConfig:
     weight_decay = 0.5e-5
     warmup_epochs = 3
     reg_lambda = 0.6    # weights of l2r
-    beam_size = 4
+    beam_size = 3
     label_smoothing = 0.15
 
     """ Evaluation Metrics """

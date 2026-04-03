@@ -39,7 +39,7 @@ def build_model(vocab):
         n_dec_layers=C.transformer.n_dec_layers,
         dropout=C.transformer.dropout,
     )
-    model.cuda()
+    # model.cuda()
     return model
 
 
@@ -142,8 +142,8 @@ def main():
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
+    # if torch.cuda.is_available():
+    #     torch.cuda.manual_seed(seed)
 
     train_iter, val_iter, test_iter, vocab = build_loaders()
 
@@ -260,7 +260,7 @@ def main():
 
     """ Test with Best Model """
     gc.collect()
-    torch.cuda.empty_cache()
+    # torch.cuda.empty_cache()
     print(f"\n\n\n[BEST: {best_epoch} | SEED: {seed} | VAL-CIDEr: {best_val_CIDEr}]")
     best_model = load_checkpoint(model=model, ckpt_fpath=best_ckpt_fpath)
     
@@ -282,13 +282,13 @@ def main():
         time_taken=_test_time_taken
     )
     
-    save_log_summary(train_summary=train_summary,
-                     val_summary=val_summary,
-                     test_summary=test_summary,
-                     log_folder=C.log_folder)
-    save_test_qualitative_results(vid2pred=l2r_test_vid2pred,
-                                  vid2GTs=l2r_test_vid2GTs,
-                                  log_folder=C.log_folder)
+    # save_log_summary(train_summary=train_summary,
+    #                  val_summary=val_summary,
+    #                  test_summary=test_summary,
+    #                  log_folder=C.log_folder)
+    # save_test_qualitative_results(vid2pred=l2r_test_vid2pred,
+    #                               vid2GTs=l2r_test_vid2GTs,
+    #                               log_folder=C.log_folder)
     
     print("-"*64)
     print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
@@ -296,25 +296,5 @@ def main():
     return
 
 
-def print_gpu_info() -> None:
-    if not torch.cuda.is_available():
-        print("Không có GPU CUDA khả dụng.")
-        return
-
-    n = torch.cuda.device_count()
-    print(f"Found {n} CUDA device(s)\n")
-
-    for i in range(n):
-        dev = torch.device(f"cuda:{i}")
-        props = torch.cuda.get_device_properties(dev)
-        print(f"Device {i}: {props.name}")
-        print(f"  Total memory bytes: {props.total_memory}")
-        print(f"  MultiProcessor count: {props.multi_processor_count}")
-        print(f"  Major.Minor: {props.major}.{props.minor}")
-        print(f"  Max threads per block: {props.max_threads_per_multi_processor}")
-        print("=" * 64)
-
-
 if __name__ == "__main__":
-    print_gpu_info()
     main()

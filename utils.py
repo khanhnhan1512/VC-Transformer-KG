@@ -36,9 +36,10 @@ class LossChecker:
 
 def parse_batch(batch):
     vids, feats_list, r2l_captions, l2r_captions = batch
-    feats = tuple([feats.cuda() for feats in feats_list])
-    r2l_captions = r2l_captions.cuda()
-    l2r_captions = l2r_captions.cuda()
+    feats = tuple([feats#.cuda() 
+                   for feats in feats_list])
+    # r2l_captions = r2l_captions.cuda()
+    # l2r_captions = l2r_captions.cuda()
     return vids, feats, r2l_captions, l2r_captions
 
 
@@ -50,6 +51,11 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip):
     criterion = LabelSmoothing(vocab.n_vocabs, pad_idx, C.label_smoothing)
     t = tqdm(train_iter)
     # t.set_description('Train:')
+    
+    print(f"****************************************")
+    print(f"*           TRAIN ON 1 BATCH           *")
+    print(f"****************************************")
+    
     for batch in t:
 
         _, feats, r2l_captions, l2r_captions = parse_batch(batch)
@@ -81,6 +87,9 @@ def train(e, model, optimizer, train_iter, vocab, reg_lambda, gradient_clip):
         t.set_description("[Epoch #{0}] loss:{3:.3f} = (1-reg):{1:.2f} * r2l_loss:{4:.3f} + "
                           "(reg):{2:.2f} * l2r_loss:{5:.3f} "
                           .format(e, 1-reg_lambda, reg_lambda, *loss_checker.mean(last=10)))
+        
+        break
+        
     total_loss, r2l_loss, l2r_loss = loss_checker.mean()
     loss = {
         'total': total_loss,
@@ -98,6 +107,11 @@ def test(model, val_iter, vocab, reg_lambda):
     criterion = LabelSmoothing(vocab.n_vocabs, pad_idx, C.label_smoothing)
     t = tqdm(val_iter)
     t.set_description('Test:')
+    
+    print(f"****************************************")
+    print(f"*           TEST ON 1 BATCH            *")
+    print(f"****************************************")
+        
     with torch.no_grad():
         for batch in t:
 
@@ -119,6 +133,9 @@ def test(model, val_iter, vocab, reg_lambda):
                                  l2r_trg_y.contiguous().view(-1)) / l2r_norm
             loss = (1-reg_lambda)*r2l_loss + reg_lambda*l2r_loss
             loss_checker.update(loss.item(), r2l_loss.item(), l2r_loss.item())
+
+
+            break
 
         total_loss, r2l_loss, l2r_loss = loss_checker.mean()
         loss = {
@@ -153,6 +170,10 @@ def get_predicted_captions(data_iter, model, beam_size, max_len):
     r2l_vid2pred: Dict[str, str] = {}
     l2r_vid2pred: Dict[str, str] = {}
 
+    print(f"****************************************")
+    print(f"*           EVAL ON 1 BATCH            *")
+    print(f"****************************************")
+
     with torch.no_grad():
         for vid, feats in tqdm(onlyonce_iter):           
             batch_r2l_captions, batch_l2r_captions = model.beam_search_decode(feats, beam_size, max_len)
@@ -168,6 +189,9 @@ def get_predicted_captions(data_iter, model, beam_size, max_len):
             
             r2l_vid2pred[vid] = best_r2l_caption
             l2r_vid2pred[vid] = best_l2r_caption
+            
+            break
+            
     return r2l_vid2pred, l2r_vid2pred
 
 
@@ -189,10 +213,11 @@ def get_groundtruth_captions(data_iter, vocab):
 
 
 def score(vid2pred, vid2GTs):
-    assert set(vid2pred.keys()) == set(vid2GTs.keys()), f"[score] #vid2pred.keys()={len(vid2pred.keys())} != #vid2GTs.keys()={len(vid2GTs.keys())}"
+    # assert set(vid2pred.keys()) == set(vid2GTs.keys()), f"[score] #vid2pred.keys()={len(vid2pred.keys())} != #vid2GTs.keys()={len(vid2GTs.keys())}"
+    valid_ids = set(vid2pred.keys()).intersection(set(vid2GTs.keys()))
     vid2idx = {v: i for i, v in enumerate(vid2pred.keys())}
-    refs = {vid2idx[vid]: GTs for vid, GTs in vid2GTs.items()}
-    hypos = {vid2idx[vid]: [pred] for vid, pred in vid2pred.items()}
+    refs = {vid2idx[vid]: GTs for vid, GTs in vid2GTs.items() if vid in valid_ids}
+    hypos = {vid2idx[vid]: [pred] for vid, pred in vid2pred.items() if vid in valid_ids}
 
     scores = calc_scores(refs, hypos)
     return scores

@@ -122,10 +122,10 @@ By achieving balanced variance growth and stable gradient flow, Peri-LN guarante
 
 Our proposed architecture, named BiDecT, focuses on fully leveraging bidirectional context during the video caption generation process. The core structural difference between BiDecT and previous approaches [$\sout{CITE}$-BiTransformer | BTKG]() is its encoder-free design. Specifically, our model completely removes the conventional intermediate encoder and directly integrates multimodal features into a Transformer-based bidirectional decoder system. This design is motivated by the observation that multimodal features extracted from large pre-trained models already possess robust representational power. Consequently, passing these features directly into the decoders not only reduces computational overhead but also minimizes the potential information loss typically encountered when propagating features through multiple intermediate encoder layers.
 
-As shown in Figure [$\sout{???}$](), instead of processing individual video frames, we optimize the computational cost by treating the input video as a sequence of GOPs (as mentioned in Section [$\sout{???}$]()). The core processing pipeline of BiDecT consists of four main components. First, the **Multimodal Feature Extraction** uniformly obtains three types of complementary information (namely appearance, semantic, and motion features) across all GOPs in the video. Next, the **Multimodal Feature Embedding** transforms these extracted features into the model dimension and effectively combines the three independent streams into one unified representation for the decoders. Then, the **Backward Decoder (BD)** acts as a context predictor. Utilizing the multimodal embedding tokens from the video, it performs the caption generation process in a reverse direction (from right to left) to establish a supplementary backward context $\overleftarrow{H}$ for the main decoder. Finally, the **Forward Decoder (FD)** serves as the primary caption generator. It simultaneously uses both the unified multimodal embeddings from the video and the overall backward context $\overleftarrow{H}$ provided by the BD to generate the final video caption in the standard left-to-right direction. The detailed design of each component will be introduced in the following sections.
+As shown in Figure [$\sout{???}$](), instead of processing individual video frames, we optimize the computational cost by treating the input video as a sequence of GOPs (as mentioned in Section [$\sout{???}$]()). The core processing pipeline of BiDecT consists of four main components. First, the **Multimodal Feature Extraction** uniformly obtains three types of complementary information (namely appearance, semantic, and motion features) across all GOPs in the video. Next, the **Multimodal Feature Embedding** transforms these extracted features into the model dimension and effectively combines the three independent streams into one unified representation for the decoders. Then, the **Backward Decoder (BD)** acts as a context predictor. Utilizing the multimodal embedding tokens from the video, it performs the caption generation process in a reverse direction (from right to left) to establish a global backward context $\overleftarrow{H}$ for the main decoder. Finally, the **Forward Decoder (FD)** serves as the primary caption generator. It simultaneously uses both the unified multimodal embeddings from the video and the global backward context $\overleftarrow{H}$ provided by the BD to generate the final video caption in the standard left-to-right direction. The detailed design of each component will be introduced in the following sections.
 
 ![](figures/New-Architecture.svg)<br>
-Figure 3. An overview of the proposed BiDecT architecture for video captioning. To reduce the computational cost, we treat the input video as a sequence of GOPs. From this sequence, the Multimodal Feature Extraction uniformly obtains appearance, semantic, and motion features across all GOPs. These features are then projected into a shared dimensional space and combined into a unified representation through the Multimodal Feature Embedding. Next, leveraging this unified representation, the Backward Decoder (BD) generates a backward context $\overleftarrow{H}$ by predicting the caption from right to left. Finally, the Forward Decoder (FD) uses both the unified multimodal embeddings and the backward context $\overleftarrow{H}$ to generate the final caption from left to right.
+Figure 3. An overview of the proposed BiDecT architecture for video captioning. To reduce the computational cost, we treat the input video as a sequence of GOPs. From this sequence, the Multimodal Feature Extraction uniformly obtains appearance, semantic, and motion features across all GOPs. These features are then projected into a shared dimensional space and combined into a unified representation through the Multimodal Feature Embedding. Next, leveraging this unified representation, the Backward Decoder (BD) generates a global backward context $\overleftarrow{H}$ by predicting the caption from right to left. Finally, the Forward Decoder (FD) uses both the unified multimodal embeddings and the global backward context $\overleftarrow{H}$ to generate the final caption from left to right.
 <br><br>
 
 ## 4.2. Video Representation and Multimodal Feature Extraction
@@ -168,7 +168,7 @@ $$F'_M = F_M W_M + b_M,$$
 
 where $W_A \in \mathbb{R}^{d_A \times d_{model}}$, $W_S \in \mathbb{R}^{d_S \times d_{model}}$, and $W_M \in \mathbb{R}^{d_M \times d_{model}}$ are the weight matrices, and $b_A, b_S, b_M \in \mathbb{R}^{d_{model}}$ are the bias vectors. Through this projection, we obtain three sets of feature tokens: $F'_A$, $F'_S$, and $F'_M$. All of them now have the same shape of $\mathbb{R}^{G \times d_{model}}$.
 
-**Feature Type and Positional Embeddings.** Inspired by the input representation mechanism in BERT [$\sout{CITE}$](), we introduce two types of auxiliary information to enrich the projected tokens: learnable feature type embeddings and fixed positional embeddings. During text generation, the decoders will attend to all three types of features at the same time. Therefore, to help the model distinguish the origin of each token, we add a modality-specific feature type embedding $(\text{TE}_A, \text{TE}_S, \text{TE}_M \in \mathbb{R}^{d_{model}})$. Simultaneously, we add a shared fixed positional embedding $(\text{PE} \in \mathbb{R}^{G \times d_{model}})$ to help the model recognize the temporal order of the GOPs. Finally, a learnable modality-specific normalization layer is applied to stabilize the training process:
+**Feature Type and Positional Embeddings.** Inspired by the input representation mechanism in BERT [$\sout{CITE}$](), we incorporate two types of auxiliary information to enrich the projected tokens: learnable feature type embeddings and fixed positional embeddings. During text generation, the decoders will attend to all three types of features at the same time. Therefore, to help the model distinguish the origin of each token, we add a modality-specific feature type embedding $(\text{TE}_A, \text{TE}_S, \text{TE}_M \in \mathbb{R}^{d_{model}})$. Simultaneously, we add a shared fixed positional embedding $(\text{PE} \in \mathbb{R}^{G \times d_{model}})$ to help the model recognize the temporal order of the GOPs. Finally, a learnable modality-specific normalization layer is applied to stabilize the training process:
 
 $$E_A = \text{Norm}_A(F'_A + \text{TE}_A + \text{PE}),$$
 $$E_S = \text{Norm}_S(F'_S + \text{TE}_S + \text{PE}),$$
@@ -176,16 +176,63 @@ $$E_M = \text{Norm}_M(F'_M + \text{TE}_M + \text{PE}).$$
 
 After this step, we collect three sets of normalized embedding tokens: $E_A$, $E_S$, and $E_M \in \mathbb{R}^{G \times d_{model}}$.
 
-**Interleaved Concatenation.** To form the final input sequence for the decoder, we do not simply append the entire feature sequences end-to-end. Instead, we interleave the tokens from each GOP to ensure that the appearance, semantic, and motion information of the exact same time step stay close together. The final multimodal input sequence $E$ is constructed as:
+**Interleaved Concatenation.** To construct the unified representation for the decoders, we do not simply append the modality-specific embedding sequences end-to-end. Instead, we interleave the tokens from each GOP to ensure that the appearance, semantic, and motion information of the exact same time step stay close together. The unified multimodal embeddings $E$ are formulated as:
 
 $$E = [e_A^{(1)}, e_S^{(1)}, e_M^{(1)}, \dots, e_A^{(G)}, e_S^{(G)}, e_M^{(G)}] \in \mathbb{R}^{3G \times d_{model}},$$
 
 where $e_A^{(g)}, e_S^{(g)}, e_M^{(g)}$ denote the $g$-th token from $E_A, E_S,$ and $E_M$, respectively.
 
-**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a forward decoder (FD) and a backward decoder (BD). Because generating text from left-to-right and right-to-left involves entirely different decoding objectives, we construct two separate multimodal feature embedding modules. These modules share the aforementioned mathematical operations but maintain completely independent learnable weights. This independent design allows each decoder to learn a specialized multimodal representation that is strictly optimized for its specific decoding direction. Consequently, this dual strategy yields two distinct sets of multimodal embeddings: $\overleftarrow{E}$ (for the BD) and $\overrightarrow{E}$ (for the FD).
+**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a forward decoder (FD) and a backward decoder (BD). Because generating text from left-to-right and right-to-left involves entirely different decoding objectives, we construct two separate multimodal feature embedding modules. These modules share the aforementioned mathematical operations but maintain completely independent learnable weights. This independent design allows each decoder to learn a specialized multimodal representation that is strictly optimized for its specific decoding direction. Consequently, this dual strategy yields two distinct sets of unified multimodal embeddings: $\overleftarrow{E}$ (for the BD) and $\overrightarrow{E}$ (for the FD).
 
 ## 4.4. Backward Decoder (BD)
 
+The backward decoder (BD) follows the standard Transformer decoder architecture. However, instead of generating text in the conventional left-to-right manner, it is trained to predict the video caption in reverse order. By processing the unified multimodal embeddings $\overleftarrow{E}$ alongside the previously generated words, the BD explicitly captures critical right-to-left contextual dependencies, serving as a vital structural complement to the conventional left-to-right caption generation.
+
+Mathematically, let $\overleftarrow{\hat{Y}_{<t'}}=[\overleftarrow{\hat{y}_1},\dots,\overleftarrow{\hat{y}_{t'-1}}]$ be the sequence of words predicted during the first $t'-1$ time steps, and let $\overleftarrow{Z_{<t'}} = [\overleftarrow{z_1},\dots,\overleftarrow{z_{t'-1}}]$ be their corresponding normalized word embeddings. To predict the word $\overleftarrow{\hat{y}_{t'}}$ at time step $t'$, the embedding vector of the immediate previous word $\overleftarrow{z_{t'-1}}$ must pass through the core sub-layers of a decoder layer: a masked self-attention mechanism, a cross-attention mechanism, and a position-wise feed-forward network. The computational workflow for a single layer is formulated as follows:
+
+$$ \overleftarrow{u_{t'}} = \text{Masked-Self-Attention}(\overleftarrow{z_{t'-1}}, \overleftarrow{Z_{<t'}}, \overleftarrow{Z_{<t'}}), $$
+$$ \overleftarrow{q_{t'}} = \text{Cross-Attention}(\overleftarrow{u_{t'}}, \overleftarrow{E}, \overleftarrow{E}), $$
+$$ \overleftarrow{k_{t'}} = \text{FFN}(\overleftarrow{q_{t'}}), $$
+
+where $\overleftarrow{u_{t'}}$, $\overleftarrow{q_{t'}}$, and $\overleftarrow{k_{t'}}$ represent the output hidden state vectors of the respective sub-layers at step $t'$. As detailed in Section [$\sout{???}$](), each sub-layer systematically employs the Peri-LN strategy alongside a residual connection.
+
+To capture deep semantic relationships, we construct the complete BD by stacking $N_{BD}$ identical backward decoder layers. The sequence of sub-layer transformations described above is applied iteratively across all layers. After propagating through the entire stack, the output vector from the last FFN sub-layer, denoted as $\overleftarrow{k_{t'}^{(N_{BD})}}$, is passed through an additional normalization layer to obtain the final backward hidden state vector $\overleftarrow{h_{t'}}$:
+
+$$ \overleftarrow{h_{t'}} = \text{Norm}\left(\overleftarrow{k_{t'}^{(N_{BD})}}\right). $$
+
+This normalized hidden state vector $\overleftarrow{h_{t'}}$ is then projected through a linear layer and a softmax function to calculate the probability distribution of the predicted word $\overleftarrow{\hat{y}_{t'}}$:
+
+$$ P(\overleftarrow{\hat{y}_{t'}} \mid \overleftarrow{\hat{Y}_{<t'}}, \overleftarrow{E}) = \text{Softmax}(\text{Linear}(\overleftarrow{h_{t'}})). $$
+
+This autoregressive generation continues iteratively until the model predicts the end-of-sequence marker $\langle \text{S} \rangle$, which terminates the reverse captioning process. The fully generated backward caption is denoted as $\overleftarrow{\hat{Y}}= [\overleftarrow{\hat{y}_1},\dots,\overleftarrow{\hat{y}_{T'}},\langle \text{S} \rangle]$.
+
+**Global Backward Context.** In our proposed architecture, the backward hidden states generated across all time steps play an essential role beyond their primary function of predicting the reverse sequence. By preserving these states, we encapsulate the full right-to-left semantic context of the entire generated caption. As shown in Figure [$\sout{???}$](), this comprehensive representation serves as our global backward context $\overleftarrow{H}$:
+
+$$ \overleftarrow{H} = [\overleftarrow{h_1}, \dots, \overleftarrow{h_{|\overleftarrow{\hat{Y}}|}}]. $$
+
+This sequence-level context $\overleftarrow{H}$ is passed to the forward decoder as an auxiliary guide for the final decoding stage.
+
 ## 4.5. Forward Decoder (FD)
+
+The forward decoder (FD) generates the final caption in a standard left-to-right manner. Building upon the core architecture of the BD, the FD incorporates a second cross-attention sub-layer. This modification allows the FD to receive direct guidance from both the unified multimodal embeddings $\overrightarrow{E}$ and the sequence-level backward context $\overleftarrow{H}$. Consequently, at every prediction step, the FD is inherently guided by the anticipated global structure of the entire caption, empowering it to generate highly context-aware descriptions.
+
+Given the word sequence generated during the previous $t-1$ time steps $\overrightarrow{\hat{Y}_{<t}}=[\overrightarrow{\hat{y}_1},\dots,\overrightarrow{\hat{y}_{t-1}}]$, and their corresponding normalized word embeddings $\overrightarrow{Z_{<t}} = [\overrightarrow{z_1},\dots,\overrightarrow{z_{t-1}}]$, the computational workflow of a single FD layer to predict the next word $\overrightarrow{\hat{y}_{t}}$ is formulated as follows:
+
+$$ \overrightarrow{u_{t}} = \text{Masked-Self-Attention}(\overrightarrow{z_{t-1}}, \overrightarrow{Z_{<t}}, \overrightarrow{Z_{<t}}), $$
+$$ \overrightarrow{q_{t}} = \text{Cross-Attention}(\overrightarrow{u_{t}}, \overrightarrow{E}, \overrightarrow{E}), $$
+$$ \overrightarrow{q'_{t}} = \text{Cross-Attention}(\overrightarrow{q_{t}}, \overleftarrow{H}, \overleftarrow{H}), $$
+$$ \overrightarrow{k_{t}} = \text{FFN}(\overrightarrow{q'_{t}}), $$
+
+where the newly introduced output vector $\overrightarrow{q'_{t}}$ acts as a bridge, integrating the attended multimodal representation $\overrightarrow{q_{t}}$ with the backward contextual knowledge from $\overleftarrow{H}$. As in the BD, each sub-layer systematically employs the Peri-LN strategy alongside a residual connection.
+
+After propagating through $N_{FD}$ identical forward decoder layers, the output vector from the last FFN sub-layer, denoted as $\overrightarrow{k_{t}^{(N_{FD})}}$, is passed through an additional normalization layer to obtain the final forward hidden state vector $\overrightarrow{h_{t}}$:
+
+$$ \overrightarrow{h_{t}} = \text{Norm}\left(\overrightarrow{k_{t}^{(N_{FD})}}\right). $$
+
+This normalized hidden state vector $\overrightarrow{h_{t}}$ is then projected through a linear layer and a softmax function to calculate the probability distribution of the predicted word $\overrightarrow{\hat{y}_{t}}$:
+
+$$ P(\overrightarrow{\hat{y}_{t}} \mid \overrightarrow{\hat{Y}_{<t}}, \overrightarrow{E}, \overleftarrow{H}) = \text{Softmax}(\text{Linear}(\overrightarrow{h_{t}})). $$
+
+This left-to-right generation continues iteratively until the model predicts the end-of-sequence marker $\langle \text{S} \rangle$, which concludes the entire video captioning process. The final generated forward caption is denoted as $\overrightarrow{\hat{Y}}= [\overrightarrow{\hat{y}_1},\dots,\overrightarrow{\hat{y}_{T}},\langle \text{S} \rangle]$.
 
 ## 4.6. Optimization

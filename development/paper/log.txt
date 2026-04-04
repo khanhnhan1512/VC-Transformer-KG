@@ -1,0 +1,693 @@
+MODEL ID: MSVD = FEAT newBlip2ClsKF+newMViTv2+newImgCapBlip2KF fsl-9 mcl-20 = Transformer d-512 N_enc-0 N_dec-1 h-4 h_big-4 dp-0.1 = OPTIM lr-0.0001 warmup-3 gamma-0.5 pat-3 wd-5e-06 rg-0.6 = ep-1 bs-4 gc-5.0 bms-3 ls-0.15 = 1775240616
+Enter the load_video_feats method.
+Load_feature_feats::   0%|                             | 0/1200 [00:00<?, ?it/s]
+100%|█████████████████████████████████████| 1200/1200 [00:00<00:00, 1376.65it/s]
+Load_feature_feats::   0%|                             | 0/1200 [00:00<?, ?it/s]
+100%|█████████████████████████████████████| 1200/1200 [00:00<00:00, 1499.26it/s]
+Load_feature_feats::   0%|                             | 0/1200 [00:00<?, ?it/s]
+100%|█████████████████████████████████████| 1200/1200 [00:00<00:00, 1775.00it/s]
+Enter the load_video_feats method.
+Load_feature_feats::   0%|                              | 0/100 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 100/100 [00:00<00:00, 1470.90it/s]
+Load_feature_feats::   0%|                              | 0/100 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 100/100 [00:00<00:00, 1655.79it/s]
+Load_feature_feats::   0%|                              | 0/100 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 100/100 [00:00<00:00, 1494.14it/s]
+Enter the load_video_feats method.
+Load_feature_feats::   0%|                              | 0/670 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 670/670 [00:00<00:00, 1237.37it/s]
+Load_feature_feats::   0%|                              | 0/670 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 670/670 [00:00<00:00, 1692.49it/s]
+Load_feature_feats::   0%|                              | 0/670 [00:00<?, ?it/s]
+100%|███████████████████████████████████████| 670/670 [00:00<00:00, 1597.47it/s]
+#vocabs: 4116 (9614), #words: 339057 (345799). Trim words which appear less than 3 times.
+{'Total': 21201448, 'Trainable': 21201448}
+
+
+  0%|                                                 | 0/12195 [00:00<?, ?it/s]****************************************
+*           TRAIN ON 1 BATCH           *
+****************************************
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([4, 21, 512])
+r2l_trg_mask.shape: torch.Size([4, 21, 21])
+memory.shape: torch.Size([4, 27, 512])
+src_mask.shape: torch.Size([4, 1, 27])
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([4, 21, 512])
+trg_mask.shape: torch.Size([4, 21, 21])
+memory.shape: torch.Size([4, 27, 512])
+src_mask.shape: torch.Size([4, 1, 27])
+r2l_memory.shape: torch.Size([4, 21, 512])
+r2l_trg_mask.shape: torch.Size([4, 1, 21])
++---------------------------------------------+
+[Epoch #1] loss:6.756 = (1-reg):0.40 * r2l_loss:6.748 + (reg):0.60 * l2r_loss:6.
+[EPOCH 1 TRAIN]
+time: 0.40 seconds | lr: 0.000033
+loss:6.756190 = (1-reg):0.40 * r2l_loss:6.747515 + (reg):0.60 * l2r_loss:6.761973
+Test::   0%|                                           | 0/1073 [00:00<?, ?it/s]****************************************
+*           TEST ON 1 BATCH            *
+****************************************
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([4, 21, 512])
+r2l_trg_mask.shape: torch.Size([4, 21, 21])
+memory.shape: torch.Size([4, 27, 512])
+src_mask.shape: torch.Size([4, 1, 27])
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([4, 21, 512])
+trg_mask.shape: torch.Size([4, 21, 21])
+memory.shape: torch.Size([4, 27, 512])
+src_mask.shape: torch.Size([4, 1, 27])
+r2l_memory.shape: torch.Size([4, 21, 512])
+r2l_trg_mask.shape: torch.Size([4, 1, 21])
++---------------------------------------------+
+Test::   0%|                                           | 0/1073 [00:00<?, ?it/s]
+build onlyonce_iter::   0%|                            | 0/1073 [00:00<?, ?it/s]
+100%|██████████████████████████████████████| 1073/1073 [00:03<00:00, 347.64it/s]
+****************************************
+*           EVAL ON 1 BATCH            *
+****************************************
+  0%|                                                   | 0/100 [00:00<?, ?it/s]+---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([1, 1, 512])
+r2l_trg_mask.shape: torch.Size([1, 1, 1])
+memory.shape: torch.Size([1, 27, 512])
+src_mask.shape: torch.Size([1, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 2, 512])
+r2l_trg_mask.shape: torch.Size([1, 2, 2])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 3, 512])
+r2l_trg_mask.shape: torch.Size([1, 3, 3])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 4, 512])
+r2l_trg_mask.shape: torch.Size([1, 4, 4])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 5, 512])
+r2l_trg_mask.shape: torch.Size([1, 5, 5])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 6, 512])
+r2l_trg_mask.shape: torch.Size([1, 6, 6])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 7, 512])
+r2l_trg_mask.shape: torch.Size([1, 7, 7])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 8, 512])
+r2l_trg_mask.shape: torch.Size([1, 8, 8])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 9, 512])
+r2l_trg_mask.shape: torch.Size([1, 9, 9])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 10, 512])
+r2l_trg_mask.shape: torch.Size([1, 10, 10])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 11, 512])
+r2l_trg_mask.shape: torch.Size([1, 11, 11])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 12, 512])
+r2l_trg_mask.shape: torch.Size([1, 12, 12])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 13, 512])
+r2l_trg_mask.shape: torch.Size([1, 13, 13])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 14, 512])
+r2l_trg_mask.shape: torch.Size([1, 14, 14])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 15, 512])
+r2l_trg_mask.shape: torch.Size([1, 15, 15])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 16, 512])
+r2l_trg_mask.shape: torch.Size([1, 16, 16])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 17, 512])
+r2l_trg_mask.shape: torch.Size([1, 17, 17])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 18, 512])
+r2l_trg_mask.shape: torch.Size([1, 18, 18])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 19, 512])
+r2l_trg_mask.shape: torch.Size([1, 19, 19])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 20, 512])
+r2l_trg_mask.shape: torch.Size([1, 20, 20])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 21, 512])
+r2l_trg_mask.shape: torch.Size([1, 21, 21])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([1, 1, 512])
+trg_mask.shape: torch.Size([1, 1, 1])
+memory.shape: torch.Size([1, 27, 512])
+src_mask.shape: torch.Size([1, 1, 27])
+r2l_memory.shape: torch.Size([1, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 2, 512])
+trg_mask.shape: torch.Size([1, 2, 2])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 3, 512])
+trg_mask.shape: torch.Size([1, 3, 3])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 4, 512])
+trg_mask.shape: torch.Size([1, 4, 4])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 5, 512])
+trg_mask.shape: torch.Size([1, 5, 5])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 6, 512])
+trg_mask.shape: torch.Size([1, 6, 6])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 7, 512])
+trg_mask.shape: torch.Size([1, 7, 7])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 8, 512])
+trg_mask.shape: torch.Size([1, 8, 8])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 9, 512])
+trg_mask.shape: torch.Size([1, 9, 9])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 10, 512])
+trg_mask.shape: torch.Size([1, 10, 10])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 11, 512])
+trg_mask.shape: torch.Size([1, 11, 11])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 12, 512])
+trg_mask.shape: torch.Size([1, 12, 12])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 13, 512])
+trg_mask.shape: torch.Size([1, 13, 13])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 14, 512])
+trg_mask.shape: torch.Size([1, 14, 14])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 15, 512])
+trg_mask.shape: torch.Size([1, 15, 15])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 16, 512])
+trg_mask.shape: torch.Size([1, 16, 16])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 17, 512])
+trg_mask.shape: torch.Size([1, 17, 17])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 18, 512])
+trg_mask.shape: torch.Size([1, 18, 18])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 19, 512])
+trg_mask.shape: torch.Size([1, 19, 19])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 20, 512])
+trg_mask.shape: torch.Size([1, 20, 20])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 21, 512])
+trg_mask.shape: torch.Size([1, 21, 21])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
+  0%|                                                   | 0/100 [00:00<?, ?it/s]
+get_groundtruth_captions::   0%|                       | 0/1073 [00:00<?, ?it/s]
+100%|██████████████████████████████████████| 1073/1073 [00:03<00:00, 310.34it/s]
+{'testlen': 21, 'reflen': 13, 'guess': [21, 20, 19, 18], 'correct': [0, 0, 0, 0]}
+ratio: 1.615384615260355
+{'testlen': 21, 'reflen': 13, 'guess': [21, 20, 19, 18], 'correct': [0, 0, 0, 0]}
+ratio: 1.615384615260355
+[EPOCH 1 VAL]
+time: 20.32 seconds
+loss:6.758902 = (1-reg):0.40 * r2l_loss:6.819447 + (reg):0.60 * l2r_loss:6.718538
+r2l_scores: {'Bleu_1': 4.761904761678005e-17, 'Bleu_2': 4.879500364504501e-17, 'Bleu_3': 5.0041736243917744e-17, 'Bleu_4': 5.136663909241664e-17, 'METEOR': 0.03243243243243243, 'ROUGE_L': 0.0, 'CIDEr': 0.0}
+l2r_scores: {'Bleu_1': 4.761904761678005e-17, 'Bleu_2': 4.879500364504501e-17, 'Bleu_3': 5.0041736243917744e-17, 'Bleu_4': 5.136663909241664e-17, 'METEOR': 0.013150684931506848, 'ROUGE_L': 0.0, 'CIDEr': 0.0}
+>> New best model at epoch 1 | N_Metrics: 4 | CIDEr: 0.0
+
+
+
+[BEST: 1 | SEED: 904666 | VAL-CIDEr: 0.0]
+build onlyonce_iter::   0%|                            | 0/6942 [00:00<?, ?it/s]
+100%|██████████████████████████████████████| 6942/6942 [00:19<00:00, 354.92it/s]
+****************************************
+*           EVAL ON 1 BATCH            *
+****************************************
+  0%|                                                   | 0/670 [00:00<?, ?it/s]+---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([1, 1, 512])
+r2l_trg_mask.shape: torch.Size([1, 1, 1])
+memory.shape: torch.Size([1, 27, 512])
+src_mask.shape: torch.Size([1, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 2, 512])
+r2l_trg_mask.shape: torch.Size([1, 2, 2])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 3, 512])
+r2l_trg_mask.shape: torch.Size([1, 3, 3])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 4, 512])
+r2l_trg_mask.shape: torch.Size([1, 4, 4])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 5, 512])
+r2l_trg_mask.shape: torch.Size([1, 5, 5])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 6, 512])
+r2l_trg_mask.shape: torch.Size([1, 6, 6])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 7, 512])
+r2l_trg_mask.shape: torch.Size([1, 7, 7])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 8, 512])
+r2l_trg_mask.shape: torch.Size([1, 8, 8])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 9, 512])
+r2l_trg_mask.shape: torch.Size([1, 9, 9])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 10, 512])
+r2l_trg_mask.shape: torch.Size([1, 10, 10])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 11, 512])
+r2l_trg_mask.shape: torch.Size([1, 11, 11])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 12, 512])
+r2l_trg_mask.shape: torch.Size([1, 12, 12])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 13, 512])
+r2l_trg_mask.shape: torch.Size([1, 13, 13])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 14, 512])
+r2l_trg_mask.shape: torch.Size([1, 14, 14])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 15, 512])
+r2l_trg_mask.shape: torch.Size([1, 15, 15])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 16, 512])
+r2l_trg_mask.shape: torch.Size([1, 16, 16])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 17, 512])
+r2l_trg_mask.shape: torch.Size([1, 17, 17])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 18, 512])
+r2l_trg_mask.shape: torch.Size([1, 18, 18])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 19, 512])
+r2l_trg_mask.shape: torch.Size([1, 19, 19])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 20, 512])
+r2l_trg_mask.shape: torch.Size([1, 20, 20])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- R2L_Decoder ----------------+
+x.shape: torch.Size([3, 21, 512])
+r2l_trg_mask.shape: torch.Size([1, 21, 21])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([1, 1, 512])
+trg_mask.shape: torch.Size([1, 1, 1])
+memory.shape: torch.Size([1, 27, 512])
+src_mask.shape: torch.Size([1, 1, 27])
+r2l_memory.shape: torch.Size([1, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 2, 512])
+trg_mask.shape: torch.Size([1, 2, 2])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 3, 512])
+trg_mask.shape: torch.Size([1, 3, 3])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 4, 512])
+trg_mask.shape: torch.Size([1, 4, 4])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 5, 512])
+trg_mask.shape: torch.Size([1, 5, 5])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 6, 512])
+trg_mask.shape: torch.Size([1, 6, 6])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 7, 512])
+trg_mask.shape: torch.Size([1, 7, 7])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 8, 512])
+trg_mask.shape: torch.Size([1, 8, 8])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 9, 512])
+trg_mask.shape: torch.Size([1, 9, 9])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 10, 512])
+trg_mask.shape: torch.Size([1, 10, 10])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 11, 512])
+trg_mask.shape: torch.Size([1, 11, 11])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 12, 512])
+trg_mask.shape: torch.Size([1, 12, 12])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 13, 512])
+trg_mask.shape: torch.Size([1, 13, 13])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 14, 512])
+trg_mask.shape: torch.Size([1, 14, 14])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 15, 512])
+trg_mask.shape: torch.Size([1, 15, 15])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 16, 512])
+trg_mask.shape: torch.Size([1, 16, 16])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 17, 512])
+trg_mask.shape: torch.Size([1, 17, 17])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 18, 512])
+trg_mask.shape: torch.Size([1, 18, 18])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 19, 512])
+trg_mask.shape: torch.Size([1, 19, 19])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 20, 512])
+trg_mask.shape: torch.Size([1, 20, 20])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
++---------------- L2R_Decoder ----------------+
+x.shape: torch.Size([3, 21, 512])
+trg_mask.shape: torch.Size([1, 21, 21])
+memory.shape: torch.Size([3, 27, 512])
+src_mask.shape: torch.Size([3, 1, 27])
+r2l_memory.shape: torch.Size([3, 21, 512])
+r2l_trg_mask: None
++---------------------------------------------+
+  0%|                                                   | 0/670 [00:00<?, ?it/s]
+get_groundtruth_captions::   0%|                       | 0/6942 [00:00<?, ?it/s]
+100%|██████████████████████████████████████| 6942/6942 [00:21<00:00, 321.56it/s]
+{'testlen': 21, 'reflen': 19, 'guess': [21, 20, 19, 18], 'correct': [0, 0, 0, 0]}
+ratio: 1.105263157836565
+{'testlen': 21, 'reflen': 19, 'guess': [21, 20, 19, 18], 'correct': [0, 0, 0, 0]}
+ratio: 1.105263157836565
+time: 54.21 seconds
+r2l_scores: {'Bleu_1': 4.761904761678005e-17, 'Bleu_2': 4.879500364504501e-17, 'Bleu_3': 5.0041736243917744e-17, 'Bleu_4': 5.136663909241664e-17, 'METEOR': 0.05348189415041783, 'ROUGE_L': 0.0, 'CIDEr': 0.0}
+l2r_scores: {'Bleu_1': 4.761904761678005e-17, 'Bleu_2': 4.879500364504501e-17, 'Bleu_3': 5.0041736243917744e-17, 'Bleu_4': 5.136663909241664e-17, 'METEOR': 0.0687116564417178, 'ROUGE_L': 0.0, 'CIDEr': 0.0}
+----------------------------------------------------------------
+>> [Train time] Total: 0.40 seconds => Per epoch: 0.40 seconds
+>> [Val time] Total: 20.32 seconds => Per epoch: 20.32 seconds

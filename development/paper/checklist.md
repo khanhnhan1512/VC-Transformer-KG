@@ -24,6 +24,7 @@
     - [ ] *.4. Performance Comparison with SOTA Methods
     - [ ] *.5. Ablation Study
     - [ ] *.6. Hyperparameter Analysis (trình bày các bảng biểu trình bày lý do vì sao chúng ta chọn các siêu tham số như thế này)
+        - Bổ sung: (1) Phân tích việc lựa chọn LN strategies; (2) Phân tích việc sử dụng pseudo reverse caption; (3) Phân tích việc sử dụng 1 hay 2 embedding module
     - [ ] *.7. Qualitative Results (trình bày những case mình mạnh và cả những case mình yếu để làm future work)
 - [ ] 6. Conclusion
     - [ ] Hướng phát triển trong tương lai phải dựa trên những kết quả không tốt từ phần **Qualitative Results**

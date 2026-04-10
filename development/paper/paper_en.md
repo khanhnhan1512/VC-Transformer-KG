@@ -17,7 +17,7 @@ In modern video compression standards, such as H.264 and H.265, reducing tempora
 </figure>
 <br><br>
 
-Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct semantic “unit of information”.
+Typically, a GOP serves as an independently decodable unit within the video bitstream (often referred to as a closed GOP). This means that frames within one specific GOP do not reference any frames located in adjacent GOPs. Because of this structural independence, we can naturally view a compressed video as a continuous sequence of GOPs rather than a sequence of individual frames, treating each GOP as a distinct structural “unit of information”.
 
 **Discussion.** In traditional video captioning frameworks, models often process densely sampled individual frames. However, this dense sampling strategy is highly computationally expensive and often introduces massive redundant visual information, which can easily overwhelm the video captioning network. By shifting the perspective and utilizing the GOP structure as the fundamental input unit, we can effectively eliminate temporal redundancy while preserving the most critical spatio-temporal dynamics required to generate accurate captions.
 
@@ -55,7 +55,7 @@ where $W_i^Q$, $W_i^K$, and $W_i^V$ are learned projection matrices for each hea
 
 **Self-Attention and Cross-Attention.** Based on the origin of $Q$, $K$, and $V$, attention modules in the Transformer can be categorized into two primary types: self‑attention and cross‑attention.
 - **Self-Attention:** In a self‑attention mechanism, $Q$, $K$, and $V$ are all derived from the same input sequence (e.g., the hidden states of previously generated tokens). Self‑attention enables the model to effectively capture internal dependencies among elements within the same sequence.
-- **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, and $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention naturally acts as a routing mechanism that helps the attention module gather necessary semantic context from various information sources.
+- **Cross-Attention:** Cross‑attention occurs when $Q$, $K$, and $V$ come from different sources. In this case, $Q$ is taken from one representation (e.g., the current decoder states), while $K$ and $V$ are taken from another (e.g., encoder outputs). Cross‑attention naturally acts as a routing mechanism that helps the attention module gather relevant context from various information sources.
 
 ### 3.2.2. Position-Wise Feed-Forward Network (FFN)
 
@@ -176,19 +176,19 @@ $$E_M = \text{Norm}_M(F'_M + \text{TE}_M + \text{PE}).$$
 
 After this step, we collect three sets of normalized embedding tokens: $E_A$, $E_S$, and $E_M \in \mathbb{R}^{G \times d_{model}}$.
 
-**Interleaved Concatenation.** To construct the unified representation for the decoders, we do not simply append the modality-specific embedding sequences end-to-end. Instead, we interleave the tokens from each GOP to ensure that the appearance, semantic, and motion information of the exact same time step stay close together. The unified multimodal embeddings $E$ are formulated as:
+**Interleaved Concatenation.** To construct the unified representation for the decoders, we do not simply concatenate the modality-specific embedding sequences consecutively. Instead, we interleave the tokens from each GOP to ensure that the appearance, semantic, and motion information of the exact same time step stay close together. The unified multimodal embeddings $E$ are formulated as:
 
 $$E = [e_A^{(1)}, e_S^{(1)}, e_M^{(1)}, \dots, e_A^{(G)}, e_S^{(G)}, e_M^{(G)}] \in \mathbb{R}^{3G \times d_{model}},$$
 
 where $e_A^{(g)}, e_S^{(g)}, e_M^{(g)}$ denote the $g$-th token from $E_A, E_S,$ and $E_M$, respectively.
 
-**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a forward decoder (FD) and a backward decoder (BD). Because generating text from left-to-right and right-to-left involves entirely different decoding objectives, we construct two separate multimodal feature embedding modules. These modules share the aforementioned mathematical operations but maintain completely independent learnable weights. This independent design allows each decoder to learn a specialized multimodal representation that is strictly optimized for its specific decoding direction. Consequently, this dual strategy yields two distinct sets of unified multimodal embeddings: $\overleftarrow{E}$ (for the BD) and $\overrightarrow{E}$ (for the FD).
+**Dual Embedding Module Strategy.** As illustrated in Figure [$\sout{???}$](), our bidirectional architecture consists of a backward decoder and a forward decoder. To support their distinct but complementary roles, and to provide each decoder with a dedicated representational space, we construct two separate multimodal feature embedding modules. These modules share the aforementioned mathematical operations but maintain independent learnable weights. This decoupled design allows each decoder to learn a specialized multimodal representation tailored to its specific role of reverse or forward caption generation. Consequently, this strategy yields two distinct sets of unified multimodal embeddings: $\overleftarrow{E}$ and $\overrightarrow{E}$ for the backward and forward decoders, respectively.
 
 ## 4.4. Backward Decoder (BD)
 
 The backward decoder (BD) follows the standard Transformer decoder architecture. However, instead of generating text in the conventional left-to-right manner, it is trained to predict the video caption in reverse order. By processing the unified multimodal embeddings $\overleftarrow{E}$ alongside the previously generated words, the BD explicitly captures critical right-to-left contextual dependencies, serving as a vital structural complement to the conventional left-to-right caption generation.
 
-Mathematically, let $\overleftarrow{\hat{Y}_{<t'}}=[\overleftarrow{\hat{y}_1},\dots,\overleftarrow{\hat{y}_{t'-1}}]$ be the sequence of words predicted during the first $t'-1$ time steps, and let $\overleftarrow{Z_{<t'}} = [\overleftarrow{z_1},\dots,\overleftarrow{z_{t'-1}}]$ be their corresponding normalized word embeddings. To predict the word $\overleftarrow{\hat{y}_{t'}}$ at time step $t'$, the embedding vector of the immediate previous word $\overleftarrow{z_{t'-1}}$ must pass through the core sub-layers of a decoder layer: a masked self-attention mechanism, a cross-attention mechanism, and a position-wise feed-forward network. The computational workflow for a single BD layer is formulated as follows:
+Mathematically, let $\overleftarrow{\hat{Y}_{<t'}}=[\overleftarrow{\hat{y}_1},\dots,\overleftarrow{\hat{y}_{t'-1}}]$ be the sequence of words predicted during the first $t'-1$ time steps, and $\overleftarrow{Z_{<t'}} = [\overleftarrow{z_1},\dots,\overleftarrow{z_{t'-1}}]$ be the corresponding normalized word embeddings. To predict the word $\overleftarrow{\hat{y}_{t'}}$ at time step $t'$, the embedding vector of the immediate previous word $\overleftarrow{z_{t'-1}}$ must pass through the core sub-layers of a decoder layer: a masked self-attention mechanism, a cross-attention mechanism, and a position-wise feed-forward network. The computational workflow for a single BD layer is formulated as follows:
 
 $$ \overleftarrow{u_{t'}} = \text{Masked-Self-Attention}(\overleftarrow{z_{t'-1}}, \overleftarrow{Z_{<t'}}, \overleftarrow{Z_{<t'}}), $$
 $$ \overleftarrow{q_{t'}} = \text{Cross-Attention}(\overleftarrow{u_{t'}}, \overleftarrow{E}, \overleftarrow{E}), $$
@@ -196,7 +196,7 @@ $$ \overleftarrow{k_{t'}} = \text{FFN}(\overleftarrow{q_{t'}}), $$
 
 where $\overleftarrow{u_{t'}}$, $\overleftarrow{q_{t'}}$, and $\overleftarrow{k_{t'}}$ represent the output hidden state vectors of the respective sub-layers at step $t'$. As detailed in Section [$\sout{???}$](), each sub-layer systematically employs the Peri-LN strategy alongside a residual connection.
 
-To capture deep semantic relationships, we construct the complete BD by stacking $N_{BD}$ identical backward decoder layers. The sequence of sub-layer transformations described above is applied iteratively across all layers. After propagating through the entire stack, the output vector from the last FFN sub-layer, denoted as $\overleftarrow{k_{t'}^{(N_{BD})}}$, is passed through an additional normalization layer to obtain the final backward hidden state vector $\overleftarrow{h_{t'}}$:
+To capture deep contextual relationships, we construct the complete BD by stacking $N_{BD}$ identical backward decoder layers. The sequence of sub-layer transformations described above is applied iteratively across all layers. After propagating through the entire stack, the output vector from the last FFN sub-layer, denoted as $\overleftarrow{k_{t'}^{(N_{BD})}}$, is passed through an additional normalization layer to obtain the final backward hidden state vector $\overleftarrow{h_{t'}}$:
 
 $$ \overleftarrow{h_{t'}} = \text{Norm}\left(\overleftarrow{k_{t'}^{(N_{BD})}}\right). $$
 
@@ -206,7 +206,7 @@ $$ P(\overleftarrow{\hat{y}_{t'}} \mid \overleftarrow{\hat{Y}_{<t'}}, \overlefta
 
 This autoregressive generation continues iteratively until the model predicts the end-of-sequence marker $\langle \text{S} \rangle$, which terminates the reverse captioning process. The fully generated backward caption is denoted as $\overleftarrow{\hat{Y}}= [\overleftarrow{\hat{y}_1},\dots,\overleftarrow{\hat{y}_{T'}},\langle \text{S} \rangle]$.
 
-**Global Backward Context.** In our proposed architecture, the backward hidden states generated across all time steps play an essential role beyond their primary function of predicting the reverse sequence. By preserving these states, we encapsulate the full right-to-left semantic context of the entire generated caption. As shown in Figure [$\sout{???}$](), this comprehensive representation serves as our global backward context $\overleftarrow{H}$:
+**Global Backward Context.** In our proposed architecture, the backward hidden states generated across all time steps play an essential role beyond their primary function of predicting the reverse sequence. By preserving these states, we encapsulate the full right-to-left linguistic context of the entire generated caption. As shown in Figure [$\sout{???}$](), this comprehensive representation serves as our global backward context $\overleftarrow{H}$:
 
 $$ \overleftarrow{H} = [\overleftarrow{h_1}, \dots, \overleftarrow{h_{|\overleftarrow{\hat{Y}}|}}]. $$
 
@@ -216,7 +216,7 @@ This sequence-level context $\overleftarrow{H}$ is passed to the forward decoder
 
 The forward decoder (FD) generates the final caption in a standard left-to-right manner. Building upon the core architecture of the BD, the FD incorporates a second cross-attention sub-layer. This modification allows the FD to receive direct guidance from both the unified multimodal embeddings $\overrightarrow{E}$ and the sequence-level backward context $\overleftarrow{H}$. Consequently, at every prediction step, the FD is inherently guided by the anticipated global structure of the entire caption, empowering it to generate highly context-aware descriptions.
 
-Given the word sequence generated during the previous $t-1$ time steps $\overrightarrow{\hat{Y}_{<t}}=[\overrightarrow{\hat{y}_1},\dots,\overrightarrow{\hat{y}_{t-1}}]$, and their corresponding normalized word embeddings $\overrightarrow{Z_{<t}} = [\overrightarrow{z_1},\dots,\overrightarrow{z_{t-1}}]$, the computational workflow of a single FD layer to predict the next word $\overrightarrow{\hat{y}_{t}}$ is formulated as follows:
+Given the word sequence $\overrightarrow{\hat{Y}_{<t}}=[\overrightarrow{\hat{y}_1},\dots,\overrightarrow{\hat{y}_{t-1}}]$ generated during the previous $t-1$ time steps, and the corresponding normalized word embeddings $\overrightarrow{Z_{<t}} = [\overrightarrow{z_1},\dots,\overrightarrow{z_{t-1}}]$, the computational workflow of a single FD layer to predict the next word $\overrightarrow{\hat{y}_{t}}$ is formulated as follows:
 
 $$ \overrightarrow{u_{t}} = \text{Masked-Self-Attention}(\overrightarrow{z_{t-1}}, \overrightarrow{Z_{<t}}, \overrightarrow{Z_{<t}}), $$
 $$ \overrightarrow{q_{t}} = \text{Cross-Attention}(\overrightarrow{u_{t}}, \overrightarrow{E}, \overrightarrow{E}), $$

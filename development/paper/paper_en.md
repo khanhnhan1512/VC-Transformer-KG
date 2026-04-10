@@ -255,6 +255,6 @@ where the hyperparameter $\lambda \in [0,1]$ balances the contribution of the tw
 
 To address this, we adopt a randomization strategy inspired by prior works in bidirectional decoding [$\sout{CITE}$-BiTransformer | BTKG](). Specifically, we leverage the fact that each video in the dataset typically contains multiple reference captions. For a given video, we first apply a word-for-word reversal to all of its associated forward captions to form a video-specific backward pool. As illustrated in Figure [$\sout{???}$](), these candidates are then randomly shuffled and pseudo-paired with the forward captions. This randomization strategy forces the FD to utilize $\overleftarrow{H}$ for building a global contextual understanding rather than exploiting trivial word-level mappings.
 
-![](figures/Pseudo-Reverse-Captions.svg)<br>
+![](figures/New-Pseudo-Reverse-Captions.svg)<br>
 Figure 4. The construction process of pseudo reverse captions. For a given video, the reference forward captions undergo a word-for-word reversal to form a video-specific backward pool. These candidates are then randomly shuffled and pseudo-paired with the original forward captions. This intra-video randomization prevents information leakage by forcing the FD to leverage the global backward context rather than exploiting trivial word-level mappings.
 <br><br>

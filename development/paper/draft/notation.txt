@@ -12,14 +12,14 @@ K				ffn
 L loss
 M motion
 N num layer
-O 
+O big-O
 P B/P-frame
 Q 				cross-attn
 R math
 S semantic
 T time step
 U 				self-attn
-V visual
+V = 3G
 W weights
 X input
 Y output

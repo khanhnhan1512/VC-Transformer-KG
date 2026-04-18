@@ -17,6 +17,7 @@
     - [ ] *.4. Backward Decoder
     - [ ] *.5. Forward Decoder
     - [ ] *.6. Optimization (nhấn mạnh vào pseudo reverse caption, kẻ 1 bảng để cho ví dụ minh họa **reverse word order in each pair** -> **randomize reverse captions to create new pairs**)
+    - [ ] *.7. Big-O analysis
 - [ ] 5. Experiments
     - [ ] *.1. Datasets
     - [ ] *.2. Evaluation metrics (trình bày công thức của mỗi metric)

@@ -15,8 +15,8 @@ Vì sự liêm chính trong học thuật là yếu tố sống còn, tiêu chí
 - **Quyền truy vấn (Chủ động hỏi làm rõ):** Bất cứ khi nào thấy nội dung thô có sự mập mờ, thiếu logic hay chưa tường minh, bạn phải ngay lập tức dùng tiếng Việt đặt câu hỏi ngược lại cho tôi để làm sáng tỏ vấn đề, TRƯỚC KHI tiến hành viết bản thảo.
 
 ## 3. Tổng quan Kiến trúc Đề xuất (Architecture Overview)
-Mô hình đề xuất mang tên **BiDecT (Encoder-Free Bidirectional Decoder Transformer)**. Dưới đây là các đặc điểm và cơ chế hoạt động cốt lõi mà bạn cần nắm chắc:
-- **Thiết kế Encoder-Free:** Điểm khác biệt quan trọng nhất so với các mô hình trước là loại bỏ hoàn toàn Encoder trung gian. Đặc trưng đa phương thức (multimodal features) được truyền trực tiếp vào hệ thống Bidirectional Decoder. Cơ sở của thiết kế này là các đặc trưng đa phương thức từ các mô hình pre-trained lớn đã có tính biểu diễn rất mạnh; việc bỏ đi Encoder giúp giảm đáng kể chi phí tính toán và hạn chế thất thoát thông tin.
+Mô hình đề xuất mang tên **Encoder-free Bidirectional Decoder Transformer (BiDecT)**. Dưới đây là các đặc điểm và cơ chế hoạt động cốt lõi mà bạn cần nắm chắc:
+- **Thiết kế Encoder-free:** Điểm khác biệt quan trọng nhất so với các mô hình trước là loại bỏ hoàn toàn Encoder trung gian. Đặc trưng đa phương thức (multimodal features) được truyền trực tiếp vào hệ thống Bidirectional Decoder. Cơ sở của thiết kế này là các đặc trưng đa phương thức từ các mô hình pre-trained lớn đã có tính biểu diễn rất mạnh; việc bỏ đi Encoder giúp giảm đáng kể chi phí tính toán và hạn chế thất thoát thông tin.
 - **Tối ưu theo cấu trúc GOP:** Video đầu vào được xử lý theo dạng chuỗi các "GOP" (Group of Pictures) thay vì từng frame riêng lẻ để tăng hiệu năng tối ưu tính toán.
 - **4 Thành phần chính của Pipeline (Core Components):**
   1. **Multimodal Feature Extraction:** Trích xuất đồng đều 3 loại thông tin bổ trợ cho nhau (đặc trưng appearance, semantic, và motion) trên tất cả các GOP của video.

@@ -1,0 +1,26 @@
+- [x] A appearance-feature
+- [x] B B/P-frame
+- [x] C decoder-cross-attention
+- [] D
+- [x] E multimodal-embedding
+- [x] F feature 
+- [x] G num GOP
+- [x] H decoder-final-hidden-state
+- [x] I I-frame
+- [] J
+- [x] K attention-key
+- [x] L loss
+- [x] M motion-feature
+- [x] N num layer
+- [x] O big-O + decoder-ffn
+- [x] P B/P-frame
+- [x] Q attention-query
+- [x] R math
+- [x] S semantic-feature
+- [x] T time step
+- [x] U decoder-self-attn
+- [x] V attention-value
+- [x] W weights
+- [x] X input
+- [x] Y output
+- [x] Z word-embedding

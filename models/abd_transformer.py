@@ -351,15 +351,11 @@ class ABDTransformer(nn.Module):
         self.device = device
         multiple_of = 128
         
-        # --- Feature Embeddings ---
-        self.r2l_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.r2l_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
-        self.r2l_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
-        
-        self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
-        self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
-        
+        # --- 1 Shared Feature Embeddings ---
+        self.src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
+        self.seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
+        self.feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
+
         # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
         self.l2r_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -376,41 +372,22 @@ class ABDTransformer(nn.Module):
         self.l2r_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
 
     def encode(self, src, src_mask, r2l_encode=False):
-        # ============== Right-to-Left Encoding ==============
-        if r2l_encode:
-            batch_size  = src[0].size(0)
-            final_feats = []
-            for i in range(len(src)):
-                feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
-                
-                feat = self.r2l_src_embed[i](feat)
-                feat = self.r2l_seg_embed(feat, seg_id)
-                feat = self.pos_embed(feat)
-                feat = self.r2l_feat_norm[i](feat)
-                final_feats.append(feat)
+        # ============== Shared Encoding ==============
+        batch_size  = src[0].size(0)
+        final_feats = []
+        for i in range(len(src)):
+            feat   = src[i]
+            seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
             
-            B, _, D  = final_feats[0].shape
-            _stacked = torch.stack(final_feats, dim=2)
-            return _stacked.reshape(B, -1, D)
+            feat = self.src_embed[i](feat)
+            feat = self.seg_embed(feat, seg_id)
+            feat = self.pos_embed(feat)
+            feat = self.feat_norm[i](feat)
+            final_feats.append(feat)
         
-        # ============== Left-to-Right Encoding ==============
-        else:
-            batch_size  = src[0].size(0)
-            final_feats = []
-            for i in range(len(src)):
-                feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
-                
-                feat = self.l2r_src_embed[i](feat)
-                feat = self.l2r_seg_embed(feat, seg_id)
-                feat = self.pos_embed(feat)
-                feat = self.l2r_feat_norm[i](feat)
-                final_feats.append(feat)
-            
-            B, _, D  = final_feats[0].shape
-            _stacked = torch.stack(final_feats, dim=2)
-            return _stacked.reshape(B, -1, D)
+        B, _, D  = final_feats[0].shape
+        _stacked = torch.stack(final_feats, dim=2)
+        return _stacked.reshape(B, -1, D)
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)

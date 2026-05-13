@@ -120,7 +120,7 @@ class TrainConfig:
     lr_decay_patience = 3
     weight_decay = 0.5e-5
     warmup_epochs = 3
-    reg_lambda = 0.6    # weights of l2r
+    reg_lambda = 1.0    # weights of l2r
     beam_size = 4
     label_smoothing = 0.15
 

@@ -244,7 +244,7 @@ class L2RDecoderLayer(nn.Module):
             
         x = self.sublayer_connection_1(x, lambda x: self.attn_1(x, x, trg_mask))
         x = self.sublayer_connection_2(x, lambda x: self.attn_2(x, memory, src_mask))
-        x = self.sublayer_connection_3(x, lambda x: self.attn_3(x, r2l_memory, r2l_trg_mask))
+        # x = self.sublayer_connection_3(x, lambda x: self.attn_3(x, r2l_memory, r2l_trg_mask))
         x = self.sublayer_connection_4(x, self.feed_forward)
         return x
 

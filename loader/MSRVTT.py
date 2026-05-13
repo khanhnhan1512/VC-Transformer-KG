@@ -49,9 +49,9 @@ class MSRVTTDataset(CustomDataset):
                 r2l_caption = " ".join(caption.strip('.').split()[::-1])
                 self.r2l_captions[vid].append(r2l_caption)
                 self.l2r_captions[vid].append(caption)
-        for vid, caption in self.r2l_captions.items():
-            # self.r2l_captions[vid] = caption[::-1]
-            random.shuffle(caption)
+        # for vid, caption in self.r2l_captions.items():
+        #     # self.r2l_captions[vid] = caption[::-1]
+        #     random.shuffle(caption)
 
 
 class MSRVTT(Corpus):

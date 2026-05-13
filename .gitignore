@@ -171,4 +171,5 @@ data/*
 cache/*
 
 # Exclude development files
+development/*
 # Exclude some helper files

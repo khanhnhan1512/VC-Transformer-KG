@@ -198,6 +198,44 @@ class SkipConnectionAfterLN(nn.Module):
 
 
 # ╭────────────────────────────────────────────────────────────╮
+# │                          Encoder                           │
+# ╰────────────────────────────────────────────────────────────╯
+class EncoderLayer(nn.Module):
+
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, dropout: float, use_rope: bool, first_layer: bool):
+        super(EncoderLayer, self).__init__()
+
+        self.attn = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
+        if first_layer: self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
+        else:           self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
+        self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
+
+    def forward(self, x, src_mask):
+        x = self.sublayer_connection_1(x, lambda x: self.attn(x, x, src_mask))
+        x = self.sublayer_connection_2(x, self.feed_forward)
+        return x
+
+
+class Encoder(nn.Module):
+
+    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
+        super(Encoder, self).__init__()
+        self.out_norm = nn.LayerNorm(d_model)
+        self.encoder_layers = nn.ModuleList([
+            EncoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads,
+                         dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            for i in range(num_layers)
+        ])
+
+    def forward(self, x, src_mask):
+        for layer in self.encoder_layers:
+            x = layer(x, src_mask)
+        x = self.out_norm(x)
+        return x
+
+
+# ╭────────────────────────────────────────────────────────────╮
 # │                       Decoder Layers                       │
 # ╰────────────────────────────────────────────────────────────╯
 class R2LDecoderLayer(nn.Module):
@@ -351,14 +389,15 @@ class ABDTransformer(nn.Module):
         self.device = device
         multiple_of = 128
         
+        assert n_enc_layers > 0, f"[ABDTransformer.__init__] n_enc_layers must be > 0, got {n_enc_layers}"
         # --- Feature Embeddings ---
         self.r2l_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.r2l_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
         self.r2l_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
-        
+        self.r2l_feat_enc  = nn.ModuleList([Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False) for _ in d_feat])
+
         self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
         self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
+        self.l2r_feat_enc  = nn.ModuleList([Encoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_enc_layers, dropout=dropout, use_rope=False) for _ in d_feat])
         
         # --- Text Embeddings ---
         self.r2l_trg_embed = TextEmbedding(vocab.n_vocabs, d_model)
@@ -376,41 +415,30 @@ class ABDTransformer(nn.Module):
         self.l2r_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
 
     def encode(self, src, src_mask, r2l_encode=False):
+        feat_mask = src_mask[:,:,0::3]
         # ============== Right-to-Left Encoding ==============
         if r2l_encode:
-            batch_size  = src[0].size(0)
             final_feats = []
             for i in range(len(src)):
-                feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
-                
+                feat = src[i]
                 feat = self.r2l_src_embed[i](feat)
-                feat = self.r2l_seg_embed(feat, seg_id)
                 feat = self.pos_embed(feat)
                 feat = self.r2l_feat_norm[i](feat)
+                feat = self.r2l_feat_enc[i](feat, feat_mask)
                 final_feats.append(feat)
-            
-            B, _, D  = final_feats[0].shape
-            _stacked = torch.stack(final_feats, dim=2)
-            return _stacked.reshape(B, -1, D)
+            return final_feats[0] + final_feats[1] + final_feats[2]
         
         # ============== Left-to-Right Encoding ==============
         else:
-            batch_size  = src[0].size(0)
             final_feats = []
             for i in range(len(src)):
-                feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
-                
+                feat = src[i]
                 feat = self.l2r_src_embed[i](feat)
-                feat = self.l2r_seg_embed(feat, seg_id)
                 feat = self.pos_embed(feat)
                 feat = self.l2r_feat_norm[i](feat)
+                feat = self.l2r_feat_enc[i](feat, feat_mask)
                 final_feats.append(feat)
-            
-            B, _, D  = final_feats[0].shape
-            _stacked = torch.stack(final_feats, dim=2)
-            return _stacked.reshape(B, -1, D)
+            return final_feats[0] + final_feats[1] + final_feats[2]
 
     def r2l_decode(self, r2l_trg, memory, src_mask, r2l_trg_mask):
         x = self.r2l_trg_embed(r2l_trg)

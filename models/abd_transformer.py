@@ -345,6 +345,8 @@ def pad_mask(src, r2l_trg, trg, pad_idx):
     
     enc_src_mask = _out_mask.unsqueeze(1)
     dec_src_mask = _out_mask.unsqueeze(1)
+    enc_src_mask = enc_src_mask[:,:,0::3]
+    dec_src_mask = enc_src_mask
     src_mask     = (enc_src_mask, dec_src_mask)
     
     if trg is not None:
@@ -453,8 +455,6 @@ class ABDTransformer(nn.Module):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
         
         enc_src_mask, dec_src_mask = src_mask
-        enc_src_mask = enc_src_mask[:,:,0::3]
-        dec_src_mask = enc_src_mask
         r2l_encoding_outputs = self.encode(src, enc_src_mask, r2l_encode=True)
         encoding_outputs = self.encode(src, enc_src_mask)
         

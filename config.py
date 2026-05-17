@@ -93,7 +93,7 @@ class TransformerConfig:
     dropout = 0.1
     n_heads_big  = 4
     n_heads      = 4
-    n_enc_layers = 2 # Number of encoder layers
+    n_enc_layers = 3 # Number of encoder layers
     n_dec_layers = 3 # Number of decoder layers
 
 

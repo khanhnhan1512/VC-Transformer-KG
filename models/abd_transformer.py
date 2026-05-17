@@ -415,7 +415,6 @@ class ABDTransformer(nn.Module):
         self.l2r_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
 
     def encode(self, src, src_mask, r2l_encode=False):
-        feat_mask = src_mask[:,:,0::3]
         # ============== Right-to-Left Encoding ==============
         if r2l_encode:
             final_feats = []
@@ -424,7 +423,7 @@ class ABDTransformer(nn.Module):
                 feat = self.r2l_src_embed[i](feat)
                 feat = self.pos_embed(feat)
                 feat = self.r2l_feat_norm[i](feat)
-                feat = self.r2l_feat_enc[i](feat, feat_mask)
+                feat = self.r2l_feat_enc[i](feat, src_mask)
                 final_feats.append(feat)
             return final_feats[0] + final_feats[1] + final_feats[2]
         
@@ -436,7 +435,7 @@ class ABDTransformer(nn.Module):
                 feat = self.l2r_src_embed[i](feat)
                 feat = self.pos_embed(feat)
                 feat = self.l2r_feat_norm[i](feat)
-                feat = self.l2r_feat_enc[i](feat, feat_mask)
+                feat = self.l2r_feat_enc[i](feat, src_mask)
                 final_feats.append(feat)
             return final_feats[0] + final_feats[1] + final_feats[2]
 
@@ -454,6 +453,8 @@ class ABDTransformer(nn.Module):
         src_mask, r2l_pad_mask, r2l_trg_mask, trg_mask = mask
         
         enc_src_mask, dec_src_mask = src_mask
+        enc_src_mask = enc_src_mask[:,:,0::3]
+        dec_src_mask = enc_src_mask
         r2l_encoding_outputs = self.encode(src, enc_src_mask, r2l_encode=True)
         encoding_outputs = self.encode(src, enc_src_mask)
         

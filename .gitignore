@@ -173,3 +173,4 @@ cache/*
 # Exclude development files
 # Exclude some helper files
 development/*
+*.ckpt

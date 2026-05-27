@@ -126,7 +126,6 @@ class TrainConfig:
 
     transformer_id = f"Transformer "\
                      f"d-{transformer.d_model} " \
-                     f"N_enc-{transformer.n_enc_layers} " \
                      f"N_dec-{transformer.n_dec_layers} " \
                      f"h-{transformer.n_heads} " \
                      f"h_big-{transformer.n_heads_big} " \

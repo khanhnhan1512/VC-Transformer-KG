@@ -84,9 +84,9 @@ class VATEXLoaderConfig(object):
 class TransformerConfig:
     d_model      = 512
     d_ff         = d_model * 4
-    dropout      = 0.1
-    n_heads      = 4
     n_dec_layers = 3
+    n_heads      = 4
+    dropout      = 0.1
 
 
 class TrainConfig:
@@ -126,9 +126,9 @@ class TrainConfig:
 
     transformer_id = f"Transformer "\
                      f"d-{transformer.d_model} " \
+                     f"d_ff-{transformer.d_ff} " \
                      f"N_dec-{transformer.n_dec_layers} " \
                      f"h-{transformer.n_heads} " \
-                     f"h_big-{transformer.n_heads_big} " \
                      f"dp-{transformer.dropout}"
 
     optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \

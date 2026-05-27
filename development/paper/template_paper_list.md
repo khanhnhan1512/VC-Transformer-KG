@@ -16,13 +16,15 @@
 
 ---
 
-# [25-26][][UHCL] Unified hierarchical contrastive learning for video captioning
+# [25-26][v][UHCL] Unified hierarchical contrastive learning for video captioning
 
 - **Link:** https://www.sciencedirect.com/science/article/pii/S1566253525009182
 
 - **Published in:** Information Fusion, Volume 127, Part B, March 2026, 103856
 
 - **Main results:**
+    - MSVD: kém BiDecT cả 4 metrics
+    - MSR-VTT: B4 hơn 0.2 + M ngang + R/C kém
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -135,13 +137,14 @@ with single-stage training, ensuring the model both straightforward and
 efficient.
 ```
 
-# [23-25][v] Visual Commonsense-Aware Representation Network for Video Captioning
+# [23-25][v][VCRN] Visual Commonsense-Aware Representation Network for Video Captioning
 
 - **Link:** https://arxiv.org/pdf/2211.09469
 
 - **Published in:** IEEE Transactions on Neural Networks and Learning Systems ( Volume: 36, Issue: 1, January 2025)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -361,13 +364,14 @@ proposed method is applied to the task of video question
 answering to verify its effectiveness.
 ```
 
-# [25-26][v] Dual-hierarchical knowledge distillation for video captioning
+# [25-26][v][CapDistill] Dual-hierarchical knowledge distillation for video captioning
 
 - **Link:** https://www.sciencedirect.com/science/article/pii/S0031320325008532
 
 - **Published in:** Pattern Recognition, Volume 171, Part A, March 2026, 112192
 
 - **Main results:**
+    - MSVD/MSR-VTT/VATEX: thua BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -516,13 +520,15 @@ features, which constrained the semantic diversity transferred to the
 student.
 ```
 
-# [25-26][?][MK-VC] Scene adaptive dynamic multi-modal knowledge for video captioning
+# [25-26][v][MK-VC] Scene adaptive dynamic multi-modal knowledge for video captioning
 
 - **Link:** https://www.sciencedirect.com/science/article/pii/S0957417425044355
 
 - **Published in:** Expert Systems with Applications, Volume 305, 5 April 2026, 130820
 
 - **Main results:**
+    - MSVD: kém BiDecT 4 metrics
+    - MSR-VTT: M ngang + kém 3 metrics còn lại
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -702,6 +708,7 @@ mechanisms to enhance the model’s learning of cross-modal mappings.
 - **Published in:** Pattern Recognition, Volume 175, July 2026, 113105
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -852,6 +859,7 @@ content and textual semantics. Although related work [36] employs visual regions
 - **Published in:** Pattern Recognition, Volume 156, December 2024, 110744
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -1450,72 +1458,7 @@ Therefore, we propose an adaptive semantic guidance network for
 video captioning.
 ```
 
-# [24-24][v] Center-enhanced video captioning model with multimodal semantic alignment
-
-- **Link:** https://www.sciencedirect.com/science/article/pii/S0893608024006683
-
-- **Published in:** Neural Networks, Volume 180, December 2024, 106744
-
-- **Main results:**
-
-| MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
-| --- | --- | --- | --- |
-| 60.9 | 40.5 | 77.9 | 117.9 |
-
-| MSRVTT-B@4 | MSRVTT-M | MSRVTT-R | MSRVTT-C | 
-| --- | --- | --- | --- |
-| 43.6 | 31.1 | 62.1 | 53.3 |
-
-| VATEX-B@4 | VATEX-M | VATEX-R | VATEX-C |
-| --- | --- | --- | --- |
-| |
-
-- **Abstract:**
-
-```
-Video captioning aims at automatically generating descriptive sentences based on the given video, establishing an association between the visual contents and textual languages, has attracted great attention and plays a significant role in many practical applications. Previous researches focus more on the aspect of caption generation, ignoring the alignment of multimodal feature and just simply concatenating them. Besides, video feature extraction is usually done in an off-line manner, which leads to the fact that the extracted feature may not adapted to the subsequent caption generation task. To improve the applicability of extracted features for downstream caption generation and to address the issue of multimodal semantic alignment fusion, we propose an end-to-end center-enhanced video captioning model with multimodal semantic alignment, which integrates feature extraction and caption generation task into a unified framework. In order to enhance the completeness of semantic features, we design a center enhancement strategy where the visual–textual deep joint semantic feature can be captured via incremental clustering, then the cluster centers can serve as the guidance for better caption generation. Moreover, we propose to promote the visual–textual multimodal alignment fusion by learning the visual and textual representation in a shared latent semantic space, so as to alleviate the multimodal misalignment problem. Experimental results on two popular datasets MSVD and MSR-VTT demonstrate that the proposed model could outperform the state-of-the-art methods, obtaining higher-quality caption results.
-```
-
-- **Introduction:**
-
-```
-The task of generating descriptive sentence for a given video naturally establishes association between visual information and natural language, which has been rapidly advancing and has garnered significant attention from both academic and industry communities (Cheng and Gu, 2021, Wang et al., 2023). Video captioning aims at providing natural-language descriptions of the content to the given video, which is an important area of research for video understanding and multimodal representation (Li, Xie, Zhang and Shi, 2023, Wu et al., 2023), and can be applied to many practical applications, such as danger identification and warning, visually impaired people assistance, and human–machine collaboration (Gao et al., 2021, Gao et al., 2023, Gao et al., 2020, Yuan et al., 2019).
-Early researches in video captioning primarily focus on template-based models. These approaches involve selecting a pre-defined template and attempting to align sentence components with the corresponding visual content to generate captions. Over time, the research direction of video captioning has shifted toward sequence learning-based methods. These approaches typically adopt a CNN–RNN structure, where the CNN network captures visual features, and the RNN-based decoder (LSTM, GRU) generates descriptive language. Recently, the Transformer model (Vaswani et al., 2017) has outperformed conventional recurrent methods in many sequential modeling tasks. Inspired by the success of Transformer-style models in natural language processing, researchers have explored their use for vision-language multimodal tasks, demonstrating their effectiveness in multimodal representation learning and downstream tasks. Among them, Zhou, Zhou, Corso, Socher, and Xiong (2018) are the first to make a breakthrough in extending the conventional Transformer model to video caption tasks. Li, Yatskar, Yin, Hsieh, and Chang (2019) and Su et al. (2020) employ Bert (Devlin, Chang, Lee, & Toutanova, 2018) to implicitly align visual and textual features to learn multimodal representations for downstream tasks.
-However, a common situation in most previous works is the use of offline 2D and 3D extractors to obtain visual features, which raises question about how well these extracted features can be adapted to the captioning task. In the commonly adopted CNN–RNN or CNN-Transformer encoder–decoder structures, video and text are represented in their own specific embedding spaces using different encoding methods, making cross-modal information harder to fuse interactively. In addition, most existing works focus primarily on generating high-quality captions, with little attention given to the importance of cross-modal interactive fusion and its role in enhancing caption generation. Furthermore, there may also be situation where the visual representation and the textual representation do have high similarity in value to some extent, but are in different embedding spaces. Therefore, the multimodal information is actually not well aligned. Generating captions based on such misaligned multimodal information would lead to low-quality results.
-To overcome the aforementioned problems, in this paper, we propose an end-to-end center-enhanced video captioning model with multimodal semantic alignment. Compared with previous works that adopt the offline mode to extract visual features, as shown in Fig. 1, the feature extraction and caption generation are integrated into a unified framework, which would make the extracted feature more adapted to the downstream caption generation task. The whole model consists of three main components: feature extraction, multimodal semantic alignment, and center enhancement for caption generation. During the training process, the visual and textual features are first extracted by video and text encoder respectively, and the aligned multimodal representations are learned in a shared latent semantic space. These multimodal aligned representations are then fed into the multimodal encoder–decoder for caption generation, which is further enhanced by the proposed center enhancement strategy.
-
-In all, the main contributions of this work are summarized as
-follows:
-∙ We propose an end-to-end center-enhanced video captioning
-model with multimodal semantic alignment, which integrates the
-feature extraction and downstream caption generation task into a
-unified framework.
-∙ To enhance the completeness of semantic features, we design a
-cluster center enhancement strategy to capture key information
-within the multimodal features.
-∙ To alleviate the misalignment problem of multimodal semantic
-fusion, we design to learn the representation of visual and textual feature in the shared latent semantic space for multimodal
-semantic alignment.
-```
-
-- **Related work:**
-
-```
-2.1. Video captioning
-Video captioning, which aims to generate descriptive captions for given videos, has gained increasing attention in the field of multimodal representation learning. Existing methods can be broadly divided into three categories: (1) template-based methods, (2) RNNs-based methods, and (3) Transformer-based methods.
-2.1.1. Template-based methods
-Early research on video captioning adopts template-based methods, where captions are generated by filling in pre-defined sentence templates with relevant visual information extracted from the video. These templates consisted of sentence structures with placeholders for specific types of information such as objects and actions. Typical templated-based video captioning methods are Rohrbach et al. (2013) and Xu, Xiong, Chen, and Corso (2015), in which the models first identify visual contents with classifier. Then the identified concepts are used to form a caption using basic linguistic grammar principles such as subject, verb and object. Although this kind of method is intuitive and easy to understand, it is not flexible and suitable for more complex or diverse video content, as the templates is fixed and may not be able to capture all the details of video.
-2.1.2. RNN (LSTM, GRU)-based methods
-For the limitations of template-based methods, recent research direction on video captioning have shifted toward sequence-to-sequence learning methods, where the encoder–decoder structure is typically adopted (Chen et al., 2019). In this structure, the pre-trained 2D and 3D CNN extractors are first utilized to encoder the video frame contents into the visual feature, then the RNNs network would serve as language decoder to generate captions based on the sequence of encoded visual feature. Gao et al., 2022, Wang et al., 2022, Wang et al., 2018, Zhang and Peng, 2020, Zhang et al., 2020 and Zhang, Wang, Ma, and Liu (2019) are the representative works of this kind of methods. Specifically, Venugopalan et al. (2015) are the first to use such CNN–RNN structure for video captioning task, however, they adopt a mean pooled scheme when obtaining visual feature, which is too coarse for the language decoder to generate captions. Baraldi, Grana, and Cucchiara (2017) and Pan, Xu, Yang, Wu, and Zhuang (2016) utilize the hierarchical characteristic of video when capturing visual representation. Tang, Wang, and Li (2019) capture rich semantic visual and language features for video captioning with a wider and deeper LSTM network. To generate an imaginary and coherent story with narrative multi-sentences from a group of relevant images, Li, Wang, He, Chen and Wen (2023) propose a knowledge-enriched attention network with group-wise semantic for visual storytelling. Aafaq, Akhtar, Liu, Gilani, and Mian (2019) enriches the visual encoding of video frames with semantic attributes and spatio-temporal dynamics information to improve the performance of video captioning. Pei et al. (2019) design a memory module as an auxiliary to record the correspondence between a word and its corresponding visual contexts across input videos, enabling the model to obtain a more comprehensive understanding for each word and generate high-quality captions. Chen and Jiang (2021) utilizes both visual and temporal features by incorporating motion-guided region proposals and message passing to generate accurate captions for video content. Tu, Zhou, Guo, Gao, and Yu (2021) utilizes pre-detected visual tags which provide crucial visual information while belonging to the textual modality, and adopts a Textual–Temporal Attention Model to align target words with corresponding frames, bridging the gap between vision and language for caption generation. Zeng et al. (2023) construct a video dictionary from all videos to mine the cognitive power of the model’s visual commonsense knowledge, capturing video-related commonsense information and generate more accurate captions. In addition, Ryu, Kang, Kang, and Yoo (2021) and Yu, Ko, Choi, and Kim (2017) further leverage semantic information to improve the caption generation. Jing et al. (2024) and Niu et al. (2023) utilize memory information from designed memory module to facilitate caption generation. Although different, all these methods use a RNNs-based decoder for caption generation.
-2.1.3. Transformer-based methods
-Recently, inspired by the success of Transformers in the area of sequential modeling tasks, many researchers have explored extending Transformer to video captioning task (Gu et al., 2023, Vaidya et al., 2022, Zhang, Gao, and Yuan, 2024, Zhao et al., 2021, Zhong et al., 2023). Similar to the RNNs-based methods, the pre-trained 2D and 3D CNN extractors are utilized to encode visual feature. Specifically, Jin, Huang, Chen, Li, and Zhang (2020) use a sparse boundary-aware self-attention mechanism and a sparse boundary-aware cross-attention mechanism to selectively attend to important video frames and textual features, which could effectively capture long-term dependencies in video sequences and produces more accurate and diverse captions. Zhang et al. (2020) leverages object and relation information by constructing an object relational graph and employs teacher-recommended learning to guide the caption generation process. Zheng, Wang, and Tao (2020) targets actions in video frames by utilizing syntax-aware embeddings and a multi-modal transformer architecture, improving video captioning by focusing on the most relevant actions. Ye et al. (2022) utilizes a hierarchical modular network, which decomposes the task into sub-tasks of scene recognition, action recognition, and caption generation, and then combines the outputs of these modules to generate a final caption. Li et al. (2022) utilizes a Long Short-Term Relation Transformer with global gating to model long-term temporal dependencies in videos for video captioning. Zhang et al. (2023) propose Spatial Pyramid Transformer, building pyramid structure with shared parameters that consider the semantic connections among different grid resolutions to produce multi-scale captions. Zhong et al. (2022) utilizes skeleton-level tags to enhance the semantic dependencies among visual words, and employs a dual-scale visual-language alignment to reinforce the intra and inter relevance of the tags, ensuring that the generated captions are semantically coherent and aligned with the visual content. Wang, Tang, Li and Cheng (2022) build a dataset for video captioning with emotions named EmVidCap, and propose a framework which takes the consideration of both facts and emotions for video captioning with emotions. Despite significant advancements in previous research, the commonly used offline feature extracted features would be not adaptable to the downstream caption task. And most of previous methods usually focus on the process of text generation, while overlooking the importance of cross-modal alignment, which can aid in generating captions. For the similar image caption task, Zeng, Zhu, Song, and Gao (2022) adopt Swin Transformer as visual backbone, doing end-to-end image captioning based on the learned fine-grained visual semantic information from the proposed tree-structured prototype network. To alleviate the negative impact of offline feature extraction on video, SwinBERT (Lin et al., 2022) is proposed as an end-to-end transformer-based video captioning model, in which the adaptively sparse attention mask is learned for better video sequence modeling. In this paper, we utilize an end-to-end mode to integrate the feature extraction and downstream caption task into a unified framework, and we design a cluster center enhancement strategy to capture key information within the multimodal features, and propose to learn the representation of visual and textual feature in the shared latent semantic space to alleviate the misalignment problem of multimodal semantic fusion.
-2.2. Visual encoder
-Vision Transformer (ViT) is proposed by Dosovitskiy et al. (2020) as a novel way of applying the Transformer architecture to computer vision tasks. The ViT model breaks down an input image into small patches and flattens them into a sequence of tokens, which can be processed by the standard Transformer encoder. The model then learns to attend to different patches and their features to extract useful visual representations, which can be used for various downstream tasks. ViT has shown impressive results on a number of benchmark datasets, and its success has inspired further research into the use of Transformers for video tasks. For example, ViViT (Arnab et al., 2021) and TimeSformer (Bertasius, Wang, & Torresani, 2021) adopt the Transformer architecture to encode spatial–temporal feature, thus obtaining improved visual representation. Video Swin Transformer (VST) (Liu et al., 2022) adopts a hierarchical design with a Swin Transformer (Liu et al., 2021) as the backbone and a temporal attention module to capture both spatial and temporal information in videos. Deformable Video Transformer (DVT) (Wang & Torresani, 2022) proposes a new video transformer architecture that incorporates deformable self-attention, allowing the model to better capture the spatial–temporal dependencies between video frames. The above video transformer models primarily focus on visual feature extraction and video action detection tasks. In this paper, the VST model serves as the video encoder, and our work focuses on the video captioning task.
-2.3. Multimodal representation
-Joint vision language understanding is a field that combines computer vision and natural language processing, which has gained attention in recent years. Several studies have demonstrated the potential of multimodal representation learning for vision-language tasks (Gao et al., 2024, Li, Wang, Funakoshi, Okumura and Manabu, 2023, You et al., 2022). However, most language models require large-scale training data, leading to a loss of computation and memory. To address this issue, recent works have explored pre-trained language models for vision-language tasks. By freezing the weights of a pre-trained language model (Alayrac et al., 2022, Zhang, Li, and Okumura, 2024), promising results have been achieved. Besides, masked language models have also been successful in pre-training transformer-based structures to learn language representations (Devlin et al., 2018, Lewis et al., 2020), achieving competitive performance in downstream tasks after fine-tuning. This success has driven exploration of applying masked language models to multimodal representation models with paired visual–textual data (Li et al., 2019, Lin et al., 2022), resulting in competitive performance on vision-language tasks. In this paper, we focus on learning representations for multimodal information in a shared latent semantic space and further capture deep semantic features via incremental clustering based on aligned cross-modal features.
-```
-
-# [25-25][v] From visual features to key concepts: A Dynamic and Static Concept-driven approach for video captioning
+# [25-25][v][DiSCo] From visual features to key concepts: A Dynamic and Static Concept-driven approach for video captioning
 
 - **Link:** https://www.sciencedirect.com/science/article/pii/S0167865525001394
 
@@ -1570,6 +1513,7 @@ Numerous research efforts have been dedicated to identifying and leveraging conc
 - **Published in:** Pattern Recognition, Volume 159, March 2025, 111138
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -1627,6 +1571,7 @@ Undoubtedly, the strategies of existing models can earn semantic enhancement to 
 - **Published in:** IEEE Transactions on Circuits and Systems for Video Technology ( Volume: 35, Issue: 7, July 2025)
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -1778,6 +1723,7 @@ Extensive research has been conducted on semantic information extraction and mod
 - **Published in:** 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -1924,115 +1870,6 @@ advantages of autoregressive modeling for a universal video
 understanding framework for the first time.
 ```
 
-# [23-23][v] Vid2Seq: Large-Scale Pretraining of a Visual Language Model for Dense Video Captioning
-
-- **Link:** https://ieeexplore.ieee.org/document/10203714, https://openaccess.thecvf.com/content/CVPR2023/papers/Yang_Vid2Seq_Large-Scale_Pretraining_of_a_Visual_Language_Model_for_Dense_CVPR_2023_paper.pdf
-
-- **Published in:** 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
-
-- **Main results:**
-
-| MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
-| --- | --- | --- | --- |
-| – | 41.4 | – | 120.3 |
-
-| MSRVTT-B@4 | MSRVTT-M | MSRVTT-R | MSRVTT-C | 
-| --- | --- | --- | --- |
-| – | 30.0 | – | 57.2 |
-
-| VATEX-B@4 | VATEX-M | VATEX-R | VATEX-C |
-| --- | --- | --- | --- |
-| |
-
-- **Abstract:**
-
-```
-In this work, we introduce Vid2Seq, a multi-modal
-single-stage dense event captioning model pretrained on
-narrated videos which are readily-available at scale. The
-Vid2Seq architecture augments a language model with special time tokens, allowing it to seamlessly predict event
-boundaries and textual descriptions in the same output sequence. Such a unified model requires large-scale training
-data, which is not available in current annotated datasets.
-We show that it is possible to leverage unlabeled narrated
-videos for dense video captioning, by reformulating sentence boundaries of transcribed speech as pseudo event
-boundaries, and using the transcribed speech sentences as
-pseudo event captions. The resulting Vid2Seq model pretrained on the YT-Temporal-1B dataset improves the state
-of the art on a variety of dense video captioning benchmarks including YouCook2, ViTT and ActivityNet Captions.
-Vid2Seq also generalizes well to the tasks of video paragraph captioning and video clip captioning, and to few-shot
-settings. 
-```
-
-- **Introduction:**
-
-```
-Dense video captioning requires the temporal localization and captioning of all events in an untrimmed video [45,
-98, 127]. This differs from standard video captioning [62,
-69, 79], where the goal is to produce a single caption for
-a given short video clip. Dense captioning is significantly
-more difficult, as it raises the additional complexity of localizing the events in minutes-long videos. However, it also benefits from long-range video information. This task is
-potentially highly useful in applications such as large-scale
-video search and indexing, where the video content is not
-segmented into clips.
-Existing methods mostly resort to two-stage approaches [36, 45, 96], where events are first localized and
-then captioned. To further enhance the inter-task interaction between event localization and captioning, some approaches have introduced models that jointly solve the two
-tasks [19,98,127]. However, often these approaches still require task-specific components such as event counters [98].
-Furthermore, they exclusively train on manually annotated
-datasets of limited size [34, 45, 126], which makes it difficult to effectively solve the task. To address these issues,
-we take inspiration from recent sequence-to-sequence models pretrained on Web data which have been successful on a
-wide range of vision and language tasks [3,10,12,101,113].
-First, we propose a video language model, called
-Vid2Seq. We start from a language model trained on Web
-text [77] and augment it with special time tokens that represent timestamps in the video. Given video frames and transcribed speech inputs, the resulting model jointly predicts
-all event captions and their corresponding temporal boundaries by generating a single sequence of discrete tokens, as
-illustrated in Figure 1 (right). Such a model therefore has
-the potential to learn multi-modal dependencies between
-the different events in the video via attention [90]. However
-this requires large-scale training data, which is not available in current dense video captioning datasets [34,45,126].
-Moreover, collecting manual annotations of dense captions
-for videos is expensive and prohibitive at scale.
-Hence we propose to pretrain Vid2Seq by leveraging unlabeled narrated videos which are readily-available at scale.
-To do this, we reformulate sentence boundaries of transcribed speech as pseudo event boundaries, and use the transcribed speech sentences as pseudo event captions. We then
-pretrain Vid2Seq with a generative objective, that requires
-predicting the transcribed speech given visual inputs, and
-a denoising objective, which masks spans of transcribed
-speech. Note that transcribed speech may not describe the
-video content faithfully, and is often temporally misaligned
-with the visual stream [31, 42, 70]. For instance, from the
-example in Figure 1 (left), one can understand that the grey
-skier has descended a slope from the last speech sentence
-which is said after he actually descended the slope. Intuitively, Vid2Seq is particularly suited for learning from such
-noisy supervision as it jointly models all narrations and the
-corresponding timestamps in the video.
-We demonstrate the effectiveness of our pretrained
-model through extensive experiments. We show the importance of pretraining on untrimmed narrated videos, the
-ability of Vid2Seq to use both the visual and speech modalities, the importance of the pretraining objectives, the benefit
-of joint caption generation and localization, as well as the
-importance of the language model size and the scale of the
-pretraining dataset. The pretrained Vid2Seq model achieves
-state-of-the-art performance on various dense video captioning benchmarks [34, 45, 126]. Our model also excels
-at generating paragraphs of text describing the video: without using ground-truth event proposals at inference time,
-our model outperforms all prior approaches including those
-that rely on such proposals [49,75,124]. Moreover, Vid2Seq
-generalizes well to the standard task of video clip captioning [8, 105]. Finally, we introduce a new few-shot
-dense video captioning setting in which we finetune our pretrained model on a small fraction of the downstream training dataset and show benefits of Vid2Seq in this setting.
-In summary, we make the following contributions:
-(i) We introduce Vid2Seq for dense video captioning.
-Given multi-modal inputs (transcribed speech and video),
-Vid2Seq predicts a single sequence of discrete tokens that
-includes caption tokens interleaved with special time tokens that represent event timestamps. (ii) We show that
-transcribed speech and corresponding timestamps in unlabeled narrated videos can be effectively used as a source
-of weak supervision for dense video captioning. (iii) Finally, our pretrained Vid2Seq model improves the state of
-the art on three dense video captioning datasets (YouCook2,
-ViTT, ActivityNet Captions), two video paragraph captioning benchmarks (YouCook2, ActivityNet Captions) and two
-video clip captioning datasets (MSR-VTT, MSVD), and
-also generalizes well to few-shot settings.
-```
-
-- **Related work:**
-
-```
-```
-
 # [23-24][v] IcoCap: Improving Video Captioning by Compounding Images
 
 - **Link:** https://ieeexplore.ieee.org/document/10272675
@@ -2040,6 +1877,7 @@ also generalizes well to few-shot settings.
 - **Published in:** IEEE Trans. Multimed., 26 (2024), pp. 4389-4400
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2106,6 +1944,7 @@ In this article, we propose a novel method to improve video captioning by introd
 - **Published in:** ICMR '25: Proceedings of the 2025 International Conference on Multimedia Retrieval
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2146,6 +1985,7 @@ Learning-based video captioning is primarily based on the encoder-decoder archit
 - **Published in:** Neural Networks, Volume 192, December 2025, 107817
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2226,13 +2066,14 @@ However, most of these methods merely treat the acquired external textual knowle
 Although there may be an extent of semantic bias in this approach, especially when the retrieved sentences may not be consistent with the actual visual content, the retrieved sentences have a strong correlation with the video, which can still provide multimodal interaction and serve as a semantic supervision role during sentence generation. At the same time, it also offers opportunities for improving the generalization ability of the model. We also learn from the practices and construct a CLIP based retriever as an integral component in our model to get richer external linguistic semantics for video to be described.
 ```
 
-# [23-24][v] Memory-Based Augmentation Network for Video Captioning
+# [23-24][v][MAN] Memory-Based Augmentation Network for Video Captioning
 
 - **Link:** https://ieeexplore.ieee.org/document/10183355
 
 - **Published in:** IEEE Transactions on Multimedia ( Volume: 26)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2289,13 +2130,14 @@ C. Image Captioning
 Image ing is another fundamental multimodal task, which aims to generate a natural language description for an image, only dealing with static spatial information. In the early stage, retrieval-based [64], [65] and template-based [66], [67] methods were mainly applied to image ing. With the great progress in deep learning, RNN-based encoder-decoder significantly improved machine translation [68]. Subsequently, there were some attempts [69], [70] to directly employ the basic RNN-based encoder-decoder scheme for image ing, where CNN was used as the encoder to extract visual features from an image and RNN as the decoder to generate the sentence. After that, a series of innovations for image captioning had been proposed by exploring more interactions between visual and lingual via the attention mechanism. The work [14] presented soft and hard attention mechanisms into an LSTM-based decoder, which was able to select the most relevant image regions for word prediction. And there was a work [15] proposed an adaptive attention mechanism to dynamically decide whether to attend image regions when generating each word. Furthermore, [71] employed bottom-up and top-down attention mechanism that enabled attention measurement at the object level. Encouraged by the breakthrough in NLP field via Transformer [72], [73], the Transformer-based encoder-decoder scheme was studied in the image captioning field, which strengthened the visual encoding and vision-language interaction with self-attention or cross-attention mechanism. For example, [74] applied the primary Transformer structure in NLP in image captioning. Work such as [75] proposed a spatial and scale-aware Transformer to prevent the loss of spatial and fine-grained semantic information. In this article, our proposed method is applied to the task of image captioning to verify its effectiveness.
 ```
 
-# [23-23][?] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information
+# [23-23][v][CARE] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information
 
 - **Link:** https://ieeexplore.ieee.org/document/10233200
 
 - **Published in:** IEEE Transactions on Image Processing ( Volume: 32)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2347,154 +2189,6 @@ Different from regarding visual captioning as a retrieval task [43], retrieval-e
 
 D. Contrastive Vision-Language Pre-training (CVLP)
 Inspired by the success of contrastive learning in learning general visual representations [50], [51], [52] and the superiority of Transformer-based architectures in large-scale pre-training [53], [54], [55], CVLP has rapidly developed in recent years to learn transferable visual representations from natural language supervisions [18], [56], [57], [58]. CVLP aims to pull multimodal views of the matched data closer while repelling views of the mismatched data apart. Fueled by millions of noisy image-text pairs crawled from the Internet, representative works of CVLP such as CLIP [18] and ALIGN [56] demonstrate an impressive zero-shot transfer ability in various vision tasks. Most recently, some works propose to apply CLIP to different vision-language tasks [19], [20], [21], [22], [59]. For example, the works [20], [22], [59] employ CLIP for image encoding to endow caption models with more power. Luo et al. [21] show that CLIP can benefit video-text retrieval via knowledge transferring. Different from previous works, we focus the potential of CLIP in both visual understanding and cross-modal retrieval, which enables a maximum use of CLIP’s internal knowledge.
-```
-
-# [24-24][v] Exploring the Role of Audio in Video Captioning
-
-- **Link:** https://ieeexplore.ieee.org/document/10678632, https://arxiv.org/pdf/2306.12559
-
-- **Published in:** 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW)
-
-- **Main results:**
-
-| MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
-| --- | --- | --- | --- |
-| |
-
-| MSRVTT-B@4 | MSRVTT-M | MSRVTT-R | MSRVTT-C | 
-| --- | --- | --- | --- |
-| 46.4 | 30.2 | 64.1 | 57.3 |
-
-| VATEX-B@4 | VATEX-M | VATEX-R | VATEX-C |
-| --- | --- | --- | --- |
-| 39.1 | 26.3 | 53.4 | 73.7 |
-
-- **Abstract:**
-
-```
-Recent focus in video captioning has been on designing
-architectures that can consume both video and text modalities, and using large-scale video datasets with text transcripts for pre-training, such as HowTo100M. Though these
-approaches have achieved significant improvement, the audio modality is often ignored in video captioning. In this
-work, we present an audio-visual framework, which aims
-to fully exploit the potential of the audio modality for captioning. Instead of relying on text transcripts extracted via
-automatic speech recognition (ASR), we argue that learning
-with raw audio signals can be more beneficial, as audio has
-additional information including acoustic events, speaker
-identity, etc. Our contributions are twofold. First, we observed that the model overspecializes to the audio modality
-when pre-training with both video and audio modality, since
-the ground truth (i.e., text transcripts) can be solely predicted using audio. We proposed a Modality Balanced Pretraining (MBP) loss to mitigate this issue and significantly
-improve the performance on downstream tasks. Second, we
-slice and dice different design choices of the cross-modal
-module, which may become an information bottleneck and
-generate inferior results. We proposed new local-global fusion mechanisms to improve information exchange across
-audio and video. We demonstrate significant improvements
-by leveraging the audio modality on four datasets, and even
-outperform the state of the art on some metrics without relying on the text modality as the input.
-```
-
-- **Introduction:**
-
-```
-Large-scale pre-training [3, 20, 33, 43, 50, 59, 66] plays
-a key role in boosting the performance of modern deep
-learning models. It is even more so for vision and language tasks, such as video captioning[1, 12, 36, 41, 58, 65],
-where leveraging large video datasets with text supervision
-for pre-training is essential to achieve competitive results.
-
-However, manually annotating captions for video datasets
-is costly and not scalable. Thus existing video captioning
-datasets [49, 61, 63, 69] are often limited in size.
-To address this challenge, recent work collected datasets
-from instructional videos, where ASR generated transcripts
-can be used as text supervision, e.g., How2 [46], CrossTask
-[72], HowTo100M [34], HD-VILA-100M [64], etc. This
-has established a new trend of pre-training on large-scale
-video datasets with text transcripts for video captioning [16,
-32, 47]. We argue that text transcripts from ASR only
-includes partial information from audio, and hypothesize
-end-to-end learning using the audio modality can potentially lead to better performance, since audio can provide
-additional information (shown in Fig. 1) including acoustic
-events, speaker identity, etc.
-More specifically, our paper seeks to better understand
-the following questions:
-• To what extent, can the audio modality improve video
-captioning?
-• How can the potential of the audio modality be fully
-realized in an audio-visual framework for captioning?
-To this end, we start with a simple multi-modal pre-training
-framework for video captioning with ASR transcripts as supervision (shown in Fig. 2), and look into different components that may hinder the performance of the pre-trained
-audio-visual model on the downstream datasets.
-First, we observed that simply jointly training of the audio and video modalities may result in degenerated models
-that overspecialize to the audio modality and underfit on
-the video modality. As text transcripts are used as video
-captions during pre-training, the model essentially learns to
-cheat and solve the ASR problem instead of extracting information from both visual and audio signals. To mitigate
-this issue, we proposed the Modality Balanced Pre-training
-(MBP) loss, which takes into account both the unimodal
-losses and cross-modal loss. A weighting mechanism is introduced to automatically balance different modalities during training. Fig. 4 shows that our MBP loss enforces the
-model to pay more attention to the underfitted video modality and drives the final loss much smaller.
-
-Second, we did a thorough study on the design of the
-cross-modal fusion module, which is responsible for the information exchange between the audio and video modality. An improperly designed cross-modal fusion module
-may become an information bottleneck and result in inferior performance for video captioning. We proposed new
-local-global fusion mechanisms to encourage the information flow cross different modalities. We analyzed the relevance of the annotated captions to the audio modality on
-downstream datasets, and observed that the local fusion
-mechanisms are more beneficial to the flow of fine-grained
-information like single words in speech, while the global
-fusion mechanisms are more effective on holistic information like acoustic events or scenes. The local-global design
-enables the fusion module to capture information at different granularities, and mingle audio and video information at
-different levels. Compared with existing designs, our localglobal fusion has shown empirically better results.
-By combining the two contributions, we demonstrate
-that audio is crucial to video captioning and provides both
-speech and non-speech information. Fig. 1 shows a few examples on how our model effectively integrates the information from both the audio and video modality, and generates
-better captions than video-only and video-text variants.
-We summarize our contributions as follows:
-• Proposed to pre-train video captioning models based
-on video and audio modalities, explored the role of audio in video captioning, and demonstrated the benefits
-of audio on four benchmarks.
-• Proposed the MBP loss to balance different modalities automatically during training, and ease the issue
-of overspecialization to the audio modality.
-• Did an extensive evaluation on the effects of different cross-modal fusion modules on audio-visual video
-captioning, and proposed a novel local-global fusion
-module to effectively integrate audio and video information for video captioning.
-```
-
-- **Related work:**
-
-```
-Video Captioning. Most works in video captioning [1, 12,
-36, 41, 58, 65] focus on designing a better model to generate text descriptions given precomputed video features via
-an encoder-decoder framework. SwinBert [29] attempted
-to train the encoder-decoder framework directly from raw
-video pixels instead of refining precomputed features. In
-addition to visual modality, some works studied video captioning from visual data and ASR texts [15, 32, 47, 48, 49,
-53]. A few prior works also studied audio-visual video captioning [7, 17, 45, 54], but they are often limited to smallscale video captioning datasets and precomputed input features. To the best of our knowledge, we propose the first
-end-to-end audio-visual video captioning framework.
-Multi-Modal Pre-training. A growing number of works
-are investigating multi-modal pre-training in videos, e.g.,
-video-text pre-training [24, 32, 33, 34, 40, 50, 67] and
-video-text-audio pre-training [3, 4, 66], which mostly adopt
-contrastive learning and/or masked language modeling to
-learn better representations for downstream tasks. As only
-encoders are trained for multiple modalities, a separate decoder needs to be trained on top of the encoders for generative tasks such as video captioning. A recent work MVGPT [47] shows the benefits of pre-training an end-to-end
-encoder-decoder framework to video captioning. Unlike
-MV-GPT that relies on ASR text as input, our framework
-directly uses video and audio. A Textless Vision-Language
-Transformer (TVLT) [52] was recently proposed to take visual and audio inputs for multi-modal representation learning without ASR inputs. However, the pre-trained TVLT
-is a discriminative model that cannot be directly applied
-to generative tasks. While a multi-modal network receives
-more information and is expected to boost performance, recent works [18, 37, 42, 60] have identified a key challenge in training a multi-modal network that one modality may converge faster than other modalities and undermine the representation learning of other modalities. We propose a Modality Balanced Pre-training objective to mitigate this issue and
-facilitate a powerful audio-visual video captioning model.
-Cross-Modal Fusion. Given the representations of multiple modalities, a cross-modal fusion module [19, 33, 34, 43]
-will fuse these representations into a shared embedding
-space to generate cross-modal representations. In order to
-fuse a sequence of representations generated by Transformers [56], there are two major types of cross-modal fusion
-modules: merged fusion, and cross fusion. In merged fusion, the two modalities are concatenated and then fed into a
-Transformer block [25, 27, 32, 59]. In cross fusion, the two
-modalities are fed into different Transformer blocks separately, where cross attention Transformers are used to allow
-cross-modal interaction [31, 47, 48, 51, 55]. Besides, some
-recent works propose variants of cross-modal fusion modules that use bottleneck tokens [35] or prune single-modal
-units [62] to control the flow of cross-modal interaction.
 ```
 
 # [25-25][idea] Pretrained Image-Text Models are Secretly Video Captioners
@@ -2648,13 +2342,14 @@ volume, and training strategies on video captioning
 performance as we scale.
 ```
 
-# [23-24][v] Learning Hierarchical Modular Networks for Video Captioning
+# [23-24][v][RLHMN] Learning Hierarchical Modular Networks for Video Captioning
 
 - **Link:** https://ieeexplore.ieee.org/document/10296527
 
 - **Published in:** IEEE Transactions on Pattern Analysis and Machine Intelligence ( Volume: 46, Issue: 2, February 2024)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2719,6 +2414,7 @@ Large Models: Inspired by the success of image-text pre-training such as CLIP [5
 - **Published in:** Knowledge-Based Systems, Volume 340, 12 May 2026, 115568
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2784,6 +2480,7 @@ To the best of our knowledge, our method is the first to explore the generalizat
 - **Published in:** Multimedia Tools and Applications
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2828,6 +2525,7 @@ Moreover, different from the conventional encoder of the Transformer for sequent
 - **Published in:** 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
 
 - **Main results:**
+    - MSVD / MSR-VTT: kém BiDecT 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2859,13 +2557,14 @@ Video captioning aims to generate a complete and natural sentence to describe vi
 Video captioning attracts much attention of researchers in recent years. The best practice has been achieved by attention-based methods, which attempts to associate visual components with sentences in videos. Some of them focus on designing powerful network architectures. VLM [55] and VideoBERT [43] take the visual and text modalities as input, and use a shared transformer to construct a taskagnostic video-language model. ViLBERT [28] processes visual and linguistic information separately with two parallel streams, and then use the attention mechanism to model the interactions between visual and language features. Instead of using the separate encoder-decoder architecture, MART [21] designs a shared encoder-decoder network and augments it with the memory module. ActBert [72] uses local regional features to learn better visual-language alignment. WLT [35] takes audio features as an additional input, and uses context fusion to generate multimodal features. Meanwhile, some methods [10,14,15,62,65,71] focus on exploiting prior knowledge to provide semantic correlations and constraints between objects for image or video captioning, producing promising results. ORG-TRL [64] uses the knowledge information in the language model (BERT) to provide candidate words for video captioning. In contrast, we propose a two-stream transformer for video captioning, with the internal stream used to exploit multi-modality information in videos, and the external stream used to model the interactions between the additional knowledge and the built-in information of videos. These two streams use the cross-attention mechanism to share information in different modalities for generating more accurate results.  Vision-and-language representation learning is a hot topic in recent years. ViLBERT [28], LXMERT [46], UNITER [6], UNIMO [25] and Unified-VL [68] learn  the representations between image and text, while Univl [29], VideoBERT [43], ActBERT [72] and MV-GPT [40] learn the representations between videos and transcripts. Notably, most of these methods attempt to learn powerful vision-and-language representations by pre-training the models on the large-scale datasets, e.g., Howto100M [31] and WebVid-2M [1], and then finetune them on downstream tasks such as video captioning, video-text retrieval and visual question answering. In contrast, our TextKG method uses the speech transcripts as the text to model the visual and linguistic representations and integrate the additional knowledge in knowledge graph to mitigate long-tail words challenge in video captioning. Knowledge graph in NLP. Knowledge graph is an useful tool to indicate the real-world entities and their relations, which provides rich structured knowledge facts for language modeling. Large-scale knowledge graphs are used to train knowledge enhanced language models for various natural language processing (NLP) tasks. CoLAKE [44] proposes to inject the knowledge context of an entity, and to jointly learn the contextualized representation for both language and knowledge by a unified structure. ERNIE [63] enhances BERT architecture to better integrate the knowledge information and textual information. KEPLER [52] not only improves language models by integrating factual knowledge, but also generates text-enhanced knowledge representation. JAKET [59] proposes a joint pre-training framework to model knowledge graph and language simultaneously. Inspired by CoLAKE, our method jointly learns the representations of vision, language and knowledge, and enhances the joint visual-language representations by retrieving relevant knowledge in knowledge graphs.
 ```
 
-# [23-23][v] Accurate and Fast Compressed Video Captioning
+# [23-23][v][CoCap] Accurate and Fast Compressed Video Captioning
 
 - **Link:** https://ieeexplore.ieee.org/document/10378206
 
 - **Published in:** 2023 IEEE/CVF International Conference on Computer Vision (ICCV)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2906,6 +2605,7 @@ Compressed vision task. The main idea of introducing compressed video into curre
 - **Published in:** 2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |
@@ -2950,6 +2650,7 @@ Video and language. Recent studies [26, 30, 37–39, 62] have shown great succes
 - **Published in:** Knowledge-Based Systems, Volume 326, 27 September 2025, 114003
 
 - **Main results:**
+    - MSVD / MSR-VTT / VATEX: kém BiDecT cả 4 metrics
 
 | MSVD-B@4 | MSVD-M | MSVD-R | MSVD-C | 
 | --- | --- | --- | --- |

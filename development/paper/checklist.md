@@ -1,32 +1,66 @@
 # Checklist
 
-- [ ] Abstract
-- [ ] 1. Introduction
-    - [ ] Paper outline (đặt cuối introduction)
-- [ ] 2. Related Work
-- [ ] 3. Background
-    - [ ] Outline
-    - [x] *.1. Group-of-Picture (GOP) structure (ở hình minh họa, frame cuối cùng trong Closed GOP là P-frame) => **#TODO: Vẽ lại hình minh họa**
-    - [x] *.2. Basic modules in transformer architecture (attention + ffn)
-    - [x] *.3. Peri-LN strategy => **#TODO: Vẽ lại hình minh họa**
-- [ ] 4. Method
-    - [ ] Outline (encoder-free bidirectional transformer overview; multimodal feature extraction -> multimodal feature embedding -> backward decoder -> forward decoder -> optimization)
-    - [x] *.1. Overview => **#TODO: Vẽ lại hình minh họa**
-    - [ ] *.2. Multimodal Feature Extraction
-    - [ ] *.3. Multimodal Feature Embedding
-    - [ ] *.4. Backward Decoder
-    - [ ] *.5. Forward Decoder
-    - [ ] *.6. Optimization (nhấn mạnh vào pseudo reverse caption, kẻ 1 bảng để cho ví dụ minh họa **reverse word order in each pair** -> **randomize reverse captions to create new pairs**)
-    - [ ] *.7. Big-O analysis
-- [ ] 5. Experiments
-    - [ ] *.1. Datasets
-    - [ ] *.2. Evaluation metrics (trình bày công thức của mỗi metric)
-    - [ ] *.3. Implementation Details (kẻ bảng để thể hiện giá trị của mỗi biến; trình bày từ preprocessing -> feature extraction -> model config -> training config -> hardware)
-    - [ ] *.4. Performance Comparison with SOTA Methods
-    - [ ] *.5. Ablation Study
-    - [ ] *.6. Hyperparameter Analysis (trình bày các bảng biểu trình bày lý do vì sao chúng ta chọn các siêu tham số như thế này)
-        - Bổ sung: (1) Phân tích việc lựa chọn LN strategies; (2) Phân tích việc sử dụng pseudo reverse caption; (3) Phân tích việc sử dụng 1 hay 2 embedding module
-    - [ ] *.7. Qualitative Results (trình bày những case mình mạnh và cả những case mình yếu để làm future work)
-- [ ] 6. Conclusion
-    - [ ] Hướng phát triển trong tương lai phải dựa trên những kết quả không tốt từ phần **Qualitative Results**
-- [ ] References
+- [x] Paper title
+- [x] My ORCID: https://orcid.org/my-orcid?orcid=0009-0002-5460-1015
+- [x] 1. Introduction
+    - [x] Paper outline (đặt cuối introduction)
+- [x] 2. Related Work
+    - [x] 2.1.
+    - [x] 2.2.
+    - [x] 2.3.
+- [x] 3. Background
+    - [x] 3.1. Group-of-Picture (GOP) structure
+    - [x] 3.2. Transformer Building Blocks: attention + ffn + LN
+        - [x] Overview + Attention + FFN
+        - [x] LN
+- [x] 4. Proposed Method
+    - [x] 4.1. Overview
+    - [x] 4.2. Multimodal Feature Extraction
+    - [x] 4.3. Multimodal Feature Embedding
+    - [x] 4.4. Backward Decoder
+    - [x] 4.5. Forward Decoder
+    - [x] 4.6. Optimization
+    - [x] 4.7. Big-O analysis
+- [x] 5. Experiments
+    - [x] 5.1. Datasets
+    - [x] 5.2. Evaluation metrics (trình bày công thức của mỗi metric)
+    - [x] 5.3. Implementation (kẻ bảng để thể hiện giá trị của mỗi biến; trình bày từ preprocessing -> feature extraction -> model config -> training config -> hardware)
+    - [x] 5.4. Performance Comparison with SOTA Methods
+    - [x] 5.5. Hyperparameter Analysis
+    - [x] 5.6. Ablation Study
+        - [x] *.1. Bidirectional Decoding
+        - [x] *.2. Pseudo Reverse Caption
+        - [x] *.3. Input modalities
+        - [x] *.4. LN Strategies
+    - [x] 5.7. Qualitative Results (trình bày những case mình mạnh và cả những case mình yếu để làm future work)
+- [x] 6. Conclusion
+    - [x] Hướng phát triển trong tương lai phải dựa trên những kết quả không tốt từ phần **Qualitative Results**
+- [x] Abstract
+- [x] Check table number
+    - [x] Tab.01: 4.7. Complexity Analysis
+    - [x] Tab.02: 5.1. Datasets
+    - [x] Tab.03: 5.3. Implement
+    - [x] Tab.04: 5.4. MSVD+MSR-VTT
+    - [x] Tab.05: 5.4. VATEX
+    - [x] Tab.06: 5.4. Encoder-free vs. Encoder-based
+    - [x] Tab.07: 5.5. Hyperparameter Analysis
+    - [x] Tab.08: 5.6.3. Input modalities
+- [x] Vẽ lại các hình
+    - [x] Fig.01: Introduction
+        - [x] **Cho video frame to hơn**
+        - [x] **Đổi tên extractor thành VLM + video recog.**
+    - [x] Fig.02: 3.1. GOP => **ở hình minh họa, frame cuối cùng trong Closed GOP là P-frame**
+    - [x] Fig.03: 3.2. LN => **Hình minh họa LN dùng đúng màu của phần thực nghiệm**
+    - [x] Fig.04: 4.1. Overview
+        - [x] **Bỏ thông tin cụ thể về cách concat: Temporal-Dim (bản gốc) >< Sequence-Dim (section 4.3)**
+        - [x] **Không sử dụng ký hiệu `<S>` mà phải thay bằng `<BOS>` và `<EOS>` một cách tường minh**
+        - [x] **Số lượng layer nằm trong khung Nx**
+    - [x] Fig.05: 4.6. Pseudo reverse caption => **Dùng cùng ví dụ minh họa video-text với Fig.04**
+    - [x] Fig.06: 5.5. Hyperparameter Analysis
+    - [x] Fig.07: 5.6.1. Bidirectional Decoding
+    - [x] Fig.08: 5.6.2. Pseudo Reverse Caption
+    - [x] Fig.09: 5.6.4. LN
+    - [x] Fig.10: 5.7. Case Study
+        - [x] **Vẽ lại kích thước của caption và frame minh họa**
+        - [x] **Bỏ "young" trong ví dụ e)**
+- [x] References + Zotero

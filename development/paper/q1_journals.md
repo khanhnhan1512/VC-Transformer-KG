@@ -1,0 +1,10 @@
+- IEEE Transactions on Circuits and Systems for Video Technology
+- IEEE Transactions on Multimedia
+- IEEE Transactions on Image Processing
+- IEEE Transactions on Pattern Analysis and Machine Intelligence
+- IEEE Transactions on Neural Networks and Learning Systems
+- Pattern Recognition
+- Expert Systems with Applications
+- Computer Vision and Image Understanding
+- Neural Networks
+- Neurocomputing

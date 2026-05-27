@@ -34,12 +34,10 @@ def build_model(vocab):
         d_model=C.transformer.d_model,
         d_ff=C.transformer.d_ff,
         n_heads=C.transformer.n_heads,
-        n_heads_big=C.transformer.n_heads_big,
-        n_enc_layers=C.transformer.n_enc_layers,
         n_dec_layers=C.transformer.n_dec_layers,
         dropout=C.transformer.dropout,
     )
-    model.cuda()
+    if torch.cuda.is_available(): model.cuda()
     return model
 
 
@@ -142,8 +140,7 @@ def main():
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
+    if torch.cuda.is_available(): torch.cuda.manual_seed(seed)
 
     train_iter, val_iter, test_iter, vocab = build_loaders()
 
@@ -260,7 +257,7 @@ def main():
 
     """ Test with Best Model """
     gc.collect()
-    torch.cuda.empty_cache()
+    if torch.cuda.is_available(): torch.cuda.empty_cache()
     print(f"\n\n\n[BEST: {best_epoch} | SEED: {seed} | VAL-CIDEr: {best_val_CIDEr}]")
     best_model = load_checkpoint(model=model, ckpt_fpath=best_ckpt_fpath)
     

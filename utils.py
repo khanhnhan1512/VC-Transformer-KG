@@ -36,9 +36,10 @@ class LossChecker:
 
 def parse_batch(batch):
     vids, feats_list, r2l_captions, l2r_captions = batch
-    feats = tuple([feats.cuda() for feats in feats_list])
-    r2l_captions = r2l_captions.cuda()
-    l2r_captions = l2r_captions.cuda()
+    feats = tuple([feats.cuda() if torch.cuda.is_available() else feats
+                   for feats in feats_list])
+    r2l_captions = r2l_captions.cuda() if torch.cuda.is_available() else r2l_captions
+    l2r_captions = l2r_captions.cuda() if torch.cuda.is_available() else l2r_captions
     return vids, feats, r2l_captions, l2r_captions
 
 

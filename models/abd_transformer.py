@@ -60,14 +60,14 @@ class PositionalEncoding(nn.Module):
         return emb
 
 
-class SegmentEmbedding(nn.Module):
+class TypeEmbedding(nn.Module):
 
-    def __init__(self, num_segments: int, d_model: int) -> None:
-        super(SegmentEmbedding, self).__init__()
-        self.segment_embeddings = nn.Embedding(num_segments, d_model)
+    def __init__(self, num_types: int, d_model: int) -> None:
+        super(TypeEmbedding, self).__init__()
+        self.type_embeddings = nn.Embedding(num_types, d_model)
 
-    def forward(self, x: torch.Tensor, segment_ids: torch.Tensor) -> torch.Tensor:
-        return x + self.segment_embeddings(segment_ids)
+    def forward(self, x: torch.Tensor, type_ids: torch.Tensor) -> torch.Tensor:
+        return x + self.type_embeddings(type_ids)
 
 
 # ╭────────────────────────────────────────────────────────────╮
@@ -91,12 +91,10 @@ def scaled_dot_product_attention(query, key, value, mask=None, dropout=None):
 
 class MultiHeadAttention(nn.Module):
 
-    def __init__(self, num_heads: int, d_model: int, dropout: float, use_rope: bool) -> None:
+    def __init__(self, num_heads: int, d_model: int, dropout: float) -> None:
         super(MultiHeadAttention, self).__init__()
         if d_model % num_heads != 0:
             raise ValueError(f"d_model must be divisible by num_heads (got {d_model} % {num_heads} != 0)")
-        if use_rope:
-            raise ValueError("Rotary Positional Embedding (RoPE) is not supported in this implementation of MultiHeadAttention.")
         
         self.W_q = nn.Linear(d_model, d_model)
         self.W_k = nn.Linear(d_model, d_model)
@@ -107,7 +105,6 @@ class MultiHeadAttention(nn.Module):
         self.num_heads = num_heads
         self.d_model = d_model
         self.head_size = d_model // num_heads
-        self.use_rope = use_rope
         self.attn_weights = None  # To store if needed
 
     def forward(self, query: torch.Tensor, key_value: torch.Tensor, mask: torch.Tensor = None) -> torch.Tensor:
@@ -158,7 +155,7 @@ class NewGELUActivation(nn.Module):
 
 class FFN(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, dropout: float):
+    def __init__(self, d_model: int, d_ff: int, dropout: float):
         super(FFN, self).__init__()
         self.transform = nn.Sequential(
             nn.Linear(d_model, d_ff),
@@ -175,28 +172,28 @@ class FFN(nn.Module):
 # ╭────────────────────────────────────────────────────────────╮
 # │                   Skip Connections Layers                  │
 # ╰────────────────────────────────────────────────────────────╯
-class SublayerConnection(nn.Module):
+class SublayerConnectionPeriLN(nn.Module):
 
     def __init__(self, size: int, dropout: float):
-        super(SublayerConnection, self).__init__()
-        self.norm_1 = nn.LayerNorm(size)
-        self.norm_2 = nn.LayerNorm(size)
-        self.dropout = nn.Dropout(p=dropout)
+        super(SublayerConnectionPeriLN, self).__init__()
+        self.norm_in  = nn.LayerNorm(size)
+        self.norm_out = nn.LayerNorm(size)
+        self.dropout  = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
         # return self.dropout(self.layer_norm(x + sublayer(x)))
-        return self.dropout(x + self.norm_2(sublayer(self.norm_1(x))))
+        return self.dropout(x + self.norm_out(sublayer(self.norm_in(x))))
 
 
-class SkipConnectionAfterLN(nn.Module):
+class SublayerConnectionOutputLN(nn.Module):
 
     def __init__(self, size: int, dropout: float):
-        super(SkipConnectionAfterLN, self).__init__()
-        self.norm = nn.LayerNorm(size)
-        self.dropout = nn.Dropout(p=dropout)
+        super(SublayerConnectionOutputLN, self).__init__()
+        self.norm_out = nn.LayerNorm(size)
+        self.dropout  = nn.Dropout(p=dropout)
 
     def forward(self, x, sublayer):
-        return self.dropout(x + self.norm(sublayer(x)))
+        return self.dropout(x + self.norm_out(sublayer(x)))
 
 
 # ╭────────────────────────────────────────────────────────────╮
@@ -204,16 +201,15 @@ class SkipConnectionAfterLN(nn.Module):
 # ╰────────────────────────────────────────────────────────────╯
 class R2LDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool, first_layer: bool):
-        assert sublayer_num == 3, "[R2LDecoderLayer.__init__] sublayer_num must be 3"
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, dropout: float, first_layer: bool):
         super(R2LDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        if first_layer: self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
-        else:           self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_3 = SublayerConnection(size=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, dropout=dropout)
+        if first_layer: self.sublayer_connection_1 = SublayerConnectionOutputLN(size=d_model, dropout=dropout)
+        else:           self.sublayer_connection_1 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
+        self.sublayer_connection_2 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
+        self.sublayer_connection_3 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
         if r2l_memory is not None:
@@ -227,18 +223,17 @@ class R2LDecoderLayer(nn.Module):
 
 class L2RDecoderLayer(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, sublayer_num: int, dropout: float, use_rope: bool, first_layer: bool):
-        assert sublayer_num == 4, "[L2RDecoderLayer.__init__] sublayer_num must be 4"
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, dropout: float, first_layer: bool):
         super(L2RDecoderLayer, self).__init__()
-        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout, use_rope=use_rope)
-        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, dropout=dropout)
-        if first_layer: self.sublayer_connection_1 = SkipConnectionAfterLN(size=d_model, dropout=dropout)
-        else:           self.sublayer_connection_1 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_2 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_3 = SublayerConnection(size=d_model, dropout=dropout)
-        self.sublayer_connection_4 = SublayerConnection(size=d_model, dropout=dropout)
+        self.attn_1 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_2 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.attn_3 = MultiHeadAttention(num_heads=num_heads, d_model=d_model, dropout=dropout)
+        self.feed_forward = FFN(d_model=d_model, d_ff=d_ff, dropout=dropout)
+        if first_layer: self.sublayer_connection_1 = SublayerConnectionOutputLN(size=d_model, dropout=dropout)
+        else:           self.sublayer_connection_1 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
+        self.sublayer_connection_2 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
+        self.sublayer_connection_3 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
+        self.sublayer_connection_4 = SublayerConnectionPeriLN(size=d_model, dropout=dropout)
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory=None, r2l_trg_mask=None):
         if r2l_memory is None:
@@ -253,41 +248,41 @@ class L2RDecoderLayer(nn.Module):
 
 class R2L_Decoder(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, num_layers: int, dropout: float):
         super(R2L_Decoder, self).__init__()
-        self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = nn.LayerNorm(d_model)
+        self.norm_in  = nn.LayerNorm(d_model)
+        self.norm_out = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
-            R2LDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=3, 
-                            dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            R2LDecoderLayer(d_model=d_model, d_ff=d_ff, num_heads=num_heads,
+                            dropout=dropout, first_layer=(i == 0))
             for i in range(num_layers)
         ])
 
     def forward(self, x, memory, src_mask, r2l_trg_mask):
-        x = self.norm_1(x)
+        x = self.norm_in(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, r2l_trg_mask)
-        x = self.norm_2(x)
+        x = self.norm_out(x)
         return x
 
 
 class L2R_Decoder(nn.Module):
 
-    def __init__(self, d_model: int, d_ff: int, multiple_of: int, num_heads: int, num_layers: int, dropout: float, use_rope: bool):
+    def __init__(self, d_model: int, d_ff: int, num_heads: int, num_layers: int, dropout: float):
         super(L2R_Decoder, self).__init__()
-        self.norm_1 = nn.LayerNorm(d_model)
-        self.norm_2 = nn.LayerNorm(d_model)
+        self.norm_in  = nn.LayerNorm(d_model)
+        self.norm_out = nn.LayerNorm(d_model)
         self.decoder_layers = nn.ModuleList([
-            L2RDecoderLayer(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=num_heads, sublayer_num=4, 
-                            dropout=dropout, use_rope=use_rope, first_layer=(i == 0))
+            L2RDecoderLayer(d_model=d_model, d_ff=d_ff, num_heads=num_heads,
+                            dropout=dropout, first_layer=(i == 0))
             for i in range(num_layers)
         ])
 
     def forward(self, x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask):
-        x = self.norm_1(x)
+        x = self.norm_in(x)
         for layer in self.decoder_layers:
             x = layer(x, memory, src_mask, trg_mask, r2l_memory, r2l_trg_mask)
-        x = self.norm_2(x)
+        x = self.norm_out(x)
         return x
 
 
@@ -325,7 +320,10 @@ def subsequent_mask(size):
     """Mask out subsequent positions."""
     attn_shape = (1, size, size)
     mask = np.triu(np.ones(attn_shape), k=1).astype('uint8')
-    return (torch.from_numpy(mask) == 0).cuda()
+    if torch.cuda.is_available():
+        return (torch.from_numpy(mask) == 0).cuda()
+    else:
+        return torch.from_numpy(mask) == 0
 
 
 # ╭────────────────────────────────────────────────────────────╮
@@ -346,20 +344,19 @@ class Generator(nn.Module):
 # ╰────────────────────────────────────────────────────────────╯
 class ABDTransformer(nn.Module):
 
-    def __init__(self, vocab, d_feat, d_model, d_ff, n_heads, n_heads_big, 
-                 n_enc_layers, n_dec_layers, dropout, device='cuda') -> None:
+    def __init__(self, vocab, d_feat, d_model, d_ff,
+                 n_heads, n_dec_layers, dropout) -> None:
         super(ABDTransformer, self).__init__()
         self.vocab  = vocab
-        self.device = device
-        multiple_of = 128
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # --- Feature Embeddings ---
         self.r2l_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.r2l_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
+        self.r2l_typ_embed = TypeEmbedding(num_types=len(d_feat), d_model=d_model)
         self.r2l_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
         
         self.l2r_src_embed = nn.ModuleList([FeatEmbedding(d_f, d_model, dropout) for d_f in d_feat])
-        self.l2r_seg_embed = SegmentEmbedding(num_segments=len(d_feat), d_model=d_model)
+        self.l2r_typ_embed = TypeEmbedding(num_types=len(d_feat), d_model=d_model)
         self.l2r_feat_norm = nn.ModuleList([nn.LayerNorm(d_model) for _ in d_feat])
         
         # --- Text Embeddings ---
@@ -370,8 +367,8 @@ class ABDTransformer(nn.Module):
         self.pos_embed = PositionalEncoding(dim=d_model, dropout=dropout, max_len=256)
         
         # --- Decoders ---
-        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
-        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, multiple_of=multiple_of, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout, use_rope=False)
+        self.r2l_decoder = R2L_Decoder(d_model=d_model, d_ff=d_ff, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout)
+        self.l2r_decoder = L2R_Decoder(d_model=d_model, d_ff=d_ff, num_heads=n_heads, num_layers=n_dec_layers, dropout=dropout)
         
         # --- Generators ---
         self.r2l_generator = Generator(d_model=d_model, vocab_size=vocab.n_vocabs)
@@ -384,10 +381,10 @@ class ABDTransformer(nn.Module):
             final_feats = []
             for i in range(len(src)):
                 feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
+                typ_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
                 
                 feat = self.r2l_src_embed[i](feat)
-                feat = self.r2l_seg_embed(feat, seg_id)
+                feat = self.r2l_typ_embed(feat, typ_id)
                 feat = self.pos_embed(feat)
                 feat = self.r2l_feat_norm[i](feat)
                 final_feats.append(feat)
@@ -402,10 +399,10 @@ class ABDTransformer(nn.Module):
             final_feats = []
             for i in range(len(src)):
                 feat   = src[i]
-                seg_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
+                typ_id = torch.full((batch_size, feat.size(1)), i, dtype=torch.long).to(self.device)
                 
                 feat = self.l2r_src_embed[i](feat)
-                feat = self.l2r_seg_embed(feat, seg_id)
+                feat = self.l2r_typ_embed(feat, typ_id)
                 feat = self.pos_embed(feat)
                 feat = self.l2r_feat_norm[i](feat)
                 final_feats.append(feat)

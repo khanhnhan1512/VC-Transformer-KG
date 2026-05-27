@@ -184,7 +184,7 @@ class Corpus:
             ToIndex(self.vocab.word2idx),
             PadFirst(self.vocab.word2idx['<S>']),
             PadLast(self.vocab.word2idx['<S>']),
-            # +2 for <SOS> and <EOS>
+            # +2 for <BOS> and <EOS>
             PadToLength(self.vocab.word2idx['<PAD>'],
                         self.vocab.max_sentence_len + 2),
             ToTensor(torch.long),

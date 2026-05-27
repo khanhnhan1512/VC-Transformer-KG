@@ -4,26 +4,20 @@ import time
 
 
 class FeatureConfig:
-    #model: str = "Blip2ClsKF+MViTv2+ImgCapBlip2KF"
-    model: str = "newBlip2ClsKF+newMViTv2+newImgCapBlip2KF"
+    model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     feature_dims: List[int] = []
 
-    # Visual feature dimension
-    if   model.find('newBlip2ClsKF') != -1: feature_dims.append(1408)
-    # elif model.find('BlipCls')       != -1: feature_dims.append(768)
-    # elif model.find('BlipBaseClsKF') != -1: feature_dims.append(768)
-    # elif model.find('BlipBaseAvgKF') != -1: feature_dims.append(768)
-    # elif model.find('Blip2ClsKF')    != -1: feature_dims.append(1408)
-
-    # Motion feature dimension
-    if   model.find('newMViTv2') != -1: feature_dims.append(768)
-    # elif model.find('MViTv2')    != -1: feature_dims.append(768)
-
-    # Image Caption feature dimension
-    if   model.find('newImgCapBlip2KF')  != -1: feature_dims.append(1024)
-    # elif model.find('ImgCapKF')          != -1: feature_dims.append(384)
-    # elif model.find('ImgCapBlipLargeKF') != -1: feature_dims.append(1024)
-    # elif model.find('ImgCapBlip2KF')     != -1: feature_dims.append(1024)
+    for modality in model.split('+'):
+        # Appearance features
+        if   modality == "newBlip2ClsKF"   : feature_dims.append(1408)
+        # Semantic features
+        elif modality == "newImgCapBlip2KF": feature_dims.append(1024)
+        # Motion features
+        elif modality == "newMViTv2"       : feature_dims.append(768)
+        else:
+            raise ValueError(f"Unknown modality: {modality}")
+    
+    assert len(feature_dims) == 3, f"Number of modalities should be 3, but got {len(feature_dims)}"
 
 
 class VocabConfig:
@@ -39,14 +33,14 @@ class MSVDLoaderConfig:
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
     val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/val.csv")
     test_caption_fpath  = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/test.csv")
-
+    
     # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     min_count   = 3
     num_workers = 4
     max_caption_len  = 20
-    frame_sample_len = 9 #P75
+    frame_sample_len = 8
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
@@ -64,7 +58,7 @@ class MSRVTTLoaderConfig(object):
     min_count   = 3
     num_workers = 4
     max_caption_len  = 20
-    frame_sample_len = 13 #P75
+    frame_sample_len = 10
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
@@ -82,24 +76,22 @@ class VATEXLoaderConfig(object):
     min_count   = 3
     num_workers = 4
     max_caption_len  = 20
-    frame_sample_len = 9 #P75
+    frame_sample_len = 8
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
 
 class TransformerConfig:
-    d_model = 512
-    d_ff    = d_model * 4
-    dropout = 0.1
-    n_heads_big  = 4
+    d_model      = 512
+    d_ff         = d_model * 4
+    dropout      = 0.1
     n_heads      = 4
-    n_enc_layers = 0 # Number of encoder layers
-    n_dec_layers = 3 # Number of decoder layers
+    n_dec_layers = 3
 
 
 class TrainConfig:
-    # corpus = "MSVD"
-    corpus = "MSRVTT"
+    corpus = "MSVD"
+    # corpus = "MSRVTT"
     # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig

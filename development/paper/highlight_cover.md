@@ -1,11 +1,20 @@
 # Highlights
 
+```
 **Highlights:**
 - BiDecT eliminates the intermediate encoder, projecting multimodal features directly into a bidirectional decoder for video captioning.
 - A GOP-based pipeline extracts complementary appearance, semantic, and motion features from structured video segments.
 - A dual-purpose scheme leverages a pre-trained vision-language model for both appearance and semantic features, replacing explicit knowledge graphs.
 - A pseudo reverse caption strategy prevents information leakage between backward and forward decoders during bidirectional training.
 - BiDecT achieves state-of-the-art CIDEr scores of 138.0 on MSVD, 64.8 on MSR-VTT, and 78.2 on VATEX, surpassing prior methods by up to 10.8 points.
+```
+
+**Highlights:**
+- BiDecT projects multimodal features into a bidirectional decoder without an encoder.
+- A GOP-based pipeline extracts appearance, semantic, and motion features per segment.
+- A pre-trained VLM jointly provides appearance and semantic representations.
+- Pseudo reverse captions prevent information leakage in bidirectional decoding.
+- BiDecT achieves state-of-the-art CIDEr: 138.0 (MSVD), 64.8 (MSR-VTT), 78.2 (VATEX).
 
 # Cover Letter
 

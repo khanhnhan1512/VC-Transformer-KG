@@ -3,55 +3,55 @@
 # 1. Introduction
 
 - Template-based approaches: 
-    - [1][v] Describing Video Contents in Natural Language => Bỏ URL
-    - [2][v] YouTube2Text: Recognizing and Describing Arbitrary Activities Using Semantic Hierarchies and Zero-shot Recognition
+    - [1][v] Describing Video Contents in `Natural Language` => Bỏ URL: (**khanDescribingVideoContents2012**)
+    - [2][v] `YouTube2Text`: Recognizing and Describing Arbitrary Activities Using Semantic Hierarchies and Zero-shot Recognition (**guadarramaYouTube2TextRecognizingDescribing2013**)
 - CNN-RNN encoder-decoder frameworks:
-    - [3][v] Describing Videos by Exploiting Temporal Structure => [Submitted on 27 Feb 2015 (v1)]
-    - [4][v] Sequence to Sequence -- Video to Text => [Submitted on 3 May 2015 (v1)]
+    - [3][v] Describing Videos by `Exploiting Temporal` Structure => [Submitted on 27 Feb 2015 (v1)] (**yaoDescribingVideosExploiting2015**)
+    - [4][v] `Sequence to Sequence` -- Video to Text => [Submitted on 3 May 2015 (v1)] (**venugopalanSequenceSequenceVideo2015**)
 - Transformer-based architectures:
-    - [5][v] End-to-End Dense Video Captioning with Masked Transformer (3 April 2018)
-    - [6][v] TVT: Two-View Transformer Network for Video Captioning (4 November 2018)
+    - [5][v] End-to-End Dense Video Captioning with `Masked Transformer` (3 April 2018) (**zhouEndtoEndDenseVideo2018**)
+    - [6][v] `TVT`: Two-View Transformer Network for Video Captioning (4 November 2018) (**chenTVTTwoViewTransformer2018**)
 - Bidirectional Decoder:
-    - [7][v] BiTransformer
-    - [8][v] Bidirectional transformer with knowledge graph for video captioning
+    - [7][v] `BiTransformer` (**zhongBiTransformerAugmentingSemantic2022**)
+    - [8][v] `Bidirectional transformer` with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
 
 # 2. Related Work
 
 ## 2.1. 
 
 - P1:
-    - [9][v] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information
-    - [8][1.] Bidirectional transformer with knowledge graph for video captioning
-    - [10][v] SwinBERT: End-to-End Transformers with Sparse Attention for Video Captioning
+    - [9][v] `Concept-Aware` Video Captioning: Describing Videos With Effective Prior Information (**yangConceptAwareVideoCaptioning2023**)
+    - [8][1.] `Bidirectional transformer` with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
+    - [10][v] `SwinBERT`: End-to-End Transformers with Sparse Attention for Video Captioning (**linSwinBERTEndtoEndTransformers2022**)
 - P2:
-    - [11][v] Rethink video retrieval representation for video captioning (IVRC)
+    - [11][v] `Rethink` video retrieval representation for video captioning (IVRC) (**tianRethinkVideoRetrieval2024**)
     ```
     • We propose a retrieval-based multi-task model for video captioning. In extracting visual features, we introduce textual supervision via multi-grained alignment learning, which benefits subsequent processes of generating video descriptions. • We design a learnable token shift module to enhance fine-grained inter-frame information interaction and better capture movements between adjacent frames. • We design a simple yet effective Refineformer which integrates local video patches strongly related to the desired description to provide additional well text-related spatial information for caption decoder. • Our method achieves favorable performance on MSVD [20], MSRVTT [21] and VATEX [22] benchmarks without leveraging other modalities such as speech transcripts or audio information. Thorough ablation studies demonstrate the merits of proposed modules.
     ```
-    - [12][v] Frame-by-Frame Multi-Object Tracking-Guided Video Captioning (Track4Cap)
+    - [12][v] `Frame-by-Frame` Multi-Object Tracking-Guided Video Captioning (Track4Cap) (**luoFramebyFrameMultiObjectTrackingGuided2025**)
     ```
     • We propose Track4Cap, a novel encoder-decoder framework that leverages frame-level features enriched with tracking-guided information for efficient and accurate video captioning. • We introduce two core modules for information augmentation: (i) the Frame-by-frame Multi-Object Tracking (FMoT) module, which identifies and tracks salient objects, and (ii) the Object Relation Encoder (ORE), which models inter-object relationships to enhance contextual understanding. • We demonstrate that Track4Cap achieves state-of-theart performance on benchmark datasets, with significant reductions in inference time and computational complexity. Extensive ablation studies validate the contributions of individual components and their combinations.
     ```
-    - [13][v] Fully exploring object relation interaction and hidden state attention for video captioning (KG-VCN): KG-VCN avoids the over-smoothing issues of conventional graph convolutional networks by utilizing a Graph Transformer and an external knowledge graph to precisely model inter-object relations
+    - [13][v] `Fully exploring` object relation interaction and hidden state attention for video captioning (KG-VCN): KG-VCN avoids the over-smoothing issues of conventional graph convolutional networks by utilizing a Graph Transformer and an external knowledge graph to precisely model inter-object relations (**yuanFullyExploringObject2025**)
     ```
     As a video often contains multiple objects, it is comprehensively crucial to identify multiple objects and model relationships between them. Previous models usually adopt Graph Convolutional Networks (GCN) to infer relational information via object nodes, but there exist uncertainty and over-smoothing issues of relational reasoning. To tackle these issues, we propose a Knowledge Graph based Video Captioning Network (KG-VCN) by fully exploring object relation interaction, hidden state and attention enhancement. In encoding stages, we present a Graph and Convolution Hybrid Encoder (GCHE), which uses an object detector to find visual objects with bounding boxes for Knowledge Graph (KG) and Convolutional Neural Network (CNN). To model intrinsic relations between detected objects, we propose a knowledge graph based Object Relation Graph Interaction (ORGI) module. In ORGI, we design triplets (head, relation, tail) to efficiently mine object relations, and create a global node to enable adequate information flow among all graph nodes for avoiding possibly missed relations. To produce accurate and rich captions, we propose a hidden State and Attention Enhanced Decoder (SAED) by integrating hidden states and dynamically updated attention features.
 
     Combining the above insights, we propose a new framework for video captioning by exploring object relation interaction and hidden state attention. Our model incorporates three blocks, i.e., Knowledge Graph Prediction, Object Relation Graph Interaction, and Hidden State and Attention Enhanced Decoder. First, we utilize the pre-trained Knowledge Graph (KG) on the identified objects to predict the relationships between them. Notably, we pre-train an exclusive KG using captions from the VC Datasets. After that, we use the Object Relation Graph Interaction (ORGI) for extracting relation features, where a global  node is created to interact with other graph nodes under the aid of the Graph Transformer [9]. Finally, hidden states and updated attention features are concatenated to predict words. In brief, our major contributions are summarized as follows:  • We design an Object Relation Graph Interaction module (ORGI) to propose a Knowledge Graph based Video Captioning Network (KGVCN). A knowledge graph is pre-trained to predict relations between detected objects for efficiently assisting decoders to produce robust language sentences with accurate relation descriptions. • To implement adequate information flow across all nodes, we specially construct a global node that connects all graph nodes. In this manner, we can alleviate the adverse effects due to erroneous or missed relations by the pre-trained knowledge graph. • We propose a hidden State and Attention Enhanced Decoder (SAED) that concatenates hidden states and updated attentions for improving the prediction ability of next words. Unlike existing methods, we use both hidden states and dynamically updated attention features to enhance the accuracy of decoding.
     ```
-    - [14][v] Action-Driven Semantic Representation and Aggregation for Video Captioning (HSRA)
+    - [14][v] `Action-Driven` Semantic Representation and Aggregation for Video Captioning (HSRA) (**hanActionDrivenSemanticRepresentation2025**)
     ```
     To harness the power of action detection to facilitate a deeper understanding of the video content, we propose an action-driven method, named Hierarchical Semantic Representation and Aggregation (HSRA) network. This method explicitly exploits action clues with a hierarchical semantic representation module, which models visual semantics in a three-level structure: “object-action-event”. By employing learnable action queries, our approach injects extensive action semantics into the model, thereby enabling more accurate and context-rich captions. To further enhance semantic alignment and understanding, we introduce a semantic aggregation composed of a semantic interaction module and a semantic refinement module. This component facilitates the alignment of semantics across different levels and emphasizes key information, ultimately leading to significant improvements in semantic consistency between the video and generated captions.
 
     we propose a Hierarchical Semantic Representation and Aggregation (HSRA) network. This network is designed to capture fine-grained semantics of visual content through a hierarchical semantic representation module, structuring the visual semantics into an “object-action-event” hierarchy. The “event” denotes specific occurrences involving one or more “objects” engaging in “actions” within a given context, which is supposed to be semantic-accurately described by the generated caption sentence. “Objects” refer to the entities partaking in the event, aligning with the nouns in the captions, while “actions” denote the behaviors or activities undertaken by these objects, correlating with the verbs in the captions. Notably, different from existing methods, our approach diverges from existing methodologies by explicitly detecting actions in the video with an encoder-decoder architecture motivated by End-to-End Object Detection with Transformers (DETR). This strategy enhances the depiction of interactions among objects in the generated captions, offering a more accurate and detailed description of the visual content. To bridge the semantic gap across different layers and highlight visually prominent semantics, we further incorporate a semantic aggregation module into the proposed HSRA. The semantic aggregation module comprises two components: a semantic interaction module and a semantic refinement module. The former deepens the aggregation of video content and aligns semantics across varying levels of granularity,  enabling the generation of semantically consistent captions. The latter diminishes the impact of non-essential semantics and emphasizes visually significant content, thereby producing captions that are both more precise and visually grounded. Subsequently, captions are generated using a Bi-LSTM based decoder. Our proposed method has been rigorously evaluated using four metrics across two benchmark datasets (MSVD and MSRVTT). It not only attains state-of-the-art results on both datasets but also validates the effectiveness of each module through comprehensive experimentation. To summarize, the contributions of this paper are three-fold:  - We present the Hierarchical Semantic Representation and Aggregation (HSRA) network, designed to capture the hierarchical visual semantics of “object-action-event” using a hierarchical semantic representation module. This module, featuring a DETR-inspired action detection layer, significantly improves the precision and variety of verbs in the generated captions. - We propose a semantic aggregation that incorporates both a semantic interaction module and a semantic refinement module to align semantics across different hierarchical levels and augment principal visual semantics, benefiting from which the HSRA could produce video captions that are both semantically consistent and visually grounded. - We conduct extensive evaluations of the proposed method on two benchmark datasets (MSVD and MSRVTT), and the results show that our HSRA effectively promotes the quality of generated captions.
     ```
 - P3:
-    - [15][v] Learning Transferable Visual Models From Natural Language Supervision (CLIP)
-    - [16][v] MViTv2: Improved Multiscale Vision Transformers for Classification and Detection
+    - [15][v] `Learning Transferable` Visual Models From Natural Language Supervision (CLIP) (**radfordLearningTransferableVisual2021**)
+    - [16][v] `MViTv2`: Improved Multiscale Vision Transformers for Classification and Detection (**liMViTv2ImprovedMultiscale2022**)
 
 ## 2.2.
 
 - P2:
-    - [17][v] Text with Knowledge Graph Augmented Transformer for Video Captioning (TextKG)
+    - [17][v] `Text with Knowledge Graph` Augmented Transformer for Video Captioning (TextKG) (**guTextKnowledgeGraph2023**)
     ```
     Notably, TextKG is a two-stream transformer, formed by the external stream and internal stream. The external stream is designed to absorb additional knowledge, which models the interactions between the additional knowledge, e.g., pre-built knowledge graph, and the builtin information of videos, e.g., the salient object regions, speech transcripts, and video captions, to mitigate the longtail words challenge. Meanwhile, the internal stream is designed to exploit the multi-modality information in videos (e.g., the appearance of video frames, speech transcripts, and video captions) to ensure the quality of caption results. In addition, the cross attention mechanism is also used in between the two streams for sharing information. In this way, the two streams can help each other for more accurate results.
 
@@ -59,40 +59,40 @@
 
     3.4. Knowledge Graphs Construction  As mentioned above, we use the knowledge graph to retain the prior knowledge. The nodes in the graph could corresponding to a noun, an adjective, a verb or an adverb, etc. The edges in the graph are used to encode the relations between different nodes. Apparently, it is important to include all key information of videos in knowledge graphs for accurate caption results. Thus, besides general knowledge graph covering most key knowledge in general scenarios, we also introduce the specific knowledge graph for each dataset covering the key knowledge in specific scenarios. General knowledge graph is designed to include most key information in general scenarios that we are interested, such as cooking and activity. Specifically, the general knowledge graph is exported from the public available giant knowledge graph ConceptNet [42] by extracting key words1 in ConceptNet with the connected edges and neighboring nodes. Specific knowledge graph. Besides the general knowledge graph, we also construct the specific knowledge graph to cover key information in specific scenarios. We believe that the speech transcripts of videos contain most of the crucial information and use the speech transcripts as the source to construct the specific knowledge graph. We first use the automatic speech recognition (ASR) model [2] to convert the speech in all videos to transcripts. After that, we use the Stanford NLP library2 to analyze the components in each sentence in transcripts to form a structured grammer tree. We collect the “adjective and noun”, “noun and noun” and “adverb and verb” phrases from the grammar trees to construct the specific knowledge graph.
     ```
-    - [8][1.] Bidirectional transformer with knowledge graph for video captioning (BTKG)
+    - [8][1.] `Bidirectional transformer` with knowledge graph for video captioning (BTKG) (**zhongBidirectionalTransformerKnowledge2024**)
     ```
     As stated above, our Bidirectional Transformer with Knowledge Graph (BTKG) combines a bidirectional decoder proposed by Wang [8] with an encoder proposed by Zhang [7] that integrates objects in the video and relationships between the objects. As shown in Fig. 2, BTKG consists of four components: given a video, Spatio-Temporal Encoder (STE) obtains fine-grained video spatio-temporal encoding E_STE of the video exploiting an extended and multi-head attention layer, Objects and Relationships Encoder (ORE) first extracts objects in the video through object detector Mask R-CNN and acquires the relationships between the objects through the knowledge graph model TransE, then jointly encode the objects, the relationships, and the coarse-grained spatio-temporal features to obtain E_ORE
 
     3.2.2 Objects and relationships encoder (ORE)  In order to provide finer-grained actions between objects, we obtain relationships between the objects through a knowledge graph model. As shown in ODRA of Fig. 1, we utilize the object detector Mask R-CNN to obtain objects and choose TransE based on the knowledge representation learning framework OpenKE to acquire relationships between the objects.
     ```
-    - `[18]* TransE`
+    - `[18]* TransE` `Translating Embeddings` (**bordesTranslatingEmbeddingsModeling2013**)
 - P3:
-    - [19][v] Scene adaptive dynamic multi-modal knowledge for video captioning (MK-VC)
+    - [19][v] `Scene adaptive` dynamic multi-modal knowledge for video captioning (MK-VC) (**sunSceneAdaptiveDynamic2026**)
     ```
     we first construct the Dynamic Multi-modal Knowledge (DMK). It consists of a Static Concept Knowledge (SCK) and a Dynamic Context Knowledge (DCK). The former encapsulates commonsense knowledge and dataset-specific information, which is invariant for a specific dataset. And the latter captures video-related multi-modal knowledge, including visual features, attributes, and object text, which vary across different videos. Then we propose an effective multi-modal knowledge-based (MK-VC) video captioning framework. It incorporates Context-aware Fine-grained Adaptive Fusion (CaFAF) module and Attribute-guided Hardest Negative Contrastive Alignment (AHNCA) module. The CaFAF module dynamically adjusts the importance of the DMK with fine granularity by leveraging contextual scene features. In this way, CaFAF emphasizes important knowledge, such as highly relevant or low-frequency words, thereby alleviating the long-tailed word distribution problem to some extent. The AHNCA module aligns different modalities by utilizing object attributes. And it further enhances the alignment using the hardest negative samples.
 
     In this paper, we propose an effective multi-modal knowledge (MKVC) enhanced framework for video captioning. We first construct a Dynamic Multi-modal Knowledge (DMK) and use pre-trained CLIP to retrieve video-relevant knowledge. We then leverage adaptive fusion and cross-modal alignment to fully exploit DMK and mitigate the impact of long-tailed word distribution. Specifically, the MK-VC framework consists of two key modules: the Context-aware Fine-grained Adaptive Fusion (CaFAF) module and the Attribute-guided Hardest Negative Contrastive Alignment (AHNCA) module. As shown in Fig. 1(b) the DMK exhibits a long-tailed distribution; consequently, the importance of different nodes, edges, and modalities varies in caption generation. Furthermore, although a pre-trained CLIP model retrieves scene-relevant knowledge, noise may still be present. Therefore, we propose CaFAF to mitigate interference from irrelevant information in the retrieved knowledge and facilitate diverse multi-modal fusion of input knowledge triples. Guided by contextual scene information, CaFAF adaptively adjusts the weights of nodes and relationships within the knowledge. To achieve fine-grained cross-modal alignment, we propose AHNCA, which additionally incorporates object attributes to align textual entities with their visual representations using margin-based contrastive learning. In addition, to improve alignment performance, AHNCA increases training difficulty by selecting the most challenging negative sample pairs based on similarity.  Our contributions can be summarized as three-fold:  • We introduce the MK-VC framework, which leverages multi-modal knowledge to alleviate the long-tailed distribution in video captioning. To realize this, we develop a Dynamic Multi-modal Knowledge (DMK) module and propose Attribute-guided Hardest Negative Contrastive Alignment (AHNCA) for fine-grained cross-modal alignment within DMK. • We propose the Context-aware Fine-grained Adaptive Fusion (CaFAF) module, which generates adaptive weights to fine-tune the importance of nodes and relationships within the input knowledge, effectively reducing noise interference.
     ```
-    - [20][v] Towards generalized video captioning: An effective multi-modal knowledge graph perspective (EMKG)
+    - [20][v] `Towards generalized` video captioning: An effective multi-modal knowledge graph perspective (EMKG) (**sunGeneralizedVideoCaptioning2026**)
     ```
     we propose an Effective Multi-modal Knowledge Graph (EMKG) framework for video captioning, which incorporates Cross-modal Fine-grained Adaptive Fusion (CmFAF) and Hardest Sample Attribute-anchored Alignment (HSA-Aligner) to efficiently integrate knowledge into the model. Specifically, we adopt an object-centric multi-modal knowledge orchestration approach to construct ConceptVision Knowledge Graph (CVKG) composed of two subgraphs: ConceptCore (C3) and VisionVivid (V3). C3 integrates commonsense knowledge as well as dataset-specific information, whereas V3 covers video-related knowledge, such as visual objects and attributes. Before training, we utilize the pretrained CLIP model to assess the similarity between video frames and words of different parts of speech, such as nouns and verbs, retrieving a content-relevant subgraph to serve as input to the model. To minimize the noise in the retrieved subgraph, we design a CmFAF module. CmFAF leverages the cross-modal context generated by fusing global context with captions retrieved from the training corpus to dynamically adjust the weights of nodes and relationships at a fine-grained level. In addition, to improve the alignment between visual objects and textual entities of CVKG, we present HSA-Aligner. By utilizing object attributes and strategically selecting hardest samples, HSA-Aligner boosts the alignment performance.
 
     In this paper, we propose a novel video captioning framework that enhances model generalization by efficiently injecting knowledge from  MMKGs into the decoder through adaptive fusion and alignment, as illustrated in Fig. 1c. Specifically, we construct a multi-modal knowledge graph, termed ConceptVision Knowledge Graph (CVKG), which comprises two subgraphs: ConceptCore (C3) and VisionVivid (V3). C3 subgraph incorporates commonsense knowledge from ConceptNet[28] along with dataset-specific syntactic parsing to endow the model with both general and domain-specific knowledge. In contrast, V3 subgraph captures video-related knowledge, such as object visual features and attributes, thereby providing fine-grained cross-modal mappings. Moreover, we propose a hybrid query retrieval method that leverages a pretrained CLIP model to separately measure the similarity between video frames and noun or verb queries. Based on the computed similarities, we retrieve subgraphs from the CVKG that contain the most relevant noun or verb queries.  To maximize the utility of MMKGs and enhance model generalization, we propose the Effective Multi-modal Knowledge Graph (EMKG) framework, as depicted in Fig. 2. This framework comprises two core modules: the Cross-modal Fine-grained Adaptive Fusion (CmFAF) module and the Hardest Sample Attribute-Anchored Alignment (HSAAligner) module. CmFAF adaptively integrates CVKG by dynamically refining the weights of nodes and relationships at a fine-grained level, leveraging cross-modal context derived from global context and retrieved captions. This mechanism mitigates interference from irrelevant entities and relationships, thereby ensuring the incorporation of highquality knowledge into the model. HSA-Aligner facilitates the alignment of multi-modal information within the knowledge graph, enabling the establishment of robust cross-modal relationships. Given that an object can exhibit multiple attributes (e.g., a brush may be blue or white), directly aligning its visual and textual representations may introduce ambiguity. To mitigate this issue, we incorporate object attributes into the textual representations, thereby refining the cross-modal alignment at a more granular level. Furthermore, to improve alignment effectiveness, we identify and utilize the hardest visual-text pairs. This increases the difficulty of the alignment learning process and strengthens the model’s ability to associate multi-modal representations with greater precision.  The contributions of this paper can be summarized as four-fold:  • We propose the effective multi-modal knowledge graph framework, which explores the generalization capability of video captioning models from the perspective of efficiently leveraging multi-modal knowledge graphs. • We construct a multi-modal ConceptVision knowledge graph (CVKG) using an object-centric multi-modal knowledge orchestration approach. This approach integrates diverse forms of knowledge, including commonsense, objects, attributes, and conceptual information. • We propose the Cross-modal Fine-grained Adaptive Fusion (CmFAF), which dynamically adjusts the importance of subgraph components using cross-modal context. Additionally, we propose the Hardest Sample Attribute-Anchored Alignment (HSA-Aligner) to refine crossmodal alignment by utilizing attributes and the hardest sample mining.
     ```
-    - [21][v] DSSM-KG: Dual-Stream State-Space Modeling with Adaptive Knowledge Injection for Video Captioning
+    - [21][v] DSSM-KG: `Dual-Stream` State-Space Modeling with Adaptive Knowledge Injection for Video Captioning (**sunDSSMKGDualStreamStateSpace2025**)
     ```
     Recent methods extract temporal and spatial information separately and use dataset-specific prior knowledge to enhance caption quality. However, they may be inadequate in joint spatiotemporal modeling and lack the utilization of commonsense knowledge, making it difficult to fully understand the video. To address these issues, this paper proposes a dual-stream statespace model (DSSM-KG) based on cross-modal knowledge injection. Specifically, by integrating the heterogeneous Mamba with the Transformer in both parallel and sequential manners, we construct the spatially enhanced dual-stream state-space module (S-DSSM) and the temporally enhanced dual-stream state-space module (TDSSM) to strengthen joint spatiotemporal modeling. Additionally, a knowledge graph that integrates both commonsense and datasetspecific information is constructed and adaptively injected into the decoder to furnish the model with extensive video-related knowledge. Experimental results indicate that the structural designs of DSSM-KG, together with the knowledge injection mechanism , demonstrate significant efficacy.
 
     In this paper, we propose a dual-stream state-space model with cross-modal knowledge injection (DSSM-KG) to enhance the model’s spatiotemporal modeling capability while leveraging a knowledge graph (KG) to improve video comprehension. Specifically, to enhance the representation of spatial features in videos, we developed a Spatial Enhanced Dual-stream State-Space Module (S-DSSM) that employs heterogeneous Mamba and Transformer components to process features independently. To improve temporal modeling, we Figure 1: Overall framework of DSSM-KG.  introduced a Temporal Enhanced Dual-stream State-Space Module (T-DSSM) that rearranges spatial features; this module leverages the time scanning capabilities of the SSM to reinforce temporal feature modeling and further employs a Transformer to boost overall representational capacity. Subsequently, we implemented weight sharing between S-DSSM and T-DSSM, which not only reduces the number of model parameters but also facilitates joint spatiotemporal modeling of visual features. Finally, we inject knowledge into the decoder in an adaptive manner, thereby assisting the model in achieving a more comprehensive understanding of video content. The main contributions of this paper are as follows:  • We propose a dual-stream state-space model with crossmodal knowledge injection . By integrating S-DSSM and T-DSSM, the model effectively enhances the extraction of spatial and temporal information, thereby improving joint spatiotemporal modeling capabilities; • We propose an adaptive knowledge injection strategy that integrates a constructed KG into the model, thereby enriching its knowledge base and enhancing its video understanding capabilities;
     ```
 - P4:
-    - [22][v] Pretrained Image-Text Models are Secretly Video Captioners
+    - [22][v] `Pretrained` Image-Text Models are Secretly Video Captioners (**zhangPretrainedImageTextModels2025**)
     ```
     Developing video captioning models is computationally expensive. The dynamic nature of video also complicates the design of multimodal models that can effectively caption these sequences. However, we find that by using minimal computational resources and without complex modifications to address video dynamics, an image-based model can be repurposed to outperform several specialised video captioning systems. Our adapted model demonstrates top-tier performance on major benchmarks, ranking 2nd on MSR-VTT and MSVD, and 3rd on VATEX. We transform it into a competitive video captioner by post-training a typical image captioning model BLIP-2 with  only 6,000 video-text pairs and simply concatenating frames—significantly fewer data than other methods, which use 2.5 to 144 million pairs. From a resource optimization perspective, this video captioning study focuses on three fundamental factors: optimizing model scale, maximizing data efficiency, and incorporating reinforcement learning. This extensive study demonstrates that a lightweight, imagebased adaptation strategy can rival state-of-theart video captioning systems, offering a practical solution for low-resource scenarios.
 
     deo captioning models remain highly resource-intensive, often hitting performance bottlenecks when (i) computational resources are constrained, or (ii) the task requires specialized priors without clear guidance for model design and training. This raises a critical question: for simplicity and efficiency, how can  we repurpose existing image captioning models for video captioning, without relying on complex, hand-crafted video-specific designs?  To address this, we revisit fundamental factors in training—model scale, data efficiency, and supervision—that critically influence video captioning while being agnostic to the variants of videospecific designs: First, we find that moderate-sized language models (LMs) when fine-tuned for specific tasks, can meet the demands of video captioning efficiently. This challenges the common belief that larger models are always superior, demonstrating that targeted optimization can outperform sheer model size. Second, using extensive pretraining on image-text pairs, as demonstrated with BLIP-2, is transferable to video tasks. This allows the model to achieve high performance with minimal video usage, offering an efficient alternative to training from scratch. Third, instead of relying on traditional cross-entropy loss, we optimize directly for nondifferentiable CIDEr with reinforcement learning, ensuring that the generated captions better align with human-standard video descriptions.  By bypassing complex, specialized video input designs, our experiments demonstrate that BLIP-2 straightforwardly derived from image captioning, can be effectively optimized to deliver competitive video captioning performance. This study underscores the potential of simplicity and efficiency in advancing multimodal video captioning, providing a streamlined yet stable solution.
     ```
-    - [23][v] BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models
+    - [23][v] `BLIP-2: Bootstrapping` Language-Image Pre-training with Frozen Image Encoders and Large Language Models (**liBLIP2BootstrappingLanguageImage2023**)
     - <s>IcoCap: Improving Video Captioning by Compounding Images</s>
     ```
     Video data contains redundant visual content, making it difficult for captioners to generalize diverse content and avoid being misled by irrelevant elements. Moreover, redundant content is not well-trimmed to match the corresponding visual semantics in the ground truth, further increasing the difficulty of video captioning. Current research in video captioning predominantly focuses on captioner design, neglecting the impact of content density on captioner performance. Considering the differences between videos and images, there exists an another line to improve video captioning by leveraging concise and easily-learned image samples to further diversify video samples. This modification to content density compels the captioner to learn more effectively against redundancy and ambiguity. In this article, we propose a novel approach called Image-Compounded learning for video Captioners (IcoCap) to facilitate better learning of complex video semantics. IcoCap comprises two components: the ImageVideo Compounding Strategy (ICS) and Visual-Semantic Guided Captioning (VGC). ICS compounds easily-learned image semantics into video semantics, further diversifying video content and prompting the network to generalize contents in a more diverse sample. Besides, learning with the sample compounded with image contents, the captioner is compelled to better extract valuable video cues in the presence of straightforward image semantics. This helps the captioner further focus on relevant information while filtering out extraneous content. Then, VGC guides the network in flexibly learning ground truth captions based on the compounded samples, helping to mitigate the mismatch between the ground truth and ambiguous semantics in video samples. Our experimental results demonstrate the effectiveness of IcoCap in improving the learning of video captioners. Applied to the widely-used MSVD, MSRVTT, and VATEX datasets, our approach achieves competitive or superior results compared to state-of-the-art methods, illustrating its capacity to handle the redundant and ambiguous video data
@@ -103,74 +103,74 @@
 ## 2.3.
 
 - P1:
-    - [24][v] Unified hierarchical contrastive learning for video captioning (UHCL)
+    - [24][v] `Unified hierarchical` contrastive learning for video captioning (UHCL) (**sunUnifiedHierarchicalContrastive2026**)
     ```
     Many video captioning models are typically trained using video-text pairs and adopt maximum likelihood estimation as their learning method, which overlooks caption distinctiveness and results in high resemblance in model-generated captions. Although contrastive methods improve distinctiveness, their performance is influenced by the reference model, and they rely on a two-stage training process: first training a reference model, then training a target model to surpass the reference. In this work, we propose a simple yet effective Unified Hierarchical Contrastive Learning (UHCL) method, which harnesses triamese decoders and hierarchical contrastive learning to enhance overall performance and encourage distinctiveness within a unified framework. Specifically, UHCL employs triamese decoders to compute contrastive loss using additional matched and mismatched video-caption pairs. Furthermore, adaptive token fusion module is utilized to reduce the redundancy of visual tokens, guiding the model to apply hierarchical contrastive constraints at the noun and verb levels. It is worth noting that UHCL does not require prior information, thus avoiding the risk of introducing noise, and only a single decoder is required during inference, with no additional computational overhead.
 
     In this paper, we propose a simple yet effective Unified Hierarchical Contrast Learning (UHCL) method for video captioning, as illustrated in Fig. 1(c). During training, a video and its corresponding caption (anchor), positive sample (caption from the same video but different from the anchor) and negative sample (caption from different videos) are input into triamese decoders. Subsequently, the relationships among the generated video captions are constrained using contrastive learning. To further constrain the solution space, visual tokens are processed twice through the adaptive token fusion module. The fused visual tokens are then subsequently employed to compute contrastive loss hierarchically at both the noun and verb levels. Notably, while triamese decoders are used during training, only a single decoder is used during inference to generate sentence, thereby avoiding additional computational overhead.  The contributions of this paper are summarized below:  • A novel, simple yet effective contrastive framework for video captioning, named Unified Hierarchical Contrastive Learning (UHCL), is proposed. Leveraging triamese decoders and adaptive token fusion modules, this framework enforces hierarchical contrastive learning constraints without requiring additional models or training. • The relationships between the generated video captions and those of the anchor, positive samples, and negative samples are constrained using hierarchical contrastive learning. This method applies to both noun and verb levels through the adaptive token fusion module, enabling multi-granularity constraints during model training.
     ```
-    - [25][v] Adaptive semantic guidance network for video captioning (ASGNet)
+    - [25][v] `Adaptive semantic` guidance network for video captioning (ASGNet) (**liuAdaptiveSemanticGuidance2025**)
     ```
     we find that the existing methods over-rely on the language-prior information about the text acquired by training, resulting in the model tending to output high-frequency fixed phrases. In order to solve the above problems, we extract highquality semantic information from multi-modal input and then build a semantic guidance mechanism to adapt to the contribution of visual semantics and text semantics to generate captions. We propose an Adaptive Semantic Guidance Network (ASGNet) for video captioning. The ASGNet consists of a Semantic Enhancement Encoder (SEE) and an Adaptive Control Decoder (ACD). Specifically, the SEE helps the model obtain highquality semantic representations by exploring the rich semantic information from visual and textual. The ACD dynamically adjusts the contribution weights of semantics about visual and textual for word generation, guiding the model to adaptively focus on the correct semantic information. These two modules work together to help the model overcome the problem of over-reliance on language priors, resulting in more accurate video captions.
 
     ASGNet is a new approach to video captioning. It not only extracts high-quality semantic information from multimodal video inputs but also constructs a semantic guidance mechanism to adaptively adjust the contribution weights of visual and textual semantics toward caption generation. Our ASGNet is constructed based on an encoder–decoder architecture, consisting of a semantic embedding encoder (SEE) and an adaptive control decoder (ACD). Specifically, in the SEE encoder, we first design a Semantic Embedding Module (SEM), which aims to mine semantic information in video static and temporal features. Then, we propose a Semantic Fusion Module (SFM) to capture the interactions between video features and textual features to enhance the semantic expressiveness of the encoder. The ACD decoder we designed contains a text decision module (TDM) and a dependency control module (DCM). The TDM guides the decoder to adaptively focus on the corresponding visual information by utilizing textual contextual information, while the DCM dynamically controls the contribution of visual and textual information to the generated words. These two modules work together to help the model overcome the problem of over-reliance on language-prior information and thus achieve cross-modal semantic alignment.  In summary, the main contributions of this paper are as follows:  • We design a semantic enhancement encoder. It contains a Semantic Embedding Module (SEM) and a Semantic Fusion Module (SFM). The SEM aims at mining semantic information inside the static and temporal features of the video. The SFM aims to capture the interaction between video features and textual features to enhance the semantic expressiveness of the encoder. • We propose an adaptive control decoder. It contains a Text Decision Module (TDM) and a Dependent Control Module (DCM). The TDM guides the decoder to adaptively focus on the corresponding visual information by utilizing textual contextual information. The DCM dynamically controls the contribution of visual and textual information to generate words. This reduces the degree of reliance on language-prior information and helps the model generate descriptions that are more in accordance with the video captions.
     ```
-    - [26][v] Ask and focus more: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC)
+    - [26][v] `Ask and focus more`: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC) (**chenAskFocusMore2026**)
     ```
     Although entities, predicates, and syntactic structures are critical for coherent descriptions, existing controllable methods often struggle to dynamically emphasize salient information due to reliance on predefined entity lists and static fusion strategies. Moreover, uncertainty in aligning multimodal features (e.g., visual actions and textual semantics) further weakens model robustness. To address these challenges, we propose QPDC, a Dual-Controllable video captioning framework that introduces a Question-Prompt mechanism to adaptively guide caption focus. Unlike traditional entity-driven approaches, QPDC adopts a unified question-prompt strategy to maintain semantic consistency while enabling flexible attention shifts. Specifically, the Question-Prompt (Q-Prompt) module dynamically steers the model’s focus according to query intent, emphasizing salient content without predefined constraints. The Selective Fusion Module (SFM) hierarchically integrates Q-Prompt guidance with local action features and global sentence context to support multi-granularity control. In addition, a Dirichlet-based strategy is employed to model uncertainty in multimodal weight allocation, improving adaptability under varying data conditions.
 
     In this work, we propose QPDC, an encoder-decoder-based dualcontrollable video captioning framework that leverages BLIP-driven questions, a Selective Fusion Module (SFM), and comprehensive focus modeling. QPDC generates captions by responding to video-relevant questions, thereby reducing omissions and semantic errors. Specifically, we generate visual questions from both videos and human-written captions and integrate them into a dedicated question-prompt (QPrompt) captioning model. To improve robustness under alignment uncertainty, we introduce branch-adjustable supervision that allows different branches (e.g., entity and action branches) to dynamically adjust their contributions based on input characteristics. The encoder jointly processes video content and questions, followed by an alignment module for feature fusion, while the decoder generates captions conditioned on the integrated representations. This design enables dynamic emphasis on specific actions or global semantics depending on the question context. Moreover, the fusion module supports sample-adaptive multimodal integration without additional computational overhead and performs evidential-level fusion via a learnable Dirichlet distribution.  The main contributions of this paper are summarized threefold:  • We propose QPDC, a dual-controllable video captioning framework that integrates question-compatible and branch-adjustable supervision through a unified sentence-level modeling paradigm. • We design a Question Prompt (Q-Prompt) mechanism and a Selective Fusion Module (SFM) to enhance controllability. Q-Prompt generates BLIP-driven questions with global and local semantics, while SFM adaptively selects appropriate branches to support customized and diverse caption generation. • We introduce a sample-adaptive multimodal integration strategy based on evidential modeling, enabling explicit uncertainty characterization and improving robustness under noisy or degraded conditions.
     ```
 - P2:
-    - [7][1.] BiTransformer
-    - [8][1.] Bidirectional transformer with knowledge graph for video captioning
+    - [7][1.] BiTransformer (**zhongBiTransformerAugmentingSemantic2022**)
+    - [8][1.] Bidirectional transformer with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
 
 # 3.
 
 ## 3.2.
 
 - Post-LN:
-    - [27][v] Attention is all you need
-    - [28][v] On layer normalization in the transformer architecture
+    - [27][v] `Attention is all you need` (**vaswaniAttentionAllYou2017**)
+    - [28][v] `On layer normalization` in the transformer architecture (**xiongLayerNormalizationTransformer2020**)
 - Pre-LN:
-    - [28][v] On layer normalization in the transformer architecture
-    - [29][v] Peri-LN
+    - [28][v] `On layer normalization` in the transformer architecture (**xiongLayerNormalizationTransformer2020**)
+    - [29][v] `Peri-LN` (**kimPeriLNRevisitingNormalization2025**)
 - Peri-LN:
-    - [29][v] Peri-LN
-    - [29][v] Peri-LN
+    - [29][v] `Peri-LN` (**kimPeriLNRevisitingNormalization2025**)
+    - [29][v] `Peri-LN` (**kimPeriLNRevisitingNormalization2025**)
 
 # 4.
 
 ## 4.1.
 
-- [7][1.] BiTransformer
-- [8][1.] Bidirectional transformer with knowledge graph for video captioning
+- [7][1.] BiTransformer (**zhongBiTransformerAugmentingSemantic2022**)
+- [8][1.] Bidirectional transformer with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
 
 ## 4.2.
 
-- [23][2.2] BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models
-- [30][v] Sentence-BERT
-- [16][2.1] MViTv2: Improved Multiscale Vision Transformers for Classification and Detection
+- [23][2.2] `BLIP-2: Bootstrapping` Language-Image Pre-training with Frozen Image Encoders and Large Language Models (**liBLIP2BootstrappingLanguageImage2023**)
+- [30][v] `Sentence-BERT` (**reimersSentenceBERTSentenceEmbeddings2019**)
+- [16][2.1] `MViTv2`: Improved Multiscale Vision Transformers for Classification and Detection (**liMViTv2ImprovedMultiscale2022**)
 
 ## 4.6.
 
-- [7][1.] BiTransformer
-- [8][1.] Bidirectional transformer with knowledge graph for video captioning
+- [7][1.] BiTransformer (**zhongBiTransformerAugmentingSemantic2022**)
+- [8][1.] Bidirectional transformer with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
 
 # 5.
 
 ## 5.1.
 
-- [31][v] Collecting Highly Parallel Data for Paraphrase Evaluation
-- [32][v] MSR-VTT: A Large Video Description Dataset for Bridging Video and Language
-- [33][v] VaTeX: A Large-Scale, High-Quality Multilingual Dataset for Video-and-Language Research
+- [31][v] `Collecting` Highly Parallel Data for Paraphrase Evaluation (**chenCollectingHighlyParallel2011**)
+- [32][v] `MSR-VTT`: A Large Video Description Dataset for Bridging Video and Language (**xuMSRVTTLargeVideo2016**)
+- [33][v] `VaTeX`: A Large-Scale, High-Quality Multilingual Dataset for Video-and-Language Research (**wangVaTeXLargeScaleHighQuality2019**)
 
 ## 5.2. 
 
-- [34][v] Bleu: a method for automatic evaluation of machine translation
-- [35][v] Meteor: An automatic metric for mt evaluation with improved correlation with human judgments
-- [36][v] Automatic evaluation of machine translation quality using longest common subsequence and skip-bigram statistics
-- [37][v] Cider: Consensus-based image description evaluation
+- [34][v] `Bleu`: a method for automatic evaluation of machine translation (**papineniBleuMethodAutomatic2002**)
+- [35][v] `Meteor`: An automatic metric for mt evaluation with improved correlation with human judgments (**banerjeeMETEORAutomaticMetric2005**)
+- [36][v] `Automatic evaluation` of machine translation quality using longest common subsequence and skip-bigram statistics (**linAutomaticEvaluationMachine2004**)
+- [37][v] `Cider`: Consensus-based image description evaluation (**vedantamCIDErConsensusbasedImage2015**)
 
 ## 5.3.
 
@@ -181,30 +181,30 @@
 ## 5.4.
 
 - **MSVD+MSR-VTT:**
-    - [10][2.1] SwinBERT: End-to-End Transformers with Sparse Attention for Video Captioning
-    - [17][2.2] Text with Knowledge Graph Augmented Transformer for Video Captioning (TextKG)
-    - [38][v] Accurate and Fast Compressed Video Captioning
-    - [9][2.1] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information
-    - [8][1.] Bidirectional transformer with knowledge graph for video captioning
-    - [11][2.1] Rethink video retrieval representation for video captioning (IVRC)
-    - [39][v] OmniViD: A Generative Framework for Universal Video Understanding
-    - [40][v] IcoCap: Improving Video Captioning by Compounding Images
-    - [13][2.1] Fully exploring object relation interaction and hidden state attention for video captioning (KG-VCN)
-    - [12][2.1] Frame-by-Frame Multi-Object Tracking-Guided Video Captioning (Track4Cap)
-    - [21][2.2] DSSM-KG: Dual-Stream State-Space Modeling with Adaptive Knowledge Injection for Video Captioning
-    - [24][2.3] Unified hierarchical contrastive learning for video captioning (UHCL)
-    - [41][v] Dual-hierarchical knowledge distillation for video captioning
-    - [19][2.2] Scene adaptive dynamic multi-modal knowledge for video captioning (MK-VC)
-    - [26][2.3] Ask and focus more: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC)
-    - [20][2.2] Towards generalized video captioning: An effective multi-modal knowledge graph perspective (EMKG)
+    - [10][2.1] `SwinBERT`: End-to-End Transformers with Sparse Attention for Video Captioning (**linSwinBERTEndtoEndTransformers2022**)
+    - [17][2.2] `Text with Knowledge Graph` Augmented Transformer for Video Captioning (TextKG) (**guTextKnowledgeGraph2023**)
+    - [38][v] `Accurate` and Fast Compressed Video Captioning (**shenAccurateFastCompressed2023**)
+    - [9][2.1] `Concept-Aware` Video Captioning: Describing Videos With Effective Prior Information (**yangConceptAwareVideoCaptioning2023**)
+    - [8][1.] Bidirectional transformer with knowledge graph for video captioning (**zhongBidirectionalTransformerKnowledge2024**)
+    - [11][2.1] Rethink video retrieval representation for video captioning (IVRC) (**tianRethinkVideoRetrieval2024**)
+    - [39][v] OmniViD: A Generative Framework for Universal Video Understanding (**wangOmniViDGenerativeFramework2024**)
+    - [40][v] IcoCap: Improving Video Captioning by Compounding Images (**liangIcoCapImprovingVideo2024**)
+    - [13][2.1] Fully exploring object relation interaction and hidden state attention for video captioning (KG-VCN) (**yuanFullyExploringObject2025**)
+    - [12][2.1] Frame-by-Frame Multi-Object Tracking-Guided Video Captioning (Track4Cap) (**luoFramebyFrameMultiObjectTrackingGuided2025**)
+    - [21][2.2] DSSM-KG: Dual-Stream State-Space Modeling with Adaptive Knowledge Injection for Video Captioning (**sunDSSMKGDualStreamStateSpace2025**)
+    - [24][2.3] Unified hierarchical contrastive learning for video captioning (UHCL) (**sunUnifiedHierarchicalContrastive2026**)
+    - [41][v] `Dual-hierarchical` knowledge distillation for video captioning (**luoDualhierarchicalKnowledgeDistillation2026**)
+    - [19][2.2] Scene adaptive dynamic multi-modal knowledge for video captioning (MK-VC) (**sunSceneAdaptiveDynamic2026**)
+    - [26][2.3] Ask and focus more: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC) (**chenAskFocusMore2026**)
+    - [20][2.2] Towards generalized video captioning: An effective multi-modal knowledge graph perspective (EMKG) (**sunGeneralizedVideoCaptioning2026**)
 - **VATEX-only:**
-    - [10][2.1] SwinBERT: End-to-End Transformers with Sparse Attention for Video Captioning
-    - [38][v] Accurate and Fast Compressed Video Captioning
-    - [9][2.1] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information
-    - [11][2.1] Rethink video retrieval representation for video captioning (IVRC)
-    - [40][v] IcoCap: Improving Video Captioning by Compounding Images
-    - [42][v] Learning Hierarchical Modular Networks for Video Captioning
-    - [13][2.1] Fully exploring object relation interaction and hidden state attention for video captioning (KG-VCN)
-    - [43][v] Knowledge enhancement and disentanglement learning for video captioning (KEDL)
-    - [41][v] Dual-hierarchical knowledge distillation for video captioning
-    - [26][2.3] Ask and focus more: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC)
+    - [10][2.1] SwinBERT: End-to-End Transformers with Sparse Attention for Video Captioning (**linSwinBERTEndtoEndTransformers2022**)
+    - [38][v] Accurate and Fast Compressed Video Captioning (**shenAccurateFastCompressed2023**)
+    - [9][2.1] Concept-Aware Video Captioning: Describing Videos With Effective Prior Information (**yangConceptAwareVideoCaptioning2023**)
+    - [11][2.1] Rethink video retrieval representation for video captioning (IVRC) (**tianRethinkVideoRetrieval2024**)
+    - [40][v] IcoCap: Improving Video Captioning by Compounding Images (**liangIcoCapImprovingVideo2024**)
+    - [42][v] Learning `Hierarchical Modular` Networks for Video Captioning (**liLearningHierarchicalModular2024**)
+    - [13][2.1] Fully exploring object relation interaction and hidden state attention for video captioning (KG-VCN) (**yuanFullyExploringObject2025**)
+    - [43][v] `Knowledge enhancement` and disentanglement learning for video captioning (KEDL) (**wangKnowledgeEnhancementDisentanglement2025**)
+    - [41][v] Dual-hierarchical knowledge distillation for video captioning (**luoDualhierarchicalKnowledgeDistillation2026**)
+    - [26][2.3] Ask and focus more: Question-prompt uncertainty allocation for dual-controllable video captioning (QPDC) (**chenAskFocusMore2026**)

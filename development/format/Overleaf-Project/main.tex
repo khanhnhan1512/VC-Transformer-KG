@@ -1,0 +1,131 @@
+\documentclass[lettersize,journal]{IEEEtran}
+\usepackage{amsmath,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{array}
+\usepackage[caption=false,font=normalsize,labelfont=sf,textfont=sf]{subfig}
+\usepackage{textcomp}
+\usepackage{stfloats}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{xcolor}
+
+% ========== Left and right above arrow ==========
+\usepackage{stackengine,scalerel}
+\newlength\shlength
+\newcommand\MyRVec[2][0]{\ThisStyle{\setlength\shlength{#1\LMpt}%
+  \stackengine{-1.3ex}{$\SavedStyle#2$}{\smash{$\kern\shlength%
+    \stackengine{1.55ex}{$\SavedStyle\raisebox{0.24ex}{$\mathchar"017E$}$}%
+      {\rule{\widthof{$\SavedStyle#2$}}{\dimexpr.02ex+.1ex}\kern+0.20ex}{O}{r}{F}{F}{L}\kern-\shlength$}}%
+      {O}{c}{F}{T}{S}}}
+\newcommand\MyLVec[2][0]{\ThisStyle{\setlength\shlength{#1\LMpt}%
+  \stackengine{-1.3ex}{$\SavedStyle#2$}{\smash{$\kern\shlength%
+    \stackengine{1.55ex}{\kern-0.46ex\raisebox{0.24ex}{\reflectbox{\ensuremath{\mathchar"017E}}}}%
+      {\kern-0.25ex\rule{\widthof{$\SavedStyle#2$}}{\dimexpr.02ex+.1ex}}{O}{l}{F}{F}{L}\kern-\shlength$}}%
+      {O}{c}{F}{T}{S}}}
+
+% ========== Custom underline ==========
+\usepackage[normalem]{ulem}
+\newcommand{\MyULine}[1]{\stackunder[-0.4pt]{#1}{\rule{\widthof{#1}}{0.4pt}}}
+
+\hyphenation{op-tical net-works semi-conduc-tor IEEE-Xplore}
+% updated with editorial comments 8/9/2021
+
+\begin{document}
+
+% \fontsize{24}{28}\selectfont
+\title{{\fontsize{24}{28}\selectfont Encoder-Free Bidirectional Decoding with GOP-Based Multimodal Representation for Video Captioning}}
+
+% ========== TODO: Authors ==========
+% [note] Về tên của bạn Quang, em thấy trong file gốc ghi là “Dinh Quang Chan”, nhưng tên chính xác là “Dinh Quang Tran” ạ.
+\author{First A. Author,~\IEEEmembership{Fellow,~IEEE}, Second B. Author, and Third C. Author Jr.,~\IEEEmembership{Member,~IEEE}
+        % <-this % stops a space
+
+% ========== TODO: Required footnote ==========
+\thanks{This paragraph of the first footnote will contain the date on which you submitted your paper for review, which is populated by IEEE. It is IEEE style to display support information, including sponsor and financial support acknowledgment, here and not in an acknowledgment section at the end of the article. For example, “This work was supported in part by the U.S. Department of Commerce under Grant 123456.” The name of the corresponding author appears after the financial information, e.g. (Corresponding author: Second B. Author). Here you may also indicate if authors contributed equally or if there are co-first authors.}% <-this % stops a space
+\thanks{The next few paragraphs should contain the authors’ current affiliations, including current address and e-mail. For example, First A. Author is with the National Institute of Standards and Technology, Boulder, CO 80305 USA (e-mail: author@ boulder.nist.gov).}% <-this % stops a space
+\thanks{Second B. Author Jr. was with Rice University, Houston, TX 77005 USA. He is now with the Department of Physics, Colorado State University, Fort Collins, CO 80523 USA (e-mail: author@lamar.colostate.edu).}% <-this % stops a space
+\thanks{Third C. Author is with the Electrical Engineering Department, University of Colorado, Boulder, CO 80309 USA, on leave from the National Research Institute for Metals, Tsukuba 305-0047, Japan (e-mail: author@nrim.go.jp).}% <-this % stops a space
+\thanks{Mentions of supplemental materials and animal/human rights statements can be included here.}% <-this % stops a space
+\thanks{Color versions of one or more of the figures in this article are available online at http://ieeexplore.ieee.org}}
+
+% The paper headers
+\markboth{[REPLACE THIS LINE WITH YOUR MANUSCRIPT ID NUMBER (DOUBLE-CLICK HERE TO EDIT)]}%
+{Shell \MakeLowercase{\textit{et al.}}: A Sample Article Using IEEEtran.cls for IEEE Journals}
+
+%
+% \IEEEpubid{0000--0000/00\$00.00~\copyright~2021 IEEE}
+% Remember, if you use this you must call \IEEEpubidadjcol in the second
+% column for its text to clear the IEEEpubid mark.
+
+\maketitle
+
+\begin{abstract}
+Generating coherent natural-language descriptions from video content requires jointly modeling spatial appearance, temporal dynamics, and semantic context, a challenge that has driven the adoption of increasingly complex Transformer-based architectures. Existing methods commonly employ intermediate encoder modules to refine multimodal representations prior to decoding, introducing computational overhead that scales quadratically with the number of video segments. Moreover, caption generation is typically constrained to unidirectional left-to-right decoding, limiting access to future linguistic context. To address these limitations, we propose BiDecT, an encoder-free Transformer with bidirectional decoding for video captioning. BiDecT directly projects multimodal representations into a bidirectional decoding framework without intermediate encoding stages, reducing the dominant computational complexity from quadratic to linear. Each video is represented as a sequence of Groups of Pictures (GOPs), from which appearance, semantic, and motion features are extracted using pre-trained vision-language and video recognition models. A lightweight embedding module aligns these modalities within a shared representation space using learnable type embeddings. A backward decoder first generates a reverse caption to construct global right-to-left contextual representations, which are then incorporated by a forward decoder for final caption generation. In addition, a pseudo reverse caption strategy is adopted to prevent information leakage during bidirectional training. Experiments on MSVD, MSR-VTT, and VATEX demonstrate that BiDecT achieves state-of-the-art CIDEr scores of 138.0, 64.8, and 78.2, outperforming prior state-of-the-art approaches by 10.8, 2.8, and 5.2 CIDEr points, respectively. These results demonstrate that encoder-free bidirectional decoding provides an efficient and scalable alternative to conventional encoder-decoder architectures for video captioning.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Bidirectional decoding, encoder-free architecture, multimodal learning, transformer, video captioning.
+\end{IEEEkeywords}
+
+% ========== Section: 1. Introduction ==========
+\input{sections/01_intro}
+% ========== Section: 2. Related Work ==========
+\input{sections/02_rw}
+% ========== Section: 3. Background ==========
+\input{sections/03_background}
+% ========== Section: 4. Proposed Method ==========
+\input{sections/04_method}
+% ========== Section: 5. Experiments ==========
+\input{sections/05_exp}
+% ========== Section: 6. Conclusion ==========
+\input{sections/06_con}
+
+\section*{Data availability}
+Data will be made available on request.
+\section*{Declarations}
+\textbf{Conflict of interest} The authors have declared no Conflict of interest for this article.
+
+\section*{Acknowledgments}
+This should be a simple paragraph before the References to thank those individuals and institutions who have supported your work on this article.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+
+\newpage
+
+\section{Biography Section}
+If you have an EPS/PDF photo (graphicx package needed), extra braces are
+ needed around the contents of the optional argument to biography to prevent
+ the LaTeX parser from getting confused when it sees the complicated
+ $\backslash${\tt{includegraphics}} command within an optional argument. (You can create
+ your own custom macro containing the $\backslash${\tt{includegraphics}} command to make things
+ simpler here.)
+ 
+\vspace{11pt}
+
+\bf{If you include a photo:}\vspace{-33pt}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{fig1}}]{Michael Shell}
+Use $\backslash${\tt{begin\{IEEEbiography\}}} and then for the 1st argument use $\backslash${\tt{includegraphics}} to declare and link the author photo.
+Use the author name as the 3rd argument followed by the biography text.
+\end{IEEEbiography}
+
+\vspace{11pt}
+
+\bf{If you will not include a photo:}\vspace{-33pt}
+\begin{IEEEbiographynophoto}{John Doe}
+Use $\backslash${\tt{begin\{IEEEbiographynophoto\}}} and the author name as the argument followed by the biography text.
+\end{IEEEbiographynophoto}
+
+
+
+
+\vfill
+
+\end{document}
+
+

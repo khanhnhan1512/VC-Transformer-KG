@@ -88,8 +88,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    t5_model_name = "google/flan-t5-small"    # 80M params
-    # t5_model_name = "google/flan-t5-base"   # 250M params
+    # t5_model_name = "google/flan-t5-small"    # 80M params
+    t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1

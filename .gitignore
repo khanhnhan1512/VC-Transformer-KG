@@ -8,3 +8,4 @@
 data/*
 # Exclude logs file
 logs/*
+development/*

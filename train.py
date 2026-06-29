@@ -127,11 +127,13 @@ def main():
 
     model = build_model()
 
-    parameter_number = get_parameter_number(model)
-    print(parameter_number)
+    # Stage 1: Freeze T5, only train projection layers
+    model.freeze_t5()
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
+    print(f"[Stage 1] Freeze T5 — trainable params: {sum(p.numel() for p in trainable_params)}")
 
     optimizer = torch.optim.Adam(
-        model.parameters(),
+        trainable_params,
         lr=C.lr,
         weight_decay=C.weight_decay,
         amsgrad=True
@@ -141,12 +143,7 @@ def main():
         end_factor=1.0,
         total_iters=C.warmup_epochs,
     )
-    plateau_sched = ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=C.lr_decay_gamma,
-        patience=C.lr_decay_patience
-    )
+    plateau_sched = None
 
     best_val_CIDEr: float = float("-inf")
     best_val_scores: Dict[str, float] = {
@@ -162,6 +159,25 @@ def main():
 
     for e in range(1, C.epochs + 1):
         ckpt_fpath = C.ckpt_fpath_tpl.format(e)
+
+        # Stage 2: Unfreeze T5 after freeze_t5_epochs, rebuild optimizer
+        if e == C.freeze_t5_epochs + 1:
+            model.unfreeze_t5()
+            all_params = list(model.parameters())
+            print(f"[Stage 2] Unfreeze T5 — trainable params: {sum(p.numel() for p in all_params)}")
+
+            optimizer = torch.optim.Adam(
+                all_params,
+                lr=C.lr,
+                weight_decay=C.weight_decay,
+                amsgrad=True
+            )
+            plateau_sched = ReduceLROnPlateau(
+                optimizer,
+                mode='min',
+                factor=C.lr_decay_gamma,
+                patience=C.lr_decay_patience
+            )
 
         """ Train """
         print("\n")
@@ -208,7 +224,7 @@ def main():
         """ Learning Rate Decay & Checkpointing """
         if e <= C.warmup_epochs:
             warmup_sched.step()
-        else:
+        elif plateau_sched is not None:
             plateau_sched.step(val_loss['total'])
 
         n_better_metrics = 0

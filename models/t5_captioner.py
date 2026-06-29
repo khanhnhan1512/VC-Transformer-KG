@@ -63,6 +63,14 @@ class T5Captioner(nn.Module):
             nn.LayerNorm(t5_d_model) for _ in d_feat
         ])
 
+    def freeze_t5(self):
+        for param in self.t5.parameters():
+            param.requires_grad = False
+
+    def unfreeze_t5(self):
+        for param in self.t5.parameters():
+            param.requires_grad = True
+
     def encode(self, src):
         batch_size = src[0].size(0)
         feats = []

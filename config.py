@@ -88,12 +88,16 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    # t5_model_name = "google/flan-t5-small"    # 80M params
-    t5_model_name = "google/flan-t5-base"   # 250M params
+    t5_model_name = "google/flan-t5-small"    # 80M params
+    # t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
     max_caption_tokens = 32
+
+    lora_r = 8
+    lora_alpha = 16
+    lora_target_modules = ['q', 'v']
 
 
 class TrainConfig:
@@ -110,7 +114,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 20
+    epochs = 15
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
@@ -133,7 +137,8 @@ class TrainConfig:
     transformer_id = f"T5 "\
                      f"{transformer.t5_model_name} " \
                      f"mct-{transformer.max_caption_tokens} " \
-                     f"dp-{transformer.dropout}"
+                     f"dp-{transformer.dropout} " \
+                     f"lora-r{transformer.lora_r}-a{transformer.lora_alpha}"
 
     optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
                    f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \

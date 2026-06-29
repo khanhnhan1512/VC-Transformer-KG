@@ -5,6 +5,27 @@ from transformers import T5ForConditionalGeneration
 from transformers.modeling_outputs import BaseModelOutput
 
 
+class LoRALinear(nn.Module):
+    def __init__(self, original_linear, r=8, alpha=16):
+        super().__init__()
+        self.original_linear = original_linear
+        self.scaling = alpha / r
+
+        for param in self.original_linear.parameters():
+            param.requires_grad = False
+
+        in_f = original_linear.in_features
+        out_f = original_linear.out_features
+        self.lora_A = nn.Linear(in_f, r, bias=False)
+        self.lora_B = nn.Linear(r, out_f, bias=False)
+
+        nn.init.kaiming_uniform_(self.lora_A.weight, a=math.sqrt(5))
+        nn.init.zeros_(self.lora_B.weight)
+
+    def forward(self, x):
+        return self.original_linear(x) + self.lora_B(self.lora_A(x)) * self.scaling
+
+
 class FeatEmbedding(nn.Module):
     def __init__(self, d_feat, d_model, dropout):
         super().__init__()
@@ -47,7 +68,9 @@ class PositionalEncoding(nn.Module):
 
 class T5Captioner(nn.Module):
 
-    def __init__(self, d_feat, t5_model_name, dropout, device='cuda'):
+    def __init__(self, d_feat, t5_model_name, dropout,
+                 lora_r=0, lora_alpha=16, lora_target_modules=None,
+                 device='cuda'):
         super().__init__()
         self.device = device
 
@@ -63,13 +86,21 @@ class T5Captioner(nn.Module):
             nn.LayerNorm(t5_d_model) for _ in d_feat
         ])
 
-    def freeze_t5(self):
+        if lora_r > 0:
+            self._apply_lora(lora_r, lora_alpha, lora_target_modules or ['q', 'v'])
+
+    def _apply_lora(self, r, alpha, target_modules):
         for param in self.t5.parameters():
             param.requires_grad = False
 
-    def unfreeze_t5(self):
-        for param in self.t5.parameters():
-            param.requires_grad = True
+        for block in self.t5.decoder.block:
+            self_attn = block.layer[0].SelfAttention
+            for name in target_modules:
+                setattr(self_attn, name, LoRALinear(getattr(self_attn, name), r, alpha))
+
+            cross_attn = block.layer[1].EncDecAttention
+            for name in target_modules:
+                setattr(cross_attn, name, LoRALinear(getattr(cross_attn, name), r, alpha))
 
     def encode(self, src):
         batch_size = src[0].size(0)

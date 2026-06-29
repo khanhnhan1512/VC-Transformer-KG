@@ -30,6 +30,9 @@ def build_model():
         d_feat=C.feat.feature_dims,
         t5_model_name=C.transformer.t5_model_name,
         dropout=C.transformer.dropout,
+        lora_r=C.transformer.lora_r,
+        lora_alpha=C.transformer.lora_alpha,
+        lora_target_modules=C.transformer.lora_target_modules,
     )
     model.cuda()
     return model
@@ -128,8 +131,11 @@ def main():
     model = build_model()
     print(get_parameter_number(model))
 
+    trainable_params = [p for p in model.parameters() if p.requires_grad]
+    print(f"Trainable params: {sum(p.numel() for p in trainable_params):,}")
+
     optimizer = torch.optim.Adam(
-        model.parameters(),
+        trainable_params,
         lr=C.lr,
         weight_decay=C.weight_decay,
         amsgrad=True

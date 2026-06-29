@@ -55,7 +55,7 @@ class MSRVTTLoaderConfig(object):
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
     if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msrvtt-dataset"
-    
+
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/train.json")
     val_caption_fpath   = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/val.json")
     test_caption_fpath  = os.path.join(DATA_FOLDER_PATH, "MSRVTT/metadata/test.json")
@@ -88,24 +88,23 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    d_model = 512
-    d_ff    = d_model * 4
+    t5_model_name = "google/flan-t5-small"    # 80M params
+    # t5_model_name = "google/flan-t5-base"   # 250M params
+    # t5_model_name = "google/flan-t5-large"  # 780M params
+    
     dropout = 0.1
-    n_heads_big  = 4
-    n_heads      = 4
-    n_enc_layers = 0 # Number of encoder layers
-    n_dec_layers = 3 # Number of decoder layers
+    max_caption_tokens = 32
 
 
 class TrainConfig:
-    # corpus = "MSVD"
-    corpus = "MSRVTT"
+    corpus = "MSVD"
+    # corpus = "MSRVTT"
     # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
     elif corpus == "VATEX" : loader = VATEXLoaderConfig
     else: raise ValueError(f"Unknown corpus: {corpus}")
-    
+
     feat        = FeatureConfig
     vocab       = VocabConfig
     transformer = TransformerConfig
@@ -120,9 +119,8 @@ class TrainConfig:
     lr_decay_patience = 3
     weight_decay = 0.5e-5
     warmup_epochs = 3
-    reg_lambda = 0.6    # weights of l2r
-    beam_size = 4
     label_smoothing = 0.15
+    beam_size = 4
 
     """ Evaluation Metrics """
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']
@@ -132,17 +130,14 @@ class TrainConfig:
               f"fsl-{loader.frame_sample_len} "\
               f"mcl-{loader.max_caption_len}"
 
-    transformer_id = f"Transformer "\
-                     f"d-{transformer.d_model} " \
-                     f"N_enc-{transformer.n_enc_layers} " \
-                     f"N_dec-{transformer.n_dec_layers} " \
-                     f"h-{transformer.n_heads} " \
-                     f"h_big-{transformer.n_heads_big} " \
+    transformer_id = f"T5 "\
+                     f"{transformer.t5_model_name} " \
+                     f"mct-{transformer.max_caption_tokens} " \
                      f"dp-{transformer.dropout}"
 
     optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
                    f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \
-                   f"wd-{weight_decay} rg-{reg_lambda}"
+                   f"wd-{weight_decay}"
 
     hyperparams_id = f"ep-{epochs} bs-{batch_size} gc-{gradient_clip} " \
                      f"bms-{beam_size} ls-{label_smoothing}"

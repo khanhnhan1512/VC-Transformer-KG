@@ -8,7 +8,7 @@ class FeatureConfig:
     model: str = "newBlip2ClsKF+newMViTv2+newImgCapBlip2KF"
     feature_dims: List[int] = []
 
-    # Visual feature dimension
+    # Appearance feature dimension
     if   model.find('newBlip2ClsKF') != -1: feature_dims.append(1408)
     # elif model.find('BlipCls')       != -1: feature_dims.append(768)
     # elif model.find('BlipBaseClsKF') != -1: feature_dims.append(768)
@@ -19,7 +19,7 @@ class FeatureConfig:
     if   model.find('newMViTv2') != -1: feature_dims.append(768)
     # elif model.find('MViTv2')    != -1: feature_dims.append(768)
 
-    # Image Caption feature dimension
+    # Semantic feature dimension
     if   model.find('newImgCapBlip2KF')  != -1: feature_dims.append(1024)
     # elif model.find('ImgCapKF')          != -1: feature_dims.append(384)
     # elif model.find('ImgCapBlipLargeKF') != -1: feature_dims.append(1024)
@@ -88,8 +88,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    t5_model_name = "google/flan-t5-small"    # 80M params
-    # t5_model_name = "google/flan-t5-base"   # 250M params
+    # t5_model_name = "google/flan-t5-small"    # 80M params
+    t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -110,7 +110,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 15
+    epochs = 20
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
@@ -119,7 +119,6 @@ class TrainConfig:
     lr_decay_patience = 3
     weight_decay = 0.5e-5
     warmup_epochs = 3
-    freeze_t5_epochs = 3
     label_smoothing = 0.15
     beam_size = 4
 

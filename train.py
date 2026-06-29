@@ -126,6 +126,7 @@ def main():
     train_iter, val_iter, test_iter, tokenizer = build_loaders()
 
     model = build_model()
+    print(get_parameter_number(model))
 
     optimizer = torch.optim.Adam(
         model.parameters(),

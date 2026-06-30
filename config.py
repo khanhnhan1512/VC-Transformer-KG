@@ -78,8 +78,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    t5_model_name = "google/flan-t5-small"    #  80M params
-    # t5_model_name = "google/flan-t5-base"   # 250M params
+    # t5_model_name = "google/flan-t5-small"  #  80M params
+    t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -112,7 +112,8 @@ class TrainConfig:
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
-    lr_min = 1e-6
+    lr_decay_gamma = 0.5
+    lr_decay_patience = 2
     weight_decay = 0.5e-5
     warmup_epochs = 3
     label_smoothing = 0.15
@@ -132,8 +133,8 @@ class TrainConfig:
                      f"dp-{transformer.dropout} " \
                      f"lora-r{transformer.lora_r}-a{transformer.lora_alpha}"
 
-    optimizer_id = f"OPTIM lr-{lr} lrmin-{lr_min} " \
-                   f"warmup-{warmup_epochs} cosine " \
+    optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
+                   f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \
                    f"wd-{weight_decay}"
 
     hyperparams_id = f"ep-{epochs} bs-{batch_size} gc-{gradient_clip} " \

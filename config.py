@@ -87,7 +87,7 @@ class TransformerConfig:
 
     fusion_num_layers = 2
     fusion_n_heads = 8
-    feat_mask_prob = 0.15
+    feat_mask_prob = 0.0
 
     lora_r = 0
     lora_alpha = 16

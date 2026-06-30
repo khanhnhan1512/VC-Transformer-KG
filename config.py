@@ -78,8 +78,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    # t5_model_name = "google/flan-t5-small"  #  80M params
-    t5_model_name = "google/flan-t5-base"   # 250M params
+    t5_model_name = "google/flan-t5-small"  #  80M params
+    # t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -95,8 +95,8 @@ class TransformerConfig:
 
 
 class TrainConfig:
-    # corpus = "MSVD"
-    corpus = "MSRVTT"
+    corpus = "MSVD"
+    # corpus = "MSRVTT"
     # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig

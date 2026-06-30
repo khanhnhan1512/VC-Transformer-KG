@@ -129,7 +129,6 @@ def main():
     train_iter, val_iter, test_iter, tokenizer = build_loaders()
 
     model = build_model()
-    print(get_parameter_number(model))
 
     trainable_params = [p for p in model.parameters() if p.requires_grad]
     print(f"Trainable params: {sum(p.numel() for p in trainable_params):,}")

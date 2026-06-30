@@ -13,7 +13,7 @@ from loader.MSRVTT import MSRVTT
 from loader.VATEX import VATEX
 from config import TrainConfig as C
 from models.t5_captioner import T5Captioner
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
+from torch.optim.lr_scheduler import CosineAnnealingLR, LinearLR, SequentialLR
 from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
@@ -35,6 +35,7 @@ def build_model():
         lora_r=C.transformer.lora_r,
         lora_alpha=C.transformer.lora_alpha,
         lora_target_modules=C.transformer.lora_target_modules,
+        feat_mask_prob=C.transformer.feat_mask_prob,
     )
     model.cuda()
     return model
@@ -141,14 +142,19 @@ def main():
     )
     warmup_sched = LinearLR(
         optimizer,
+        start_factor=1e-2,
         end_factor=1.0,
         total_iters=C.warmup_epochs,
     )
-    plateau_sched = ReduceLROnPlateau(
+    cosine_sched = CosineAnnealingLR(
         optimizer,
-        mode='min',
-        factor=C.lr_decay_gamma,
-        patience=C.lr_decay_patience
+        T_max=C.epochs - C.warmup_epochs,
+        eta_min=C.lr_min,
+    )
+    scheduler = SequentialLR(
+        optimizer,
+        schedulers=[warmup_sched, cosine_sched],
+        milestones=[C.warmup_epochs],
     )
 
     best_val_CIDEr: float = float("-inf")
@@ -209,10 +215,7 @@ def main():
                 time_taken=_val_time_taken, summary=val_summary)
 
         """ Learning Rate Decay & Checkpointing """
-        if e <= C.warmup_epochs:
-            warmup_sched.step()
-        else:
-            plateau_sched.step(val_loss['total'])
+        scheduler.step()
 
         n_better_metrics = 0
         if val_scores["Bleu_4"]  > best_val_scores["Bleu_4"] : n_better_metrics += 1

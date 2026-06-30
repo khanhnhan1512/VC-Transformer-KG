@@ -119,9 +119,11 @@ class T5Captioner(nn.Module):
     def __init__(self, d_feat, t5_model_name, dropout,
                  fusion_num_layers=0, fusion_n_heads=8,
                  lora_r=0, lora_alpha=16, lora_target_modules=None,
+                 feat_mask_prob=0.15,
                  device='cuda'):
         super().__init__()
         self.device = device
+        self.feat_mask_prob = feat_mask_prob
 
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
@@ -186,9 +188,19 @@ class T5Captioner(nn.Module):
         stacked = torch.stack(masks, dim=2)
         return stacked.reshape(masks[0].size(0), -1).long()
 
+    def _mask_features(self, encoder_hidden, attention_mask):
+        B, T, D = encoder_hidden.shape
+        mask = torch.rand(B, T, device=encoder_hidden.device) < self.feat_mask_prob
+        mask = mask & attention_mask.bool()
+        encoder_hidden = encoder_hidden.masked_fill(mask.unsqueeze(-1), 0.0)
+        return encoder_hidden
+
     def forward(self, src, labels=None, decoder_attention_mask=None):
         encoder_hidden = self.encode(src)
         attention_mask = self._build_encoder_attention_mask(src)
+
+        if self.training and self.feat_mask_prob > 0:
+            encoder_hidden = self._mask_features(encoder_hidden, attention_mask)
 
         if self.fusion is not None:
             encoder_hidden = self.fusion(encoder_hidden, mask=attention_mask)

@@ -87,6 +87,7 @@ class TransformerConfig:
 
     fusion_num_layers = 2
     fusion_n_heads = 8
+    feat_mask_prob = 0.15
 
     lora_r = 0
     lora_alpha = 16
@@ -111,9 +112,7 @@ class TrainConfig:
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
-    lr_decay_start_from = 3
-    lr_decay_gamma = 0.5
-    lr_decay_patience = 3
+    lr_min = 1e-6
     weight_decay = 0.5e-5
     warmup_epochs = 3
     label_smoothing = 0.15
@@ -133,8 +132,8 @@ class TrainConfig:
                      f"dp-{transformer.dropout} " \
                      f"lora-r{transformer.lora_r}-a{transformer.lora_alpha}"
 
-    optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
-                   f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \
+    optimizer_id = f"OPTIM lr-{lr} lrmin-{lr_min} " \
+                   f"warmup-{warmup_epochs} cosine " \
                    f"wd-{weight_decay}"
 
     hyperparams_id = f"ep-{epochs} bs-{batch_size} gc-{gradient_clip} " \

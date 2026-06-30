@@ -30,6 +30,8 @@ def build_model():
         d_feat=C.feat.feature_dims,
         t5_model_name=C.transformer.t5_model_name,
         dropout=C.transformer.dropout,
+        fusion_num_layers=C.transformer.fusion_num_layers,
+        fusion_n_heads=C.transformer.fusion_n_heads,
         lora_r=C.transformer.lora_r,
         lora_alpha=C.transformer.lora_alpha,
         lora_target_modules=C.transformer.lora_target_modules,
@@ -219,6 +221,9 @@ def main():
         if val_scores["CIDEr"]   > best_val_scores["CIDEr"]  : n_better_metrics += 1
 
         if (val_scores['CIDEr'] > best_val_CIDEr) and (n_better_metrics >= 3):
+            if best_ckpt_fpath and os.path.exists(best_ckpt_fpath):
+                os.remove(best_ckpt_fpath)
+
             best_epoch = e
             best_val_CIDEr  = val_scores['CIDEr']
             best_val_scores = val_scores

@@ -4,26 +4,16 @@ import time
 
 
 class FeatureConfig:
-    #model: str = "Blip2ClsKF+MViTv2+ImgCapBlip2KF"
-    model: str = "newBlip2ClsKF+newMViTv2+newImgCapBlip2KF"
+    model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     feature_dims: List[int] = []
 
-    # Appearance feature dimension
-    if   model.find('newBlip2ClsKF') != -1: feature_dims.append(1408)
-    # elif model.find('BlipCls')       != -1: feature_dims.append(768)
-    # elif model.find('BlipBaseClsKF') != -1: feature_dims.append(768)
-    # elif model.find('BlipBaseAvgKF') != -1: feature_dims.append(768)
-    # elif model.find('Blip2ClsKF')    != -1: feature_dims.append(1408)
-
-    # Motion feature dimension
-    if   model.find('newMViTv2') != -1: feature_dims.append(768)
-    # elif model.find('MViTv2')    != -1: feature_dims.append(768)
-
-    # Semantic feature dimension
-    if   model.find('newImgCapBlip2KF')  != -1: feature_dims.append(1024)
-    # elif model.find('ImgCapKF')          != -1: feature_dims.append(384)
-    # elif model.find('ImgCapBlipLargeKF') != -1: feature_dims.append(1024)
-    # elif model.find('ImgCapBlip2KF')     != -1: feature_dims.append(1024)
+    for modality in model.split("+"):
+        # Appearance feature dimension
+        if   model.find('newBlip2ClsKF') != -1:    feature_dims.append(1408)
+        # Semantic feature dimension
+        elif model.find('newImgCapBlip2KF') != -1: feature_dims.append(1024)
+        # Motion feature dimension
+        elif model.find('newMViTv2') != -1:        feature_dims.append(768)
 
 
 class VocabConfig:
@@ -88,12 +78,15 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    # t5_model_name = "google/flan-t5-small"    # 80M params
+    t5_model_name = "google/flan-t5-small"    #  80M params
     # t5_model_name = "google/flan-t5-base"   # 250M params
-    t5_model_name = "google/flan-t5-large"  # 780M params
+    # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
     max_caption_tokens = 32
+
+    fusion_num_layers = 2
+    fusion_n_heads = 8
 
     lora_r = 0
     lora_alpha = 16

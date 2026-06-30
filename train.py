@@ -129,12 +129,10 @@ def main():
     train_iter, val_iter, test_iter, tokenizer = build_loaders()
 
     model = build_model()
-
-    trainable_params = [p for p in model.parameters() if p.requires_grad]
-    print(f"Trainable params: {sum(p.numel() for p in trainable_params):,}")
+    print(get_parameter_number(model))
 
     optimizer = torch.optim.Adam(
-        trainable_params,
+        model.parameters(),
         lr=C.lr,
         weight_decay=C.weight_decay,
         amsgrad=True

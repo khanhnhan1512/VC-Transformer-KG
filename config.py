@@ -9,11 +9,11 @@ class FeatureConfig:
 
     for modality in model.split("+"):
         # Appearance feature dimension
-        if   model.find('newBlip2ClsKF') != -1:    feature_dims.append(1408)
+        if   modality.find('newBlip2ClsKF') != -1:    feature_dims.append(1408)
         # Semantic feature dimension
-        elif model.find('newImgCapBlip2KF') != -1: feature_dims.append(1024)
+        elif modality.find('newImgCapBlip2KF') != -1: feature_dims.append(1024)
         # Motion feature dimension
-        elif model.find('newMViTv2') != -1:        feature_dims.append(768)
+        elif modality.find('newMViTv2') != -1:        feature_dims.append(768)
 
 
 class VocabConfig:
@@ -108,7 +108,7 @@ class TrainConfig:
 
     """ Optimization """
     epochs = 20
-    batch_size = 32
+    batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
     lr_decay_start_from = 3

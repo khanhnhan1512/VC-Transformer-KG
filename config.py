@@ -115,7 +115,7 @@ class TrainConfig:
     lr = 1e-4
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
-    weight_decay = 5e-4
+    weight_decay = 1e-4
     warmup_epochs = 3
     label_smoothing = 0.15
     beam_size = 5

@@ -120,6 +120,7 @@ class T5Captioner(nn.Module):
                  fusion_num_layers=0, fusion_n_heads=8,
                  lora_r=0, lora_alpha=16, lora_target_modules=None,
                  feat_mask_prob=0.15,
+                 num_decoder_layers=0,
                  device='cuda'):
         super().__init__()
         self.device = device
@@ -127,6 +128,10 @@ class T5Captioner(nn.Module):
 
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
+
+        if 0 < num_decoder_layers < len(self.t5.decoder.block):
+            self.t5.decoder.block = self.t5.decoder.block[:num_decoder_layers]
+            self.t5.config.num_decoder_layers = num_decoder_layers
 
         self.feat_embeds = nn.ModuleList([
             FeatEmbedding(d_f, t5_d_model, dropout) for d_f in d_feat

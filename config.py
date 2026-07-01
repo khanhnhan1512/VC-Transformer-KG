@@ -83,11 +83,12 @@ class TransformerConfig:
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
-    max_caption_tokens = 32
+    max_caption_tokens = 24
 
     fusion_num_layers = 2
     fusion_n_heads = 8
     feat_mask_prob = 0.0
+    num_decoder_layers = 2
 
     lora_r = 0
     lora_alpha = 16
@@ -113,7 +114,7 @@ class TrainConfig:
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
     lr_decay_gamma = 0.5
-    lr_decay_patience = 2
+    lr_decay_patience = 3
     weight_decay = 0.5e-5
     warmup_epochs = 3
     label_smoothing = 0.15

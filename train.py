@@ -36,6 +36,7 @@ def build_model():
         lora_alpha=C.transformer.lora_alpha,
         lora_target_modules=C.transformer.lora_target_modules,
         feat_mask_prob=C.transformer.feat_mask_prob,
+        num_decoder_layers=C.transformer.num_decoder_layers,
     )
     model.cuda()
     return model

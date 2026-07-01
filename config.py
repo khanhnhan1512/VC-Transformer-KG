@@ -83,7 +83,7 @@ class TransformerConfig:
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
-    max_caption_tokens = 24
+    max_caption_tokens = 32
 
     fusion_num_layers = 2
     fusion_n_heads = 8
@@ -115,10 +115,10 @@ class TrainConfig:
     lr = 1e-4
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
-    weight_decay = 1e-5
+    weight_decay = 5e-5
     warmup_epochs = 3
     label_smoothing = 0.15
-    beam_size = 3
+    beam_size = 5
 
     """ Evaluation Metrics """
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']

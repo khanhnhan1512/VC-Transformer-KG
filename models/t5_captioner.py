@@ -147,7 +147,7 @@ class T5Captioner(nn.Module):
             self.fusion = CrossModalFusion(
                 d_model=t5_d_model,
                 n_heads=fusion_n_heads,
-                d_ff=t5_d_model * 4,
+                d_ff=t5_d_model * 2,
                 dropout=dropout,
                 num_layers=fusion_num_layers,
             )

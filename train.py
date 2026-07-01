@@ -134,6 +134,7 @@ def main():
 
     model = build_model()
     print(get_parameter_number(model))
+    print(model)
 
     optimizer = torch.optim.Adam(
         model.parameters(),

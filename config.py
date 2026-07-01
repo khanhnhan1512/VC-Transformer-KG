@@ -85,7 +85,7 @@ class TransformerConfig:
     dropout = 0.1
     max_caption_tokens = 32
 
-    fusion_num_layers = 2
+    fusion_num_layers = 4
     fusion_n_heads = 8
     feat_mask_prob = 0.0
     num_decoder_layers = 0
@@ -96,8 +96,8 @@ class TransformerConfig:
 
 
 class TrainConfig:
-    # corpus = "MSVD"
-    corpus = "MSRVTT"
+    corpus = "MSVD"
+    # corpus = "MSRVTT"
     # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig

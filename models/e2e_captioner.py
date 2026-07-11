@@ -4,7 +4,34 @@ import torch.nn as nn
 from transformers import CLIPVisionModel, T5ForConditionalGeneration
 from transformers.modeling_outputs import BaseModelOutput
 
-from models.t5_captioner import PositionalEncoding
+
+def select_evenly_spaced_layers(layers, num_keep):
+    """Chọn num_keep layer cách đều (linspace) từ ModuleList pretrained.
+
+    Luôn bao gồm layer đầu tiên (index 0) — quan trọng với T5 decoder vì
+    relative_attention_bias chỉ nằm ở block 0 và được các block sau dùng chung.
+    """
+    idxs = torch.linspace(0, len(layers) - 1, steps=num_keep).round().long().tolist()
+    return nn.ModuleList([layers[i] for i in idxs]), idxs
+
+
+class LearnablePositionalEncoding(nn.Module):
+    """Learnable positional embedding cho chuỗi keyframe (thứ tự thời gian).
+
+    Số vị trí nhỏ và cố định (keyframe_threshold) nên learnable phù hợp hơn
+    sinusoidal — không cần khả năng ngoại suy chuỗi dài.
+    """
+
+    def __init__(self, d_model, dropout, max_len=64):
+        super().__init__()
+        self.pos_embeddings = nn.Embedding(max_len, d_model)
+        nn.init.trunc_normal_(self.pos_embeddings.weight, std=0.02)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x):
+        positions = torch.arange(x.size(1), device=x.device)
+        x = x + self.pos_embeddings(positions)
+        return self.dropout(x)
 
 
 class CLIPT5Captioner(nn.Module):
@@ -33,25 +60,34 @@ class CLIPT5Captioner(nn.Module):
         self.vision_encoder = CLIPVisionModel.from_pretrained(clip_model_name)
         clip_hidden = self.vision_encoder.config.hidden_size
 
-        # Giữ lại N layer đầu của vision encoder (CLS vẫn đi qua post_layernorm của CLIP)
+        # Chọn N layer cách đều của vision encoder (CLS vẫn đi qua post_layernorm của CLIP)
         vision_layers = self.vision_encoder.vision_model.encoder.layers
         if 0 < num_vision_layers < len(vision_layers):
-            self.vision_encoder.vision_model.encoder.layers = vision_layers[:num_vision_layers]
+            selected, idxs = select_evenly_spaced_layers(vision_layers, num_vision_layers)
+            self.vision_encoder.vision_model.encoder.layers = selected
             self.vision_encoder.config.num_hidden_layers = num_vision_layers
+            print(f"[CLIPT5Captioner] Vision encoder giữ các layer: {idxs}")
 
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
 
         if 0 < num_decoder_layers < len(self.t5.decoder.block):
-            self.t5.decoder.block = self.t5.decoder.block[:num_decoder_layers]
+            selected, idxs = select_evenly_spaced_layers(self.t5.decoder.block, num_decoder_layers)
+            self.t5.decoder.block = selected
             self.t5.config.num_decoder_layers = num_decoder_layers
+            print(f"[CLIPT5Captioner] T5 decoder giữ các block: {idxs}")
+
+        # T5 encoder không bao giờ được dùng (forward/generate luôn truyền encoder_outputs)
+        # -> bỏ toàn bộ block để model gọn (~19M params); embed_tokens là shared với decoder nên giữ nguyên
+        self.t5.encoder.block = nn.ModuleList()
+        self.t5.config.num_layers = 0
 
         # pooler_output đã qua post_layernorm của CLIP nên không cần LayerNorm ở đây
         self.proj = nn.Sequential(
             nn.Dropout(dropout),
             nn.Linear(clip_hidden, t5_d_model),
         )
-        self.pos_embed = PositionalEncoding(t5_d_model, dropout, max_len=256)
+        self.pos_embed = LearnablePositionalEncoding(t5_d_model, dropout, max_len=32)
         self.final_norm = nn.LayerNorm(t5_d_model)
 
         if freeze_vision_encoder:

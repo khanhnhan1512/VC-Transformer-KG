@@ -97,8 +97,9 @@ class TransformerConfig:
     clip_model_name = "openai/clip-vit-base-patch32"  # nhỏ nhất, để test code
     token_mode = "cls"            # hiện chỉ hỗ trợ "cls"; giữ field để mở rộng sau
     freeze_vision_encoder = False # False = fine-tune cả vision encoder
-    # Giữ lại N layer đầu của CLIP vision encoder (0 = giữ nguyên toàn bộ, ViT-B có 12 layer)
-    num_vision_layers = 6
+    # Chọn N layer cách đều (linspace, luôn gồm layer 0) của CLIP vision encoder
+    # (0 = giữ nguyên toàn bộ, ViT-B có 12 layer)
+    num_vision_layers = 4
 
     t5_model_name = "google/flan-t5-small"  #  80M params
     # t5_model_name = "google/flan-t5-base"   # 250M params
@@ -110,7 +111,9 @@ class TransformerConfig:
     fusion_num_layers = 2
     fusion_n_heads = 12
     feat_mask_prob = 0.0
-    # Giữ lại N layer đầu của T5 decoder (0 = giữ nguyên; dùng cho cả 2 pipeline, flan-t5-small có 8 layer)
+    # Số layer T5 decoder (0 = giữ nguyên; flan-t5-small có 8 layer)
+    # Pipeline e2e: chọn N layer cách đều (linspace, luôn gồm block 0 mang relative bias)
+    # Pipeline feats: giữ N layer đầu như cũ
     num_decoder_layers = 4
 
     lora_r = 0
@@ -135,7 +138,7 @@ class TrainConfig:
     epochs = 15
     if transformer.pipeline == "e2e":
         # 64 caption-pair x 9 keyframe = 576 ảnh/step qua ViT -> OOM trên P100/T4
-        batch_size = 16
+        batch_size = 32
         # Fine-tune full pretrained (CLIP + T5): lr 1e-4 quá cao, dễ phá pretrained weights
         lr = 3e-5
         # Mixed precision: tăng tốc đáng kể phần encoder ViT trên T4/P100

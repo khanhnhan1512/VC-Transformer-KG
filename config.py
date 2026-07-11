@@ -33,6 +33,18 @@ class MSVDLoaderConfig:
     # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
+    """ End-to-end pipeline (keyframes -> CLIP ViT) """
+    # Folder chứa video .avi đã preprocess (tên file khớp format vid: {VideoID}_{Start}_{End}.avi)
+    # Flexible to change the path to video folder when run on Kaggle
+    VIDEO_FOLDER_PATH = "/mnt/d/___Video-Preprocessing/msvd/videos_240_h264_keyint_60"
+    if not os.path.exists(VIDEO_FOLDER_PATH):
+        VIDEO_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-videos-240-h264-keyint-60/msvd/videos_240_h264_keyint_60"
+    # Số keyframe chuẩn hóa mỗi video: thiếu -> zero-pad (kèm mask), thừa -> uniform sampling trên tập keyframe
+    # P75 của phân bố keyframe thực tế (video h264 keyint=60: min=1 max=33 mean=5.74, P50=5 P75=7 P90=10)
+    keyframe_threshold = 7 #P75
+    # Folder lưu disk cache keyframe đã trích (.npz) để khỏi decode lại video; để trống nếu không dùng
+    frame_cache_dpath = ""
+
     min_count   = 3
     num_workers = 4
     max_caption_len  = 20
@@ -78,8 +90,16 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    # t5_model_name = "google/flan-t5-small"  #  80M params
-    t5_model_name = "google/flan-t5-base"   # 250M params
+    # "e2e": keyframes -> CLIP ViT -> T5 decoder | "feats": pre-extracted features (đường cũ)
+    pipeline = "e2e"
+    assert pipeline in ["e2e", "feats"]
+
+    clip_model_name = "openai/clip-vit-base-patch32"  # nhỏ nhất, để test code
+    token_mode = "cls"            # hiện chỉ hỗ trợ "cls"; giữ field để mở rộng sau
+    freeze_vision_encoder = False # False = fine-tune cả vision encoder
+
+    t5_model_name = "google/flan-t5-small"  #  80M params
+    # t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -88,7 +108,7 @@ class TransformerConfig:
     fusion_num_layers = 2
     fusion_n_heads = 12
     feat_mask_prob = 0.0
-    num_decoder_layers = 6
+    num_decoder_layers = 0
 
     lora_r = 0
     lora_alpha = 16
@@ -110,9 +130,15 @@ class TrainConfig:
 
     """ Optimization """
     epochs = 20
-    batch_size = 64
+    if transformer.pipeline == "e2e":
+        # 64 caption-pair x 9 keyframe = 576 ảnh/step qua ViT -> OOM trên P100/T4
+        batch_size = 16
+        # Fine-tune full pretrained (CLIP + T5): lr 1e-4 quá cao, dễ phá pretrained weights
+        lr = 3e-5
+    else:
+        batch_size = 64
+        lr = 1e-4
     gradient_clip = 5.0 # None if not used
-    lr = 1e-4
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
     weight_decay = 5e-5
@@ -123,10 +149,20 @@ class TrainConfig:
     """ Evaluation Metrics """
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']
 
+    if transformer.pipeline == "e2e" and not hasattr(loader, "keyframe_threshold"):
+        raise ValueError(f"Pipeline 'e2e' hiện chỉ hỗ trợ MSVD (corpus={corpus} chưa có "
+                         f"VIDEO_FOLDER_PATH/keyframe_threshold trong loader config)")
+
     """ ID """
-    feat_id = f"FEAT {feat.model} "\
-              f"fsl-{loader.frame_sample_len} "\
-              f"mcl-{loader.max_caption_len}"
+    if transformer.pipeline == "e2e":
+        feat_id = f"E2E {transformer.clip_model_name.split('/')[-1]} "\
+                  f"tok-{transformer.token_mode} "\
+                  f"kft-{loader.keyframe_threshold} "\
+                  f"mcl-{loader.max_caption_len}"
+    else:
+        feat_id = f"FEAT {feat.model} "\
+                  f"fsl-{loader.frame_sample_len} "\
+                  f"mcl-{loader.max_caption_len}"
 
     transformer_id = f"T5 "\
                      f"{transformer.t5_model_name} " \

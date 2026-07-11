@@ -8,17 +8,22 @@ import numpy as np
 import json
 import os
 from typing import Dict, List
-from loader.MSVD import MSVD
+from loader.MSVD import MSVD, MSVDE2E
 from loader.MSRVTT import MSRVTT
 from loader.VATEX import VATEX
 from config import TrainConfig as C
 from models.t5_captioner import T5Captioner
+from models.e2e_captioner import CLIPT5Captioner
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
 from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
 def build_loaders():
-    if   C.corpus == "MSVD"  : corpus = MSVD(C)
+    if C.transformer.pipeline == "e2e":
+        if C.corpus != "MSVD":
+            raise NotImplementedError(f"Pipeline 'e2e' hiện chỉ hỗ trợ MSVD, corpus={C.corpus}")
+        corpus = MSVDE2E(C)
+    elif C.corpus == "MSVD"  : corpus = MSVD(C)
     elif C.corpus == "MSRVTT": corpus = MSRVTT(C)
     elif C.corpus == "VATEX" : corpus = VATEX(C)
     print('T5 tokenizer vocab size: {}'.format(corpus.tokenizer.vocab_size))
@@ -26,18 +31,27 @@ def build_loaders():
 
 
 def build_model():
-    model = T5Captioner(
-        d_feat=C.feat.feature_dims,
-        t5_model_name=C.transformer.t5_model_name,
-        dropout=C.transformer.dropout,
-        fusion_num_layers=C.transformer.fusion_num_layers,
-        fusion_n_heads=C.transformer.fusion_n_heads,
-        lora_r=C.transformer.lora_r,
-        lora_alpha=C.transformer.lora_alpha,
-        lora_target_modules=C.transformer.lora_target_modules,
-        feat_mask_prob=C.transformer.feat_mask_prob,
-        num_decoder_layers=C.transformer.num_decoder_layers,
-    )
+    if C.transformer.pipeline == "e2e":
+        model = CLIPT5Captioner(
+            clip_model_name=C.transformer.clip_model_name,
+            t5_model_name=C.transformer.t5_model_name,
+            dropout=C.transformer.dropout,
+            token_mode=C.transformer.token_mode,
+            freeze_vision_encoder=C.transformer.freeze_vision_encoder,
+        )
+    else:
+        model = T5Captioner(
+            d_feat=C.feat.feature_dims,
+            t5_model_name=C.transformer.t5_model_name,
+            dropout=C.transformer.dropout,
+            fusion_num_layers=C.transformer.fusion_num_layers,
+            fusion_n_heads=C.transformer.fusion_n_heads,
+            lora_r=C.transformer.lora_r,
+            lora_alpha=C.transformer.lora_alpha,
+            lora_target_modules=C.transformer.lora_target_modules,
+            feat_mask_prob=C.transformer.feat_mask_prob,
+            num_decoder_layers=C.transformer.num_decoder_layers,
+        )
     model.cuda()
     return model
 

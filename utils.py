@@ -109,7 +109,9 @@ def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len):
             for i, vid in enumerate(vids):
                 if vid not in seen_vids:
                     seen_vids.add(vid)
-                    feats_tup = tuple(f[i, :, :].unsqueeze(0) for f in feats)
+                    # f[i] works for both pipelines: feature tensors (B, L, D)
+                    # and e2e (pixel_values (B, T, 3, H, W), frame_mask (B, T))
+                    feats_tup = tuple(f[i].unsqueeze(0) for f in feats)
                     onlyonce_iter.append((vid, feats_tup))
 
         return onlyonce_iter

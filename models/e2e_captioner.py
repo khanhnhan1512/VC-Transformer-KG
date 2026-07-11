@@ -117,26 +117,32 @@ class CLIPT5Captioner(nn.Module):
         pixel_values, frame_mask = src
         encoder_hidden = self.encode(pixel_values)
 
-        encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
-        outputs = self.t5(
-            encoder_outputs=encoder_outputs,
-            attention_mask=frame_mask,
-            decoder_attention_mask=decoder_attention_mask,
-            labels=labels,
-        )
+        # T5 tràn số (NaN) khi chạy fp16 autocast (pretrain bằng bf16, activation
+        # trong T5DenseGatedActDense vượt ngưỡng fp16) -> luôn chạy T5 ở fp32.
+        # AMP vẫn áp dụng cho vision encoder (phần chiếm phần lớn compute).
+        with torch.autocast('cuda', enabled=False):
+            encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden.float())
+            outputs = self.t5(
+                encoder_outputs=encoder_outputs,
+                attention_mask=frame_mask,
+                decoder_attention_mask=decoder_attention_mask,
+                labels=labels,
+            )
         return outputs
 
     def generate_captions(self, src, tokenizer, beam_size, max_len):
         pixel_values, frame_mask = src
         encoder_hidden = self.encode(pixel_values)
 
-        encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
-        generated_ids = self.t5.generate(
-            encoder_outputs=encoder_outputs,
-            attention_mask=frame_mask,
-            num_beams=beam_size,
-            max_length=max_len,
-            early_stopping=True,
-        )
+        # Giống forward: T5 luôn chạy fp32 để tránh tràn số fp16
+        with torch.autocast('cuda', enabled=False):
+            encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden.float())
+            generated_ids = self.t5.generate(
+                encoder_outputs=encoder_outputs,
+                attention_mask=frame_mask,
+                num_beams=beam_size,
+                max_length=max_len,
+                early_stopping=True,
+            )
         captions = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         return captions

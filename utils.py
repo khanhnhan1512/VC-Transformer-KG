@@ -39,11 +39,12 @@ def parse_batch(batch):
     return vids, feats, caption_ids, caption_mask, raw_captions
 
 
-def train(e, model, optimizer, train_iter, tokenizer, gradient_clip):
+def train(e, model, optimizer, train_iter, tokenizer, gradient_clip, scaler=None):
     model.train()
     loss_checker = LossChecker(1)
     pad_token_id = tokenizer.pad_token_id
     loss_fct = nn.CrossEntropyLoss(ignore_index=-100, label_smoothing=C.label_smoothing)
+    use_amp = scaler is not None and scaler.is_enabled()
 
     t = tqdm(train_iter)
     for batch in t:
@@ -53,16 +54,26 @@ def train(e, model, optimizer, train_iter, tokenizer, gradient_clip):
         labels[labels == pad_token_id] = -100
 
         optimizer.zero_grad()
-        outputs = model(feats, labels=labels, decoder_attention_mask=caption_mask)
+        with torch.autocast('cuda', enabled=use_amp):
+            outputs = model(feats, labels=labels, decoder_attention_mask=caption_mask)
 
-        loss = loss_fct(
-            outputs.logits.view(-1, outputs.logits.size(-1)),
-            labels.view(-1)
-        )
-        loss.backward()
-        if gradient_clip is not None:
-            torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
-        optimizer.step()
+            loss = loss_fct(
+                outputs.logits.view(-1, outputs.logits.size(-1)),
+                labels.view(-1)
+            )
+
+        if use_amp:
+            scaler.scale(loss).backward()
+            if gradient_clip is not None:
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            loss.backward()
+            if gradient_clip is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), gradient_clip)
+            optimizer.step()
 
         loss_checker.update(loss.item())
         t.set_description(
@@ -88,11 +99,12 @@ def test(model, val_iter, tokenizer):
             labels = caption_ids.clone()
             labels[labels == pad_token_id] = -100
 
-            outputs = model(feats, labels=labels, decoder_attention_mask=caption_mask)
-            loss = loss_fct(
-                outputs.logits.view(-1, outputs.logits.size(-1)),
-                labels.view(-1)
-            )
+            with torch.autocast('cuda', enabled=C.use_amp):
+                outputs = model(feats, labels=labels, decoder_attention_mask=caption_mask)
+                loss = loss_fct(
+                    outputs.logits.view(-1, outputs.logits.size(-1)),
+                    labels.view(-1)
+                )
             loss_checker.update(loss.item())
 
     total_loss = loss_checker.mean()
@@ -122,7 +134,8 @@ def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len):
 
     with torch.no_grad():
         for vid, feats in tqdm(onlyonce_iter):
-            captions = model.generate_captions(feats, tokenizer, beam_size, max_len)
+            with torch.autocast('cuda', enabled=C.use_amp):
+                captions = model.generate_captions(feats, tokenizer, beam_size, max_len)
             vid2pred[vid] = captions[0]
 
     return vid2pred

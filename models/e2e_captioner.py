@@ -19,6 +19,8 @@ class CLIPT5Captioner(nn.Module):
     def __init__(self, clip_model_name, t5_model_name, dropout,
                  token_mode='cls',
                  freeze_vision_encoder=False,
+                 num_vision_layers=0,
+                 num_decoder_layers=0,
                  device='cuda'):
         super().__init__()
         if token_mode not in self.SUPPORTED_TOKEN_MODES:
@@ -31,11 +33,21 @@ class CLIPT5Captioner(nn.Module):
         self.vision_encoder = CLIPVisionModel.from_pretrained(clip_model_name)
         clip_hidden = self.vision_encoder.config.hidden_size
 
+        # Giữ lại N layer đầu của vision encoder (CLS vẫn đi qua post_layernorm của CLIP)
+        vision_layers = self.vision_encoder.vision_model.encoder.layers
+        if 0 < num_vision_layers < len(vision_layers):
+            self.vision_encoder.vision_model.encoder.layers = vision_layers[:num_vision_layers]
+            self.vision_encoder.config.num_hidden_layers = num_vision_layers
+
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
 
+        if 0 < num_decoder_layers < len(self.t5.decoder.block):
+            self.t5.decoder.block = self.t5.decoder.block[:num_decoder_layers]
+            self.t5.config.num_decoder_layers = num_decoder_layers
+
+        # pooler_output đã qua post_layernorm của CLIP nên không cần LayerNorm ở đây
         self.proj = nn.Sequential(
-            nn.LayerNorm(clip_hidden),
             nn.Dropout(dropout),
             nn.Linear(clip_hidden, t5_d_model),
         )

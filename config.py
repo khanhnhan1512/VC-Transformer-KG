@@ -97,6 +97,8 @@ class TransformerConfig:
     clip_model_name = "openai/clip-vit-base-patch32"  # nhỏ nhất, để test code
     token_mode = "cls"            # hiện chỉ hỗ trợ "cls"; giữ field để mở rộng sau
     freeze_vision_encoder = False # False = fine-tune cả vision encoder
+    # Giữ lại N layer đầu của CLIP vision encoder (0 = giữ nguyên toàn bộ, ViT-B có 12 layer)
+    num_vision_layers = 6
 
     t5_model_name = "google/flan-t5-small"  #  80M params
     # t5_model_name = "google/flan-t5-base"   # 250M params
@@ -108,7 +110,8 @@ class TransformerConfig:
     fusion_num_layers = 2
     fusion_n_heads = 12
     feat_mask_prob = 0.0
-    num_decoder_layers = 0
+    # Giữ lại N layer đầu của T5 decoder (0 = giữ nguyên; dùng cho cả 2 pipeline, flan-t5-small có 8 layer)
+    num_decoder_layers = 4
 
     lora_r = 0
     lora_alpha = 16
@@ -135,14 +138,19 @@ class TrainConfig:
         batch_size = 16
         # Fine-tune full pretrained (CLIP + T5): lr 1e-4 quá cao, dễ phá pretrained weights
         lr = 3e-5
+        # Mixed precision: tăng tốc đáng kể phần encoder ViT trên T4/P100
+        use_amp = True
+        # Dùng pretrained weights nên không cần warmup (0 = tắt; train from scratch mới cần)
+        warmup_epochs = 0
     else:
         batch_size = 64
         lr = 1e-4
+        use_amp = False  # giữ nguyên hành vi các run cũ để so sánh được
+        warmup_epochs = 3
     gradient_clip = 5.0 # None if not used
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
     weight_decay = 5e-5
-    warmup_epochs = 3
     label_smoothing = 0.15
     beam_size = 5
 
@@ -158,6 +166,8 @@ class TrainConfig:
         feat_id = f"E2E {transformer.clip_model_name.split('/')[-1]} "\
                   f"tok-{transformer.token_mode} "\
                   f"kft-{loader.keyframe_threshold} "\
+                  f"vl-{transformer.num_vision_layers} "\
+                  f"dl-{transformer.num_decoder_layers} "\
                   f"mcl-{loader.max_caption_len}"
     else:
         feat_id = f"FEAT {feat.model} "\
@@ -175,7 +185,7 @@ class TrainConfig:
                    f"wd-{weight_decay}"
 
     hyperparams_id = f"ep-{epochs} bs-{batch_size} gc-{gradient_clip} " \
-                     f"bms-{beam_size} ls-{label_smoothing}"
+                     f"bms-{beam_size} ls-{label_smoothing} amp-{int(use_amp)}"
 
     model_id = " = ".join(
         [corpus, feat_id, transformer_id, optimizer_id, hyperparams_id,

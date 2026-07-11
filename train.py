@@ -38,6 +38,8 @@ def build_model():
             dropout=C.transformer.dropout,
             token_mode=C.transformer.token_mode,
             freeze_vision_encoder=C.transformer.freeze_vision_encoder,
+            num_vision_layers=C.transformer.num_vision_layers,
+            num_decoder_layers=C.transformer.num_decoder_layers,
         )
     else:
         model = T5Captioner(
@@ -147,8 +149,8 @@ def main():
     train_iter, val_iter, test_iter, tokenizer = build_loaders()
 
     model = build_model()
-    print(get_parameter_number(model))
     print(model)
+    print(get_parameter_number(model))
 
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -156,11 +158,16 @@ def main():
         weight_decay=C.weight_decay,
         amsgrad=True
     )
-    warmup_sched = LinearLR(
-        optimizer,
-        end_factor=1.0,
-        total_iters=C.warmup_epochs,
-    )
+    # GradScaler dùng chung cho mọi epoch để giữ trạng thái scale khi train với AMP
+    scaler = torch.amp.GradScaler('cuda', enabled=C.use_amp)
+    # LinearLR giảm lr ngay khi khởi tạo, nên chỉ tạo khi thực sự dùng warmup
+    warmup_sched = None
+    if C.warmup_epochs > 0:
+        warmup_sched = LinearLR(
+            optimizer,
+            end_factor=1.0,
+            total_iters=C.warmup_epochs,
+        )
     plateau_sched = ReduceLROnPlateau(
         optimizer,
         mode='min',
@@ -192,7 +199,8 @@ def main():
             optimizer=optimizer,
             train_iter=train_iter,
             tokenizer=tokenizer,
-            gradient_clip=C.gradient_clip
+            gradient_clip=C.gradient_clip,
+            scaler=scaler
         )
         _train_end_time = time.time()
         _train_time_taken = _train_end_time - _train_start_time

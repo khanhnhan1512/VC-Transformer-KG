@@ -129,7 +129,7 @@ class TrainConfig:
     transformer = TransformerConfig
 
     """ Optimization """
-    epochs = 20
+    epochs = 15
     if transformer.pipeline == "e2e":
         # 64 caption-pair x 9 keyframe = 576 ảnh/step qua ViT -> OOM trên P100/T4
         batch_size = 16

@@ -13,7 +13,7 @@ from collections import defaultdict
 from torch.utils.data import Dataset, DataLoader, RandomSampler
 from transformers import T5TokenizerFast
 
-from loader.keyframe import extract_gop_motion
+from loader.keyframe import extract_gop_motion, extract_gop_timestamps
 
 
 VIDEO_EXTENSIONS = ['.avi', '.mp4', '.mkv', '.webm']
@@ -155,9 +155,17 @@ class GOPDataset(Dataset):
                     mismatches.append((vid, 'hdf5-vs-video', (L, motion_maps.shape[0])))
                     continue
             else:
-                # Ablation không motion: không cần video folder, dummy zeros
+                # Ablation không motion: MV map dummy zeros (model bỏ qua)
                 motion_maps = np.zeros((L, 2, grid, grid), dtype=np.float32)
-                timestamps = np.zeros((L,), dtype=np.float32)
+                if C.transformer.pos_encoding_type == 'timestamp':
+                    # Vẫn cần timestamp thật cho PE (decode NONKEY, rất nhanh) —
+                    # nếu để 0 thì timestamp PE suy biến, mất thông tin thứ tự
+                    timestamps = extract_gop_timestamps(self._find_video_fpath(vid))
+                    if timestamps.shape[0] != L:
+                        mismatches.append((vid, 'hdf5-vs-timestamps', (L, timestamps.shape[0])))
+                        continue
+                else:
+                    timestamps = np.zeros((L,), dtype=np.float32)
 
             arrays, num_real = self._normalize_length(
                 [*feats, motion_maps, timestamps], threshold)

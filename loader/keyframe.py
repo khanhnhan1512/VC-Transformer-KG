@@ -68,6 +68,22 @@ def _rasterize_mvs(mv_arr, frame_width, frame_height, grid_size):
     return grid / count
 
 
+def extract_gop_timestamps(video_path: str):
+    """Chỉ lấy timestamp (giây) của các I-frame — decode với skip_frame NONKEY
+    nên rất nhanh. Dùng cho run ablation không motion nhưng vẫn cần timestamp
+    PE (tránh timestamps=0 làm PE suy biến thành hằng số, mất thông tin thứ tự).
+    """
+    timestamps = []
+    with av.open(video_path) as container:
+        stream = container.streams.video[0]
+        stream.codec_context.skip_frame = "NONKEY"
+        for frame in container.decode(stream):
+            timestamps.append(float(frame.time) if frame.time is not None else 0.0)
+    if not timestamps:
+        raise ValueError(f"[extract_gop_timestamps] No keyframe decoded: {video_path}")
+    return np.array(timestamps, dtype=np.float32)
+
+
 def extract_gop_motion(video_path: str, grid_size: int = 16):
     """Decode video MỘT lượt, thu motion data cho TẤT CẢ GOP (không pad/sample).
 

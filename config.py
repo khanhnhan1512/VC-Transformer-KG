@@ -97,6 +97,14 @@ class TransformerConfig:
     clip_model_name = "openai/clip-vit-base-patch32"  # nhỏ nhất, để test code
     token_mode = "cls"            # hiện chỉ hỗ trợ "cls"; giữ field để mở rộng sau
     freeze_vision_encoder = False # False = fine-tune cả vision encoder
+
+    """ GOP motion tokens (compressed-domain motion vectors) """
+    # Mỗi GOP: token appearance (CLS I-frame) + token motion (MV map của P/B-frame)
+    use_motion_tokens = True
+    motion_grid_size = 16         # độ phân giải lưới MV map (2 x g x g)
+    # Positional encoding cho chuỗi GOP: "index" (thứ tự) | "timestamp" (giây thật của I-frame)
+    pos_encoding_type = "timestamp"
+    assert pos_encoding_type in ["index", "timestamp"]
     # Chọn N layer cách đều (linspace, luôn gồm layer 0) của CLIP vision encoder
     # (0 = giữ nguyên toàn bộ, ViT-B có 12 layer)
     num_vision_layers = 4
@@ -171,6 +179,8 @@ class TrainConfig:
                   f"kft-{loader.keyframe_threshold} "\
                   f"vl-{transformer.num_vision_layers} "\
                   f"dl-{transformer.num_decoder_layers} "\
+                  f"mot-{int(transformer.use_motion_tokens)} "\
+                  f"pe-{transformer.pos_encoding_type} "\
                   f"mcl-{loader.max_caption_len}"
     else:
         feat_id = f"FEAT {feat.model} "\

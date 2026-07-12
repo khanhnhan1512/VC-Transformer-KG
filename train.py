@@ -40,6 +40,9 @@ def build_model():
             freeze_vision_encoder=C.transformer.freeze_vision_encoder,
             num_vision_layers=C.transformer.num_vision_layers,
             num_decoder_layers=C.transformer.num_decoder_layers,
+            use_motion_tokens=C.transformer.use_motion_tokens,
+            motion_grid_size=C.transformer.motion_grid_size,
+            pos_encoding_type=C.transformer.pos_encoding_type,
         )
     else:
         model = T5Captioner(

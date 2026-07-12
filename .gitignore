@@ -177,3 +177,4 @@ keyframe_stats.json
 smoke_test_e2e.py
 stats_keyframes.py
 smoke_test_data.py
+stats_gop.py

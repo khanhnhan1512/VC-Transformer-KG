@@ -109,7 +109,9 @@ def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len):
             for i, vid in enumerate(vids):
                 if vid not in seen_vids:
                     seen_vids.add(vid)
-                    feats_tup = tuple(f[i, :, :].unsqueeze(0) for f in feats)
+                    # f[i] hoạt động với mọi số chiều: feature (B,T,D), motion
+                    # maps (B,T,2,g,g) lẫn timestamps (B,T)
+                    feats_tup = tuple(f[i].unsqueeze(0) for f in feats)
                     onlyonce_iter.append((vid, feats_tup))
 
         return onlyonce_iter

@@ -31,6 +31,9 @@ def build_model():
         t5_model_name=C.transformer.t5_model_name,
         dropout=C.transformer.dropout,
         num_decoder_layers=C.transformer.num_decoder_layers,
+        use_motion_tokens=C.transformer.use_motion_tokens,
+        motion_grid_size=C.transformer.motion_grid_size,
+        pos_encoding_type=C.transformer.pos_encoding_type,
     )
     model.cuda()
     return model

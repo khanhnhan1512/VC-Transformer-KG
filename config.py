@@ -37,10 +37,19 @@ class MSVDLoaderConfig:
     # phase_video_feat_fpath_tpl = "./data/{}/features/{}_{}.hdf5"
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
+    """ GOP motion (MV maps trích từ video cho motion encoder built-in) """
+    # Folder chứa video .avi đã preprocess (tên file khớp vid: {VideoID}_{Start}_{End}.avi)
+    VIDEO_FOLDER_PATH = "/mnt/d/___Video-Preprocessing/msvd/videos_240_h264_keyint_60"
+    if not os.path.exists(VIDEO_FOLDER_PATH):
+        VIDEO_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-videos-240-h264-keyint-60/msvd/videos_240_h264_keyint_60"
+    # Folder cache MV maps đã trích (.npy) để khỏi decode lại video; để trống nếu không dùng
+    mv_cache_dpath = ""
+
     num_workers = 4
-    frame_sample_len = 10
-    frame_sampling_method = 'uniform'
-    assert frame_sampling_method in ['uniform', 'random']
+    # Số GOP chuẩn hóa mỗi video — DÙNG CHUNG cho MỌI feature (BLIP-2, motion,
+    # và các feature bổ sung sau này): thiếu -> zero-pad chung, thừa -> cùng bộ
+    # chỉ số linspace (giữ alignment 1-1 giữa các modality)
+    num_gop = 10
 
 
 class MSRVTTLoaderConfig(object):
@@ -87,6 +96,15 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias)
     num_decoder_layers = 4
 
+    """ GOP motion tokens (compressed-domain motion vectors) """
+    # Mỗi GOP: token feature (BLIP-2, projection) + token motion (MotionEncoder
+    # built-in trên MV map của các P/B-frame, train từ đầu)
+    use_motion_tokens = True
+    motion_grid_size = 16         # độ phân giải lưới MV map (2 x g x g)
+    # Positional encoding cho chuỗi GOP: "index" (thứ tự) | "timestamp" (giây thật của I-frame)
+    pos_encoding_type = "timestamp"
+    assert pos_encoding_type in ["index", "timestamp"]
+
 
 class TrainConfig:
     corpus = "MSVD"
@@ -119,8 +137,11 @@ class TrainConfig:
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']
 
     """ ID """
+    _seq_len = getattr(loader, 'num_gop', None) or getattr(loader, 'frame_sample_len', None)
     feat_id = f"FEAT {feat.model} "\
-              f"fsl-{loader.frame_sample_len}"
+              f"gop-{_seq_len} "\
+              f"mot-{int(transformer.use_motion_tokens)} "\
+              f"pe-{transformer.pos_encoding_type}"
 
     transformer_id = f"T5 "\
                      f"{transformer.t5_model_name} " \

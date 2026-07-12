@@ -1,10 +1,10 @@
 # coding=utf-8
 import pandas as pd
-from loader.data_loader_fusion import CustomDataset, Corpus
+from loader.data_loader_gop import GOPDataset, GOPCorpus
 
 
-class MSVDDataset(CustomDataset):
-    """ MSVD Dataset """
+class MSVDDataset(GOPDataset):
+    """ MSVD Dataset (GOP-structured: HDF5 features + MV maps) """
 
     def load_captions(self):
         df = pd.read_csv(self.caption_fpath)
@@ -17,7 +17,7 @@ class MSVDDataset(CustomDataset):
             self.captions[vid].append(self.preprocess_caption(caption))
 
 
-class MSVD(Corpus):
+class MSVD(GOPCorpus):
     """ MSVD Corpus """
 
     def __init__(self, C):

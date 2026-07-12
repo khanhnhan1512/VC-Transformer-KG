@@ -38,7 +38,7 @@ class MSVDLoaderConfig:
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    frame_sample_len = 10
+    frame_sample_len = 8
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
@@ -76,8 +76,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    t5_model_name = "google/flan-t5-small"  #  80M params
-    # t5_model_name = "google/flan-t5-base"   # 250M params
+    # t5_model_name = "google/flan-t5-small"  #  80M params
+    t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -85,7 +85,7 @@ class TransformerConfig:
 
     # Số block T5 decoder giữ lại (0 = giữ nguyên; flan-t5-small có 8 block)
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias)
-    num_decoder_layers = 4
+    num_decoder_layers = 0
 
 
 class TrainConfig:
@@ -108,7 +108,7 @@ class TrainConfig:
     lr = 1e-4
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
-    weight_decay = 5e-5
+    weight_decay = 1e-5
     # Fine-tune pretrained Flan-T5 decoder nên không cần warmup (0 = tắt;
     # train from scratch mới cần)
     warmup_epochs = 0

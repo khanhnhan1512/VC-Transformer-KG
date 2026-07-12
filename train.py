@@ -220,7 +220,7 @@ def main():
         if val_scores["ROUGE_L"] > best_val_scores["ROUGE_L"]: n_better_metrics += 1
         if val_scores["CIDEr"]   > best_val_scores["CIDEr"]  : n_better_metrics += 1
 
-        if (val_scores['CIDEr'] > best_val_CIDEr) and (n_better_metrics >= 3):
+        if (val_scores['CIDEr'] > best_val_CIDEr) and (n_better_metrics >= 2):
             if best_ckpt_fpath and os.path.exists(best_ckpt_fpath):
                 os.remove(best_ckpt_fpath)
 

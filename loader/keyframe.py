@@ -88,6 +88,13 @@ def _rasterize_mvs(mv_arr, frame_width, frame_height, grid_size):
     dx = (mv_arr['motion_x'] / scale) / float(frame_width)
     dy = (mv_arr['motion_y'] / scale) / float(frame_height)
 
+    # B-frame có MV tham chiếu tương lai (source > 0): hướng hình học ngược với
+    # chuyển động thật -> đảo dấu để mọi MV cùng quy ước "quá khứ -> hiện tại",
+    # tránh trung bình bị triệt tiêu khi trộn MV backward/forward trong cùng GOP
+    backward = mv_arr['source'] > 0
+    dx = np.where(backward, -dx, dx)
+    dy = np.where(backward, -dy, dy)
+
     gx = np.clip(mv_arr['dst_x'] * grid_size // frame_width, 0, grid_size - 1).astype(int)
     gy = np.clip(mv_arr['dst_y'] * grid_size // frame_height, 0, grid_size - 1).astype(int)
 

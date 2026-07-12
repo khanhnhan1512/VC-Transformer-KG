@@ -174,8 +174,6 @@ cache/*
 development/*
 # Exclude some helper files
 keyframe_stats.json
-smoke_test_e2e.py
-stats_keyframes.py
-smoke_test_data.py
-stats_gop.py
 blip2_extractor.py
+smoke*.py
+stats*.py

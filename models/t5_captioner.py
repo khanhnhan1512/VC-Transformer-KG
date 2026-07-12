@@ -5,33 +5,20 @@ from transformers import T5ForConditionalGeneration
 from transformers.modeling_outputs import BaseModelOutput
 
 
-class NewGELUActivation(nn.Module):
-    def forward(self, input):
-        return 0.5 * input * (1.0 + torch.tanh(math.sqrt(2.0 / math.pi) * (input + 0.044715 * torch.pow(input, 3.0))))
+def select_evenly_spaced_layers(layers, num_keep):
+    """Chọn num_keep layer cách đều (linspace) từ ModuleList pretrained.
 
-
-class LoRALinear(nn.Module):
-    def __init__(self, original_linear, r=8, alpha=16):
-        super().__init__()
-        self.original_linear = original_linear
-        self.scaling = alpha / r
-
-        for param in self.original_linear.parameters():
-            param.requires_grad = False
-
-        in_f = original_linear.in_features
-        out_f = original_linear.out_features
-        self.lora_A = nn.Linear(in_f, r, bias=False)
-        self.lora_B = nn.Linear(r, out_f, bias=False)
-
-        nn.init.kaiming_uniform_(self.lora_A.weight, a=math.sqrt(5))
-        nn.init.zeros_(self.lora_B.weight)
-
-    def forward(self, x):
-        return self.original_linear(x) + self.lora_B(self.lora_A(x)) * self.scaling
+    Luôn bao gồm layer đầu tiên (index 0) — quan trọng với T5 vì
+    relative_attention_bias chỉ nằm ở block 0 và được các block sau dùng chung.
+    (Layer cuối cũng luôn được giữ do linspace kết thúc tại len-1.)
+    """
+    idxs = torch.linspace(0, len(layers) - 1, steps=num_keep).round().long().tolist()
+    return nn.ModuleList([layers[i] for i in idxs]), idxs
 
 
 class FeatEmbedding(nn.Module):
+    """Projection: đưa feature về đúng kích thước d_model của T5 decoder."""
+
     def __init__(self, d_feat, d_model, dropout):
         super().__init__()
         self.embeddings = nn.Sequential(
@@ -45,6 +32,8 @@ class FeatEmbedding(nn.Module):
 
 
 class SegmentEmbedding(nn.Module):
+    """Feature type embedding: phân biệt token của các modality khác nhau."""
+
     def __init__(self, num_segments, d_model):
         super().__init__()
         self.segment_embeddings = nn.Embedding(num_segments, d_model)
@@ -71,67 +60,37 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-class CrossModalFusionLayer(nn.Module):
-    def __init__(self, d_model, n_heads, d_ff, dropout):
-        super().__init__()
-        self.norm1 = nn.LayerNorm(d_model)
-        self.self_attn = nn.MultiheadAttention(d_model, n_heads, dropout=dropout, batch_first=True)
-        self.dropout1 = nn.Dropout(dropout)
-
-        self.norm2 = nn.LayerNorm(d_model)
-        self.act = NewGELUActivation()
-        self.w_gate = nn.Linear(d_model, d_ff, bias=False)
-        self.w_up = nn.Linear(d_model, d_ff, bias=False)
-        self.w_down = nn.Linear(d_ff, d_model, bias=False)
-        self.ffn_dropout = nn.Dropout(dropout)
-        self.dropout2 = nn.Dropout(dropout)
-
-    def forward(self, x, mask=None):
-        key_padding_mask = ~mask.bool() if mask is not None else None
-
-        normed = self.norm1(x)
-        attn_out, _ = self.self_attn(normed, normed, normed, key_padding_mask=key_padding_mask)
-        x = x + self.dropout1(attn_out)
-
-        normed = self.norm2(x)
-        gate = self.act(self.w_gate(normed))
-        x = x + self.dropout2(self.w_down(self.ffn_dropout(gate * self.w_up(normed))))
-        return x
-
-
-class CrossModalFusion(nn.Module):
-    def __init__(self, d_model, n_heads, d_ff, dropout, num_layers):
-        super().__init__()
-        self.layers = nn.ModuleList([
-            CrossModalFusionLayer(d_model, n_heads, d_ff, dropout)
-            for _ in range(num_layers)
-        ])
-        self.final_norm = nn.LayerNorm(d_model)
-
-    def forward(self, x, mask=None):
-        for layer in self.layers:
-            x = layer(x, mask)
-        return self.final_norm(x)
-
-
 class T5Captioner(nn.Module):
+    """Pre-extracted video features -> projection -> Flan-T5 decoder.
+
+    Không dùng encoder/fusion layer nào để biến đổi feature: mỗi feature chỉ
+    qua projection (+ segment/positional embedding) rồi đưa thẳng vào T5
+    decoder qua `encoder_outputs` (ý tưởng BiDecT, thay bidirectional decoder
+    bằng pretrained Flan-T5 decoder). Khối T5 encoder không được dùng nên bị
+    loại bỏ ngay khi khởi tạo.
+    """
 
     def __init__(self, d_feat, t5_model_name, dropout,
-                 fusion_num_layers=0, fusion_n_heads=8,
-                 lora_r=0, lora_alpha=16, lora_target_modules=None,
-                 feat_mask_prob=0.15,
                  num_decoder_layers=0,
                  device='cuda'):
         super().__init__()
         self.device = device
-        self.feat_mask_prob = feat_mask_prob
 
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
 
+        # Giữ N block decoder cách đều (linspace, luôn gồm block 0 mang relative bias)
         if 0 < num_decoder_layers < len(self.t5.decoder.block):
-            self.t5.decoder.block = self.t5.decoder.block[:num_decoder_layers]
+            selected, idxs = select_evenly_spaced_layers(
+                self.t5.decoder.block, num_decoder_layers)
+            self.t5.decoder.block = selected
             self.t5.config.num_decoder_layers = num_decoder_layers
+            print(f"[T5Captioner] T5 decoder giữ các block: {idxs}")
+
+        # T5 encoder không bao giờ được dùng (forward/generate luôn truyền encoder_outputs)
+        # -> bỏ toàn bộ block để model gọn; embed_tokens là shared với decoder nên giữ nguyên
+        self.t5.encoder.block = nn.ModuleList()
+        self.t5.config.num_layers = 0
 
         self.feat_embeds = nn.ModuleList([
             FeatEmbedding(d_f, t5_d_model, dropout) for d_f in d_feat
@@ -141,32 +100,6 @@ class T5Captioner(nn.Module):
         self.feat_norms = nn.ModuleList([
             nn.LayerNorm(t5_d_model) for _ in d_feat
         ])
-
-        self.fusion = None
-        if fusion_num_layers > 0:
-            self.fusion = CrossModalFusion(
-                d_model=t5_d_model,
-                n_heads=fusion_n_heads,
-                d_ff=2048,
-                dropout=dropout,
-                num_layers=fusion_num_layers,
-            )
-
-        if lora_r > 0:
-            self._apply_lora(lora_r, lora_alpha, lora_target_modules or ['q', 'v'])
-
-    def _apply_lora(self, r, alpha, target_modules):
-        for param in self.t5.parameters():
-            param.requires_grad = False
-
-        for block in self.t5.decoder.block:
-            self_attn = block.layer[0].SelfAttention
-            for name in target_modules:
-                setattr(self_attn, name, LoRALinear(getattr(self_attn, name), r, alpha))
-
-            cross_attn = block.layer[1].EncDecAttention
-            for name in target_modules:
-                setattr(cross_attn, name, LoRALinear(getattr(cross_attn, name), r, alpha))
 
     def encode(self, src):
         batch_size = src[0].size(0)
@@ -193,22 +126,9 @@ class T5Captioner(nn.Module):
         stacked = torch.stack(masks, dim=2)
         return stacked.reshape(masks[0].size(0), -1).long()
 
-    def _mask_features(self, encoder_hidden, attention_mask):
-        B, T, D = encoder_hidden.shape
-        mask = torch.rand(B, T, device=encoder_hidden.device) < self.feat_mask_prob
-        mask = mask & attention_mask.bool()
-        encoder_hidden = encoder_hidden.masked_fill(mask.unsqueeze(-1), 0.0)
-        return encoder_hidden
-
     def forward(self, src, labels=None, decoder_attention_mask=None):
         encoder_hidden = self.encode(src)
         attention_mask = self._build_encoder_attention_mask(src)
-
-        if self.training and self.feat_mask_prob > 0:
-            encoder_hidden = self._mask_features(encoder_hidden, attention_mask)
-
-        if self.fusion is not None:
-            encoder_hidden = self.fusion(encoder_hidden, mask=attention_mask)
 
         encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
         outputs = self.t5(
@@ -222,9 +142,6 @@ class T5Captioner(nn.Module):
     def generate_captions(self, src, tokenizer, beam_size, max_len):
         encoder_hidden = self.encode(src)
         attention_mask = self._build_encoder_attention_mask(src)
-
-        if self.fusion is not None:
-            encoder_hidden = self.fusion(encoder_hidden, mask=attention_mask)
 
         encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
         generated_ids = self.t5.generate(

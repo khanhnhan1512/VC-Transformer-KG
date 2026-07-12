@@ -30,12 +30,6 @@ def build_model():
         d_feat=C.feat.feature_dims,
         t5_model_name=C.transformer.t5_model_name,
         dropout=C.transformer.dropout,
-        fusion_num_layers=C.transformer.fusion_num_layers,
-        fusion_n_heads=C.transformer.fusion_n_heads,
-        lora_r=C.transformer.lora_r,
-        lora_alpha=C.transformer.lora_alpha,
-        lora_target_modules=C.transformer.lora_target_modules,
-        feat_mask_prob=C.transformer.feat_mask_prob,
         num_decoder_layers=C.transformer.num_decoder_layers,
     )
     model.cuda()
@@ -133,8 +127,8 @@ def main():
     train_iter, val_iter, test_iter, tokenizer = build_loaders()
 
     model = build_model()
-    print(get_parameter_number(model))
     print(model)
+    print(get_parameter_number(model))
 
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -142,11 +136,14 @@ def main():
         weight_decay=C.weight_decay,
         amsgrad=True
     )
-    warmup_sched = LinearLR(
-        optimizer,
-        end_factor=1.0,
-        total_iters=C.warmup_epochs,
-    )
+    # LinearLR giảm lr xuống 1/3 ngay khi khởi tạo, nên chỉ tạo khi thực sự dùng warmup
+    warmup_sched = None
+    if C.warmup_epochs > 0:
+        warmup_sched = LinearLR(
+            optimizer,
+            end_factor=1.0,
+            total_iters=C.warmup_epochs,
+        )
     plateau_sched = ReduceLROnPlateau(
         optimizer,
         mode='min',

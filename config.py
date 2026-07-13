@@ -4,11 +4,13 @@ import time
 
 
 class FeatureConfig:
-    # --- New single features (ưu tiên pooled/[CLS] trước, rồi mean) ---
-    # model: str = "Blip2VitGPooledKF"       # EVA-ViT-g [CLS] token
-    model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
+    # model: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
+    # model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # model: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # model: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
+
+    model: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # --- Old features ---
     # model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     # model: str = "Blip2QFormerMeanKF"
@@ -96,8 +98,8 @@ class TransformerConfig:
       xxl    ~11B  | d_model 4096 | 24 layer | 64 head | d_ff 10240 (gated)
     d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
     """;
-    # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
-    t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
+    t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
+    # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
     # t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
     # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
@@ -108,7 +110,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 6
+    num_decoder_layers = 4
 
 
 class TrainConfig:

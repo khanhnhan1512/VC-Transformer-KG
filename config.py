@@ -4,9 +4,9 @@ import time
 
 
 class FeatureConfig:
-    # model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
+    model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     # model: str = "Blip2QFormerMeanKF"
-    model: str = "newBlip2ClsKF"
+    # model: str = "newBlip2ClsKF"
     feature_dims: List[int] = []
 
     for modality in model.split("+"):

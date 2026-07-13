@@ -5,7 +5,8 @@ import time
 
 class FeatureConfig:
     # model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
-    model: str = "Blip2QFormerMeanKF"
+    # model: str = "Blip2QFormerMeanKF"
+    model: str = "newBlip2ClsKF"
     feature_dims: List[int] = []
 
     for modality in model.split("+"):
@@ -27,7 +28,7 @@ class MSVDLoaderConfig:
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
     if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msvd-dataset"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-blip2qformer"
+    # if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-blip2qformer"
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
@@ -38,7 +39,7 @@ class MSVDLoaderConfig:
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    frame_sample_len = 8
+    frame_sample_len = 9 #8
     frame_sampling_method = 'uniform'
     assert frame_sampling_method in ['uniform', 'random']
 
@@ -76,8 +77,8 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    # t5_model_name = "google/flan-t5-small"  #  80M params
-    t5_model_name = "google/flan-t5-base"   # 250M params
+    t5_model_name = "google/flan-t5-small"  #  80M params
+    # t5_model_name = "google/flan-t5-base"   # 250M params
     # t5_model_name = "google/flan-t5-large"  # 780M params
 
     dropout = 0.1
@@ -85,7 +86,7 @@ class TransformerConfig:
 
     # Số block T5 decoder giữ lại (0 = giữ nguyên; flan-t5-small có 8 block)
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias)
-    num_decoder_layers = 0
+    num_decoder_layers = 4
 
 
 class TrainConfig:
@@ -108,7 +109,7 @@ class TrainConfig:
     lr = 1e-4
     lr_decay_gamma = 0.5
     lr_decay_patience = 3
-    weight_decay = 1e-5
+    weight_decay = 5e-6
     # Fine-tune pretrained Flan-T5 decoder nên không cần warmup (0 = tắt;
     # train from scratch mới cần)
     warmup_epochs = 0

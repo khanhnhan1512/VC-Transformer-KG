@@ -5,8 +5,8 @@ import time
 
 class FeatureConfig:
     # --- New single features (ưu tiên pooled/[CLS] trước, rồi mean) ---
-    model: str = "Blip2VitGPooledKF"       # EVA-ViT-g [CLS] token
-    # model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # model: str = "Blip2VitGPooledKF"       # EVA-ViT-g [CLS] token
+    model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # model: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # model: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
     # --- Old features ---

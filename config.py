@@ -87,16 +87,28 @@ class VATEXLoaderConfig(object):
 
 
 class TransformerConfig:
-    t5_model_name = "google/flan-t5-small"  #  80M params
-    # t5_model_name = "google/flan-t5-base"   # 250M params
-    # t5_model_name = "google/flan-t5-large"  # 780M params
+    """
+    Flan-T5 family (params | d_model | #decoder layer | #head | d_ff):
+      small  ~80M  | d_model 512  | 8  layer | 6  head | d_ff 1024 (gated)
+      base   ~250M | d_model 768  | 12 layer | 12 head | d_ff 2048 (gated)
+      large  ~780M | d_model 1024 | 24 layer | 16 head | d_ff 2816 (gated)
+      xl     ~3B   | d_model 2048 | 24 layer | 32 head | d_ff 5120 (gated)
+      xxl    ~11B  | d_model 4096 | 24 layer | 64 head | d_ff 10240 (gated)
+    d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
+    """;
+    # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
+    # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
+    t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
+    # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
     dropout = 0.1
     max_caption_tokens = 32
 
-    # Số block T5 decoder giữ lại (0 = giữ nguyên; flan-t5-small có 8 block)
-    # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias)
-    num_decoder_layers = 4
+    # Số block T5 decoder giữ lại (0 = giữ nguyên toàn bộ).
+    # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
+    #   small/base: 8/12 block  | large/xl/xxl: 24 block
+    #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
+    num_decoder_layers = 6
 
 
 class TrainConfig:

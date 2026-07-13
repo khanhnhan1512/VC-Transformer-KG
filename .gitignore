@@ -174,6 +174,7 @@ cache/*
 development/*
 # Exclude some helper files
 keyframe_stats.json
-blip2_extractor.py
+*extractor.py
 smoke*.py
 stats*.py
+split_features.py

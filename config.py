@@ -4,7 +4,13 @@ import time
 
 
 class FeatureConfig:
-    model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
+    # --- New single features (ưu tiên pooled/[CLS] trước, rồi mean) ---
+    model: str = "Blip2VitGPooledKF"       # EVA-ViT-g [CLS] token
+    # model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # model: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
+    # model: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
+    # --- Old features ---
+    # model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     # model: str = "Blip2QFormerMeanKF"
     # model: str = "newBlip2ClsKF"
     feature_dims: List[int] = []
@@ -16,8 +22,12 @@ class FeatureConfig:
         elif modality.find('newImgCapBlip2KF') != -1:   feature_dims.append(1024)
         # Motion feature dimension
         elif modality.find('newMViTv2') != -1:          feature_dims.append(768)
-        # BLIP-2 feature dimension
+        # BLIP-2 Q-Former feature dimension (mean của 32 query token)
         elif modality.find('Blip2QFormerMeanKF') != -1: feature_dims.append(768)
+        # BLIP-2 ViT-g feature dimension (CLS/Pooled hoặc Mean của patch token)
+        elif modality.find('Blip2VitG') != -1:          feature_dims.append(1408)
+        # SigLIP2-giant feature dimension (pooler_output/Pooled hoặc Mean của patch token)
+        elif modality.find('SigLIP2Giant') != -1:       feature_dims.append(1536)
 
 
 class VocabConfig:
@@ -28,7 +38,7 @@ class MSVDLoaderConfig:
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
     if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msvd-dataset"
-    # if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-blip2qformer"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-blip2qformer"
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")

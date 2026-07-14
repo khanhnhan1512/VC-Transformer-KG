@@ -109,7 +109,10 @@ def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len):
             for i, vid in enumerate(vids):
                 if vid not in seen_vids:
                     seen_vids.add(vid)
-                    feats_tup = tuple(f[i, :, :].unsqueeze(0) for f in feats)
+                    # f[i:i+1] giữ nguyên chiều batch và MỌI chiều sau đó:
+                    #   (B,T,D) -> (1,T,D)            appearance pre-extracted
+                    #   (B,T,K,C,G,G) -> (1,T,K,C,G,G) motion vector grid (THÔ)
+                    feats_tup = tuple(f[i:i + 1] for f in feats)
                     onlyonce_iter.append((vid, feats_tup))
 
         return onlyonce_iter

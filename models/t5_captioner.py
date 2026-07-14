@@ -31,15 +31,95 @@ class FeatEmbedding(nn.Module):
         return self.embeddings(x)
 
 
-class SegmentEmbedding(nn.Module):
-    """Feature type embedding: phân biệt token của các modality khác nhau."""
+class FeatureTypeEmbedding(nn.Module):
+    """Phân biệt token thuộc loại feature nào.
 
-    def __init__(self, num_segments, d_model):
+    Với GOP-structured input, hai token của cùng một GOP có cùng positional
+    encoding (cùng chỉ số GOP) — chính embedding này là thứ duy nhất phân biệt
+    token appearance (I-frame) với token motion (MV) của GOP đó.
+    """
+
+    def __init__(self, num_types, d_model):
         super().__init__()
-        self.segment_embeddings = nn.Embedding(num_segments, d_model)
+        self.type_embeddings = nn.Embedding(num_types, d_model)
 
-    def forward(self, x, segment_ids):
-        return x + self.segment_embeddings(segment_ids)
+    def forward(self, x, type_ids):
+        return x + self.type_embeddings(type_ids)
+
+
+def pool_motion_bins(motion, pool_bins):
+    """Gộp K bin thời gian của mỗi GOP xuống còn `pool_bins` bin.
+
+    Motion được lưu ở K=8 để ablate K mà không phải trích lại. Nhưng mỗi bin
+    lưu TRUNG BÌNH THEO Ô, nên gộp 2 trung bình != trung bình của hợp — phải
+    lấy trung bình CÓ TRỌNG SỐ theo số MV. Kênh density (index 3) tỉ lệ thuận
+    với số MV trong ô (vì các bin có số frame xấp xỉ bằng nhau), nên dùng nó
+    làm trọng số.
+
+    motion: (B, T, K, C, G, G) -> (B, T, pool_bins, C, G, G)
+    """
+    B, T, K, C, G, _ = motion.shape
+    assert K % pool_bins == 0, f"K={K} không chia hết cho pool_bins={pool_bins}"
+    if pool_bins == K:
+        return motion
+
+    g = K // pool_bins
+    m = motion.reshape(B, T, pool_bins, g, C, G, G)
+    w = m[:, :, :, :, 3:4]                                    # density (B,T,P,g,1,G,G)
+    vals = (m[:, :, :, :, :3] * w).sum(dim=3) / w.sum(dim=3).clamp(min=1e-6)
+    dens = m[:, :, :, :, 3:4].mean(dim=3)                     # density gộp = trung bình thường
+    return torch.cat([vals, dens], dim=3)                     # (B,T,P,C,G,G)
+
+
+class MotionEncoder(nn.Module):
+    """Motion vector grid THÔ của mỗi GOP -> 1 token d_out. (B,T,K,C,G,G) -> (B,T,d_out)
+
+    Input: K bin thời gian trong GOP, C=4 kênh (dx, dy, |v|, density), lưới GxG.
+    Conv3D quét đồng thời trục thời gian (K) và không gian (G,G) để học động lực
+    chuyển động bên trong GOP.
+
+    Dùng GroupNorm chứ không BatchNorm: batch chứa các GOP pad toàn 0 (video ít
+    GOP hơn num_gop), thống kê batch sẽ bị chúng làm nhiễu.
+
+    `proj` là Linear tối giản (pool -> flatten -> Linear). Nó KHÔNG thừa: nếu bỏ
+    đi thì conv cuối phải xuất thẳng d_out kênh (3x3x3 x 64 x 512 = 885K params)
+    thay vì 128 kênh + Linear 128->512 (65K) — tức bỏ Linear lại làm encoder
+    PHÌNH ~3.5 lần. Không có Dropout ở đây vì FeatEmbedding ngay sau đã có.
+    """
+
+    def __init__(self, d_out, in_channels=4, num_bins=8, grid_size=16,
+                 pool_bins=None, width=32):
+        super().__init__()
+        self.pool_bins = pool_bins or num_bins
+        self.num_bins = num_bins
+        self.d_out = d_out
+
+        w1, w2, w3 = width, width * 2, width * 4
+        self.conv = nn.Sequential(
+            nn.Conv3d(in_channels, w1, kernel_size=3, padding=1),
+            nn.GroupNorm(4, w1), nn.ReLU(inplace=True),
+            nn.Conv3d(w1, w2, kernel_size=3, stride=2, padding=1),
+            nn.GroupNorm(8, w2), nn.ReLU(inplace=True),
+            nn.Conv3d(w2, w3, kernel_size=3, stride=2, padding=1),
+            nn.GroupNorm(8, w3), nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool3d(1),
+            nn.Flatten(),
+        )
+        self.proj = nn.Linear(w3, d_out)
+
+    def forward(self, motion):
+        motion = pool_motion_bins(motion, self.pool_bins)
+        B, T = motion.shape[:2]
+        x = motion.reshape(B * T, *motion.shape[2:])   # (B*T, K, C, G, G)
+        x = x.permute(0, 2, 1, 3, 4).contiguous()      # (B*T, C, K, G, G) cho Conv3d
+        return self.proj(self.conv(x)).reshape(B, T, self.d_out)
+
+
+# Feature THÔ (chưa qua encoder nào lúc trích) -> cần encoder học được trong model.
+# Tên khớp với modality name trong FeatureConfig.model.
+RAW_ENCODERS = {
+    "MotionMV": MotionEncoder,
+}
 
 
 class PositionalEncoding(nn.Module):
@@ -72,6 +152,8 @@ class T5Captioner(nn.Module):
 
     def __init__(self, d_feat, t5_model_name, dropout,
                  num_decoder_layers=0,
+                 feature_names=None,
+                 raw_feature_cfgs=None,
                  device='cuda'):
         super().__init__()
         self.device = device
@@ -92,10 +174,35 @@ class T5Captioner(nn.Module):
         self.t5.encoder.block = nn.ModuleList()
         self.t5.config.num_layers = 0
 
+        # Mỗi modality có 1 encoder đứng trước projection:
+        #   - feature pre-extracted (đã sẵn sàng project) -> Identity
+        #   - feature THÔ (motion vector grid) -> encoder học được, đưa về d_feat[i]
+        # Sau bước này MỌI modality đều là (B, T, d_i) -> vòng lặp trong encode()
+        # xử lý đồng nhất, không cần biết cái nào thô cái nào không.
+        feature_names = feature_names or [f"feat{i}" for i in range(len(d_feat))]
+        raw_feature_cfgs = raw_feature_cfgs or {}
+        assert len(feature_names) == len(d_feat), \
+            f"feature_names ({len(feature_names)}) phải cùng độ dài d_feat ({len(d_feat)})"
+
+        self.encoders = nn.ModuleList()
+        self.is_raw = []
+        for i, name in enumerate(feature_names):
+            cfg = raw_feature_cfgs.get(name)
+            if cfg is None:
+                self.encoders.append(nn.Identity())
+                self.is_raw.append(False)
+            else:
+                assert cfg["d_out"] == d_feat[i], (
+                    f"{name}: d_out={cfg['d_out']} không khớp feature_dims[{i}]={d_feat[i]}")
+                self.encoders.append(RAW_ENCODERS[name](**cfg))
+                self.is_raw.append(True)
+                print(f"[T5Captioner] '{name}' là feature THÔ -> "
+                      f"{RAW_ENCODERS[name].__name__}(d_out={cfg['d_out']})")
+
         self.feat_embeds = nn.ModuleList([
             FeatEmbedding(d_f, t5_d_model, dropout) for d_f in d_feat
         ])
-        self.seg_embed = SegmentEmbedding(len(d_feat), t5_d_model)
+        self.type_embed = FeatureTypeEmbedding(len(d_feat), t5_d_model)
         self.pos_embed = PositionalEncoding(t5_d_model, dropout, max_len=256)
         self.feat_norms = nn.ModuleList([
             nn.LayerNorm(t5_d_model) for _ in d_feat
@@ -105,26 +212,45 @@ class T5Captioner(nn.Module):
         batch_size = src[0].size(0)
         feats = []
         for i, feat in enumerate(src):
-            seg_id = torch.full(
+            feat = self.encoders[i](feat)  # THÔ -> (B,T,d_i); pre-extracted -> giữ nguyên
+            type_id = torch.full(
                 (batch_size, feat.size(1)), i, dtype=torch.long, device=self.device
             )
             x = self.feat_embeds[i](feat)
-            x = self.seg_embed(x, seg_id)
+            x = self.type_embed(x, type_id)
             x = self.pos_embed(x)
             x = self.feat_norms[i](x)
             feats.append(x)
 
+        # stack(dim=2) + reshape -> interleave theo GOP: [a1, m1, a2, m2, ...]
         B, _, D = feats[0].shape
         stacked = torch.stack(feats, dim=2)
         return stacked.reshape(B, -1, D)
 
     def _build_encoder_attention_mask(self, src):
-        masks = []
-        for feat in src:
-            mask = (feat.abs().sum(dim=-1) > 0)
-            masks.append(mask)
-        stacked = torch.stack(masks, dim=2)
-        return stacked.reshape(masks[0].size(0), -1).long()
+        """Mask ở mức GOP: GOP nào là thật, GOP nào là zero-pad.
+
+        Mask là thuộc tính của GOP, KHÔNG phải của modality: loader đã assert mọi
+        feature của cùng 1 video có cùng NUM_GOP và được pad/sample cùng chỉ số.
+        Nên chỉ dựng MỘT mask rồi nhân bản cho mọi modality — hai token của cùng
+        một GOP vì thế luôn cùng số phận (không thể có chuyện appearance bị mask
+        còn motion thì không).
+
+        Dựng từ feature pre-extracted đầu tiên. KHÔNG bao giờ suy từ feature THÔ:
+          - 119/11303 GOP THẬT có 0 P/B-frame -> motion toàn 0 nhưng GOP vẫn hợp
+            lệ (có I-frame) -> sẽ bị loại nhầm;
+          - output encoder với input toàn 0 cũng không phải 0 (conv có bias).
+        """
+        ref = next((i for i, is_raw in enumerate(self.is_raw) if not is_raw), None)
+        assert ref is not None, \
+            "Cần ít nhất 1 feature pre-extracted để dựng GOP mask (không thể suy từ feature THÔ)"
+
+        gop_mask = (src[ref].abs().sum(dim=-1) > 0)  # (B, num_gop)
+
+        # Mỗi GOP sinh ra len(src) token liên tiếp sau interleave -> nhân bản mask
+        # theo đúng thứ tự stack(dim=2).reshape() ở encode()
+        B, T = gop_mask.shape
+        return gop_mask.unsqueeze(2).expand(B, T, len(src)).reshape(B, -1).long()
 
     def forward(self, src, labels=None, decoder_attention_mask=None):
         encoder_hidden = self.encode(src)

@@ -4,22 +4,50 @@ import time
 
 
 class FeatureConfig:
-    # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
-    # model: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    # model: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
-    # model: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
-    # model: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
+    # `feature_spec`: các feature dùng cho model, nối bằng '+'. Mỗi tên khớp với
+    # file HDF5 `{CORPUS}_{tên}_{phase}.hdf5`, và sinh ra 1 token cho mỗi GOP
+    # (interleave: GOP thứ t -> [feat0_t, feat1_t, ...]).
 
-    model: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
+    # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
+    # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
+    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
+    # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
+
+    # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
+    feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"
+
     # --- Old features ---
-    # model: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
-    # model: str = "Blip2QFormerMeanKF"
-    # model: str = "newBlip2ClsKF"
+    # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
+    # feature_spec: str = "Blip2QFormerMeanKF"
+    # feature_spec: str = "newBlip2ClsKF"
+
+    # --- Feature THÔ ---
+    # File HDF5 lưu dữ liệu CHƯA qua encoder nào (motion vector grid, shape
+    # (NUM_GOP, K, C, G, G)), nên cần một encoder HỌC ĐƯỢC nằm trong model —
+    # khác các feature pre-extracted vốn đã sẵn sàng để project thẳng.
+    # `d_out` ở đây là HYPERPARAMETER (chiều output của encoder), KHÔNG phải
+    # thuộc tính của file. Sau encoder, nó trở thành "một modality như mọi
+    # modality khác" -> projection + type/positional embedding + interleave
+    # dùng chung đường.
+    raw_feature_cfgs = {
+        "MotionMV": dict(
+            d_out=512,       # chiều token motion; phải chia hết cho 8 (GroupNorm)
+            in_channels=4,   # dx, dy, |v|, density
+            num_bins=8,      # K đã lưu trong file HDF5
+            grid_size=16,
+            pool_bins=8,     # <= num_bins; đặt 4/2/1 để ablate K (pool có trọng số density)
+        ),
+    }
+
+    feature_names: List[str] = feature_spec.split("+")
     feature_dims: List[int] = []
 
-    for modality in model.split("+"):
+    for modality in feature_names:
+        # Feature THÔ -> dim = output của encoder tương ứng
+        if   modality in raw_feature_cfgs:              feature_dims.append(raw_feature_cfgs[modality]["d_out"])
         # Appearance feature dimension
-        if   modality.find('newBlip2ClsKF') != -1:      feature_dims.append(1408)
+        elif modality.find('newBlip2ClsKF') != -1:      feature_dims.append(1408)
         # Semantic feature dimension
         elif modality.find('newImgCapBlip2KF') != -1:   feature_dims.append(1024)
         # Motion feature dimension
@@ -30,6 +58,9 @@ class FeatureConfig:
         elif modality.find('Blip2VitG') != -1:          feature_dims.append(1408)
         # SigLIP2-giant feature dimension (pooler_output/Pooled hoặc Mean của patch token)
         elif modality.find('SigLIP2Giant') != -1:       feature_dims.append(1536)
+        else: raise ValueError(f"Unknown modality: {modality}")
+
+    assert len(feature_dims) == len(feature_names)
 
 
 class VocabConfig:
@@ -51,9 +82,10 @@ class MSVDLoaderConfig:
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    frame_sample_len = 9 #8
-    frame_sampling_method = 'uniform'
-    assert frame_sampling_method in ['uniform', 'random']
+    # Số GOP giữ lại cho mỗi video (thiếu -> zero-pad, thừa -> uniform-sample).
+    # Đơn vị là GOP, KHÔNG phải frame và cũng KHÔNG phải token: mỗi GOP sinh ra
+    # len(feature_names) token sau khi interleave (vd. 2 token: appearance + motion).
+    num_gop = 9  # P75 của phân bố số GOP/video
 
 
 class MSRVTTLoaderConfig(object):
@@ -67,9 +99,7 @@ class MSRVTTLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    frame_sample_len = 13 #P75
-    frame_sampling_method = 'uniform'
-    assert frame_sampling_method in ['uniform', 'random']
+    num_gop = 13  # P75
 
 
 class VATEXLoaderConfig(object):
@@ -83,9 +113,7 @@ class VATEXLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    frame_sample_len = 9 #P75
-    frame_sampling_method = 'uniform'
-    assert frame_sampling_method in ['uniform', 'random']
+    num_gop = 9  # P75
 
 
 class TransformerConfig:
@@ -144,8 +172,8 @@ class TrainConfig:
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']
 
     """ ID """
-    feat_id = f"FEAT {feat.model} "\
-              f"fsl-{loader.frame_sample_len}"
+    feat_id = f"FEAT {feat.feature_spec} "\
+              f"gop-{loader.num_gop}"
 
     transformer_id = f"T5 "\
                      f"{transformer.t5_model_name} " \
@@ -173,4 +201,7 @@ class TrainConfig:
 if __name__ == "__main__":
     C = TrainConfig()
     print(f"Model ID:\n{C.model_id}")
+    print(f"Feature names     : {C.feat.feature_names}")
     print(f"Feature dimensions: {C.feat.feature_dims}")
+    print(f"Raw features      : {list(C.feat.raw_feature_cfgs)}")
+    print(f"Num GOP per video : {C.loader.num_gop}")

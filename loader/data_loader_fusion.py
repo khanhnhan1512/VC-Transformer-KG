@@ -52,30 +52,53 @@ class CustomDataset(Dataset):
 
     def load_video_feats(self):
         print('Enter the load_video_feats method.')
-        models = self.C.feat.model.split('+')
-        self.num_features = len(models)
+        feature_names = self.C.feat.feature_names
+        self.num_features = len(feature_names)
+
+        # Số GOP giữ lại cho mỗi video (pad lên / sample xuống về con số này)
+        num_gop: int = self.C.loader.num_gop
+        # NUM_GOP THẬT của mỗi video, lấy từ modality đầu tiên
+        real_num_gops: Dict[str, int] = {}
 
         for i in range(self.num_features):
-            num_tokens: int = self.C.loader.frame_sample_len
-
             fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
-                self.C.corpus, self.C.corpus + '_' + models[i], self.phase)
+                self.C.corpus, self.C.corpus + '_' + feature_names[i], self.phase)
 
             fin = h5py.File(fpath, 'r')
 
-            tqdm(fin.keys()).set_description('Load_feature_feats:')
-            for vid in tqdm(fin.keys()):
+            for vid in tqdm(fin.keys(), desc=f'Load feats [{feature_names[i]}]'):
                 feature: np.ndarray = fin[vid][()]
                 if feature.size == 0: raise ValueError("[CustomDataset.load_video_feats] Feature size is zero!")
 
-                if len(feature) < num_tokens:
-                    num_padding = num_tokens - feature.shape[0]
-                    pad_tokens = np.zeros((num_padding, feature.shape[1]), dtype=feature.dtype)
-                    feature = np.concatenate((feature, pad_tokens), axis=0)
-                elif len(feature) > num_tokens:
-                    sampled_idxs = np.linspace(0, len(feature) - 1, num_tokens, dtype=int)
+                # Mọi modality PHẢI có cùng NUM_GOP cho cùng 1 video. Nếu lệch,
+                # token appearance và motion của cùng GOP sẽ bị ghép sai cặp —
+                # một lỗi IM LẶNG (không crash, chỉ làm kết quả tệ khó hiểu).
+                # Khi NUM_GOP khớp, np.linspace bên dưới chỉ phụ thuộc NUM_GOP
+                # nên mọi modality tự động được sample ĐỒNG BỘ cùng chỉ số GOP.
+                if i == 0:
+                    real_num_gops[vid] = len(feature)
+                else:
+                    assert vid in real_num_gops, \
+                        f"[load_video_feats] '{vid}' có ở {feature_names[i]} " \
+                        f"nhưng thiếu ở {feature_names[0]}"
+                    assert len(feature) == real_num_gops[vid], \
+                        f"[load_video_feats] NUM_GOP lệch cho '{vid}': " \
+                        f"{feature_names[0]}={real_num_gops[vid]} " \
+                        f"vs {feature_names[i]}={len(feature)}"
+
+                if len(feature) < num_gop:
+                    num_padding = num_gop - feature.shape[0]
+                    # shape[1:] để pad đúng với MỌI ndim:
+                    #   (N, D)          appearance pre-extracted
+                    #   (N, 32, D)      Q-Former tokens
+                    #   (N, K, C, G, G) motion vector grid (feature THÔ)
+                    pad_shape = (num_padding,) + feature.shape[1:]
+                    pad_gops = np.zeros(pad_shape, dtype=feature.dtype)
+                    feature = np.concatenate((feature, pad_gops), axis=0)
+                elif len(feature) > num_gop:
+                    sampled_idxs = np.linspace(0, len(feature) - 1, num_gop, dtype=int)
                     feature = feature[sampled_idxs]
-                assert len(feature) == num_tokens
+                assert len(feature) == num_gop
 
                 self.video_features[vid].append(feature)
 

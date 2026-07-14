@@ -31,6 +31,8 @@ def build_model():
         t5_model_name=C.transformer.t5_model_name,
         dropout=C.transformer.dropout,
         num_decoder_layers=C.transformer.num_decoder_layers,
+        feature_names=C.feat.feature_names,
+        raw_feature_cfgs=C.feat.raw_feature_cfgs,
     )
     model.cuda()
     return model

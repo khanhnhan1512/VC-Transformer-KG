@@ -173,7 +173,7 @@ cache/*
 # Exclude development files
 development/*
 # Exclude some helper files
-keyframe_stats.json
+*stats.json
 *extractor.py
 smoke*.py
 stats*.py

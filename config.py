@@ -15,7 +15,7 @@ class FeatureConfig:
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
-    feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"
+    feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"

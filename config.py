@@ -10,12 +10,12 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
-    feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
+    # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
@@ -138,7 +138,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 4
+    num_decoder_layers = 0
 
 
 class TrainConfig:

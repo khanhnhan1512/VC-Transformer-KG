@@ -144,8 +144,8 @@ class TransformerConfig:
       xxl    ~11B  | d_model 4096 | 24 layer | 64 head | d_ff 10240 (gated)
     d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
     """;
-    t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
-    # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
+    # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
+    t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
     # t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
     # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
@@ -167,7 +167,7 @@ class SCSTConfig:
     # True: `python train.py` chạy trọn pipeline XE -> SCST trong MỘT lệnh
     # (SCST bắt đầu từ best-val ckpt của XE). False: chỉ XE như cũ; SCST vẫn
     # chạy riêng được qua `python train_scst.py --ckpt <path>`.
-    enabled = True
+    enabled = False
     epochs = 30
     batch_size = 16      # số VIDEO mỗi bước (mỗi video sinh num_samples caption)
     num_samples = 5      # K

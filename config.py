@@ -69,12 +69,16 @@ class FeatureConfig:
     assert len(feature_dims) == len(feature_names)
 
     # Nhãn cấu hình của các feature THÔ đang dùng (vào model_id để các run
-    # grounded/blind/pool_bins khác nhau không bị lẫn thư mục checkpoint/log)
-    raw_id: str = " ".join(
-        f"{n}[{'grd' if raw_feature_cfgs[n].get('grounded') else 'blind'}"
-        f"-K{raw_feature_cfgs[n]['pool_bins']}]"
-        for n in feature_names if n in raw_feature_cfgs
-    )
+    # grounded/blind/pool_bins khác nhau không bị lẫn thư mục checkpoint/log).
+    # Dùng vòng lặp thường, KHÔNG dùng genexpr: genexpr trong thân class có scope
+    # riêng, không nhìn thấy biến class-level (raw_feature_cfgs) -> NameError.
+    _raw_tags: List[str] = []
+    for _n in feature_names:
+        if _n in raw_feature_cfgs:
+            _raw_tags.append(
+                f"{_n}[{'grd' if raw_feature_cfgs[_n].get('grounded') else 'blind'}"
+                f"-K{raw_feature_cfgs[_n]['pool_bins']}]")
+    raw_id: str = " ".join(_raw_tags)
 
 
 class VocabConfig:

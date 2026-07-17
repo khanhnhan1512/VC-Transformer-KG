@@ -3,8 +3,9 @@ import os
 import torch
 import torch.nn as nn
 from tqdm import tqdm
-from typing import Dict
+from typing import Dict, List, Tuple
 from collections import defaultdict
+from weakref import WeakKeyDictionary
 from config import TrainConfig as C
 
 from pycocoevalcap.bleu.bleu import Bleu
@@ -99,45 +100,73 @@ def test(model, val_iter, tokenizer):
     return {'total': total_loss[0]}
 
 
-def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len):
-    def build_onlyonce_iter(data_iter):
-        seen_vids = set()
-        onlyonce_iter = []
+# Dữ liệu eval là TĨNH qua các epoch (chỉ trọng số model đổi), nên chỉ quét
+# loader đúng MỘT lần rồi tái dùng. WeakKeyDictionary: cache tự biến mất khi
+# loader được thu hồi, không giữ tham chiếu sống.
+_eval_data_cache: "WeakKeyDictionary" = WeakKeyDictionary()
 
-        for batch in tqdm(iter(data_iter)):
-            vids, feats, _, _, _ = parse_batch(batch)
-            for i, vid in enumerate(vids):
-                if vid not in seen_vids:
-                    seen_vids.add(vid)
-                    # f[i:i+1] giữ nguyên chiều batch và MỌI chiều sau đó:
-                    #   (B,T,D) -> (1,T,D)            appearance pre-extracted
-                    #   (B,T,K,C,G,G) -> (1,T,K,C,G,G) motion vector grid (THÔ)
-                    feats_tup = tuple(f[i:i + 1] for f in feats)
-                    onlyonce_iter.append((vid, feats_tup))
 
-        return onlyonce_iter
+def _get_eval_data(data_iter) -> Tuple[List[str], List[tuple], Dict[str, list]]:
+    """Quét loader 1 lần -> (vids, feats mỗi video, caption ground-truth). Có cache.
+
+    Trước đây evaluate() quét loader HAI lần MỖI epoch: một để gom feature, một
+    để gom GT caption. Cả hai đều không đổi giữa các epoch -> gộp thành một lượt
+    duy nhất và cache lại.
+    """
+    cached = _eval_data_cache.get(data_iter)
+    if cached is not None:
+        return cached
+
+    vids_order: List[str] = []
+    feats_per_vid: List[tuple] = []
+    vid2GTs: Dict[str, list] = defaultdict(list)
+    seen_vids = set()
+
+    for batch in tqdm(iter(data_iter), desc='Build eval cache'):
+        vids, feats, _, _, raw_captions = parse_batch(batch)
+        for i, vid in enumerate(vids):
+            vid2GTs[vid].append(raw_captions[i])
+            if vid in seen_vids:
+                continue
+            seen_vids.add(vid)
+            vids_order.append(vid)
+            # f[i:i+1] giữ nguyên chiều batch và MỌI chiều sau đó:
+            #   (B,T,D) -> (1,T,D)            appearance pre-extracted
+            #   (B,T,K,C,G,G) -> (1,T,K,C,G,G) motion vector grid (THÔ)
+            feats_per_vid.append(tuple(f[i:i + 1] for f in feats))
+
+    cached = (vids_order, feats_per_vid, vid2GTs)
+    _eval_data_cache[data_iter] = cached
+    return cached
+
+
+def get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len, batch_size):
+    """Sinh caption cho mỗi video (1 lần/video), gom nhiều video vào một lần generate().
+
+    Trước đây gọi generate() với batch=1 cho từng video -> GPU gần như rỗi và
+    beam search không tận dụng được song song. Gom batch cho kết quả TƯƠNG ĐƯƠNG
+    (mọi video cùng num_gop; GOP pad đã do attention mask xử lý) nhưng nhanh hơn
+    nhiều lần.
+    """
+    vids_order, feats_per_vid, _ = _get_eval_data(data_iter)
 
     model.eval()
-    onlyonce_iter = build_onlyonce_iter(data_iter)
     vid2pred: Dict[str, str] = {}
 
     with torch.no_grad():
-        for vid, feats in tqdm(onlyonce_iter):
-            captions = model.generate_captions(feats, tokenizer, beam_size, max_len)
-            vid2pred[vid] = captions[0]
+        for start in tqdm(range(0, len(vids_order), batch_size), desc='Generate'):
+            chunk_vids = vids_order[start:start + batch_size]
+            chunk_feats = feats_per_vid[start:start + batch_size]
+            # zip(*) gom theo modality, cat -> (B, T, ...) cho từng modality
+            batched = tuple(torch.cat(mod, dim=0) for mod in zip(*chunk_feats))
+            captions = model.generate_captions(batched, tokenizer, beam_size, max_len)
+            vid2pred.update(zip(chunk_vids, captions))
 
     return vid2pred
 
 
 def get_groundtruth_captions(data_iter):
-    vid2GTs = defaultdict(list)
-
-    for batch in tqdm(iter(data_iter)):
-        vids, _, _, _, raw_captions = parse_batch(batch)
-        for vid, caption in zip(vids, raw_captions):
-            vid2GTs[vid].append(caption)
-
-    return vid2GTs
+    return _get_eval_data(data_iter)[2]
 
 
 def score(vid2pred, vid2GTs):
@@ -168,8 +197,10 @@ def calc_scores(ref, hypo):
     return final_scores
 
 
-def evaluate(data_iter, model, tokenizer, beam_size, max_len, return_captions):
-    vid2pred = get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len)
+def evaluate(data_iter, model, tokenizer, beam_size, max_len, return_captions,
+             eval_batch_size):
+    vid2pred = get_predicted_captions(data_iter, model, tokenizer, beam_size, max_len,
+                                      eval_batch_size)
     vid2GTs = get_groundtruth_captions(data_iter)
     scores = score(vid2pred, vid2GTs)
     if return_captions:

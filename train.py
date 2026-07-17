@@ -201,7 +201,8 @@ def main():
             tokenizer=tokenizer,
             beam_size=C.beam_size,
             max_len=C.transformer.max_caption_tokens,
-            return_captions=False
+            return_captions=False,
+            eval_batch_size=C.eval_batch_size
         )
         _val_end_time = time.time()
         _val_time_taken = _val_end_time - _val_start_time
@@ -247,7 +248,8 @@ def main():
         tokenizer=tokenizer,
         beam_size=C.beam_size,
         max_len=C.transformer.max_caption_tokens,
-        return_captions=True
+        return_captions=True,
+        eval_batch_size=C.eval_batch_size
     )
     _test_end_time = time.time()
     _test_time_taken = _test_end_time - _test_start_time

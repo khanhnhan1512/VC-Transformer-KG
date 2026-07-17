@@ -138,7 +138,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 0
+    num_decoder_layers = 4
 
 
 class TrainConfig:
@@ -167,6 +167,10 @@ class TrainConfig:
     warmup_epochs = 0
     label_smoothing = 0.15
     beam_size = 5
+    # Số video gom vào một lần generate() lúc eval. Chỉ ảnh hưởng TỐC ĐỘ, không
+    # đổi kết quả (mỗi video có mask GOP riêng). Bộ nhớ ~ eval_batch_size x
+    # beam_size chuỗi cùng lúc -> giảm nếu OOM với decoder lớn (base/large/xl).
+    eval_batch_size = 32
 
     """ Evaluation Metrics """
     metrics = ['Bleu_4', 'CIDEr', 'METEOR', 'ROUGE_L']

@@ -9,7 +9,7 @@ from tqdm import tqdm
 from typing import List, Dict
 from collections import defaultdict
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader, RandomSampler
+from torch.utils.data import Dataset, DataLoader, RandomSampler, SequentialSampler
 from transformers import T5TokenizerFast
 
 from loader.transform import ToTensor
@@ -154,9 +154,9 @@ class Corpus:
         self.val_dataset = self.build_dataset("val", self.C.loader.val_caption_fpath)
         self.test_dataset = self.build_dataset("test", self.C.loader.test_caption_fpath)
 
-        self.train_data_loader = self.build_data_loader(self.train_dataset)
-        self.val_data_loader = self.build_data_loader(self.val_dataset)
-        self.test_data_loader = self.build_data_loader(self.test_dataset)
+        self.train_data_loader = self.build_data_loader(self.train_dataset, shuffle=True)
+        self.val_data_loader = self.build_data_loader(self.val_dataset, shuffle=False)
+        self.test_data_loader = self.build_data_loader(self.test_dataset, shuffle=False)
 
     def build_dataset(self, phase, caption_fpath):
         dataset = self.CustomDataset(
@@ -182,13 +182,20 @@ class Corpus:
 
         return vids, features_list, tokenized.input_ids, tokenized.attention_mask, list(captions)
 
-    def build_data_loader(self, dataset):
+    def build_data_loader(self, dataset, shuffle):
         g = torch.Generator()
+        # Chỉ train mới cần xáo trộn. Với val/test, thứ tự KHÔNG ảnh hưởng loss
+        # lẫn CIDEr — nhưng RandomSampler (không truyền generator) rút RNG TOÀN
+        # CỤC mỗi lần iter, nên số lượt quét loader phía eval sẽ làm dịch luồng
+        # RNG và đổi quỹ đạo train ở các epoch sau. Dùng SequentialSampler để
+        # eval tất định và tách rời hoàn toàn khỏi RNG của train.
+        sampler = (RandomSampler(dataset, replacement=False) if shuffle
+                   else SequentialSampler(dataset))
         data_loader = DataLoader(
             dataset,
             batch_size=self.C.batch_size,
-            shuffle=False,
-            sampler=RandomSampler(dataset, replacement=False),
+            shuffle=False,  # thứ tự do `sampler` quyết định
+            sampler=sampler,
             num_workers=self.C.loader.num_workers,
             collate_fn=self.feature_collate_fn,
             worker_init_fn=seed_worker,

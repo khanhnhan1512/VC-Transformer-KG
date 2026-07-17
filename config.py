@@ -10,14 +10,13 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
-    feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF+newMViTv2"
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
@@ -146,8 +145,8 @@ class TransformerConfig:
     d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
     """;
     # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
-    t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
-    # t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
+    # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
+    t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
     # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
     dropout = 0.1

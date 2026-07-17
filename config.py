@@ -159,9 +159,27 @@ class TrainConfig:
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
-    lr_decay_gamma = 0.5
-    lr_decay_patience = 3
-    weight_decay = 5e-6
+
+    # --- Optimizer ---
+    # "adam"  : baseline — Adam + L2 coupled, wd=5e-6 (thực chất ~0, không regularize)
+    # "adamw" : decoupled weight decay THẬT, nhắm vào overfit đã quan sát được
+    #           (train loss giảm đều nhưng val CIDEr đỉnh sớm ở epoch 9-17).
+    #           Chỉ decay tham số >= 2D (weight matrix); bias/norm/scalar không decay.
+    optimizer_type = "adam"
+    assert optimizer_type in ["adam", "adamw"]
+    weight_decay = 5e-6        # dùng cho "adam" (giữ nguyên baseline)
+    adamw_weight_decay = 0.01  # dùng cho "adamw"; ablate 0.05 nếu có tín hiệu
+
+    # --- LR scheduler (sau warmup) ---
+    # "plateau": baseline — ReduceLROnPlateau theo val loss. LƯU Ý: chưa từng
+    #            kích hoạt trong mọi run 20 epoch (val loss giảm gần đơn điệu
+    #            4.91->3.85, không plateau đủ patience) => thực tế là lr HẰNG SỐ.
+    # "cosine" : cosine annealing lr -> lr*0.01 qua các epoch — bước nhỏ dần ở
+    #            giai đoạn 9-17 nơi best model thường xuất hiện.
+    scheduler_type = "plateau"
+    assert scheduler_type in ["plateau", "cosine"]
+    lr_decay_gamma = 0.5       # chỉ dùng cho "plateau"
+    lr_decay_patience = 3      # chỉ dùng cho "plateau"
     # Fine-tune pretrained Flan-T5 decoder nên không cần warmup (0 = tắt;
     # train from scratch mới cần)
     warmup_epochs = 0
@@ -185,9 +203,10 @@ class TrainConfig:
                      f"dp-{transformer.dropout} " \
                      f"dl-{transformer.num_decoder_layers}"
 
-    optimizer_id = f"OPTIM lr-{lr} warmup-{warmup_epochs} " \
+    optimizer_id = f"OPTIM {optimizer_type}+{scheduler_type} " \
+                   f"lr-{lr} warmup-{warmup_epochs} " \
                    f"gamma-{lr_decay_gamma} pat-{lr_decay_patience} " \
-                   f"wd-{weight_decay}"
+                   f"wd-{weight_decay if optimizer_type == 'adam' else adamw_weight_decay}"
 
     hyperparams_id = f"ep-{epochs} bs-{batch_size} gc-{gradient_clip} " \
                      f"bms-{beam_size} ls-{label_smoothing}"

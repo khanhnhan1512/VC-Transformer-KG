@@ -13,7 +13,7 @@ from loader.MSRVTT import MSRVTT
 from loader.VATEX import VATEX
 from config import TrainConfig as C
 from models.t5_captioner import T5Captioner
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LinearLR, CosineAnnealingLR
 from utils import evaluate, load_checkpoint, save_checkpoint, test, train
 
 
@@ -132,12 +132,32 @@ def main():
     print(model)
     print(get_parameter_number(model))
 
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=C.lr,
-        weight_decay=C.weight_decay,
-        amsgrad=True
-    )
+    if C.optimizer_type == "adam":
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=C.lr,
+            weight_decay=C.weight_decay,
+            amsgrad=True
+        )
+    else:  # adamw
+        # Decoupled weight decay chỉ áp lên weight matrix (ndim >= 2).
+        # Tham số 1-D (bias, RMSNorm/LayerNorm/GroupNorm weight) kéo về 0 là
+        # sai lệch vô cớ -> không decay. Giữ amsgrad=True như baseline để
+        # khác biệt duy nhất so với "adam" là cơ chế + độ lớn decay.
+        decay_params, no_decay_params = [], []
+        for p in model.parameters():
+            if not p.requires_grad:
+                continue
+            (decay_params if p.ndim >= 2 else no_decay_params).append(p)
+        optimizer = torch.optim.AdamW(
+            [
+                {"params": decay_params, "weight_decay": C.adamw_weight_decay},
+                {"params": no_decay_params, "weight_decay": 0.0},
+            ],
+            lr=C.lr,
+            amsgrad=True
+        )
+
     # LinearLR giảm lr xuống 1/3 ngay khi khởi tạo, nên chỉ tạo khi thực sự dùng warmup
     warmup_sched = None
     if C.warmup_epochs > 0:
@@ -146,12 +166,19 @@ def main():
             end_factor=1.0,
             total_iters=C.warmup_epochs,
         )
-    plateau_sched = ReduceLROnPlateau(
-        optimizer,
-        mode='min',
-        factor=C.lr_decay_gamma,
-        patience=C.lr_decay_patience,
-    )
+    if C.scheduler_type == "cosine":
+        main_sched = CosineAnnealingLR(
+            optimizer,
+            T_max=C.epochs - C.warmup_epochs,
+            eta_min=C.lr * 0.01,
+        )
+    else:  # plateau
+        main_sched = ReduceLROnPlateau(
+            optimizer,
+            mode='min',
+            factor=C.lr_decay_gamma,
+            patience=C.lr_decay_patience,
+        )
 
     best_val_CIDEr: float = float("-inf")
     best_val_scores: Dict[str, float] = {
@@ -214,8 +241,10 @@ def main():
         """ Learning Rate Decay & Checkpointing """
         if e <= C.warmup_epochs:
             warmup_sched.step()
-        else:
-            plateau_sched.step(val_loss['total'])
+        elif C.scheduler_type == "cosine":
+            main_sched.step()
+        else:  # plateau cần metric để theo dõi
+            main_sched.step(val_loss['total'])
 
         n_better_metrics = 0
         if val_scores["Bleu_4"]  > best_val_scores["Bleu_4"] : n_better_metrics += 1

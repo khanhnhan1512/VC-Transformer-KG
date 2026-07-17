@@ -85,34 +85,71 @@ class MotionEncoder(nn.Module):
     đi thì conv cuối phải xuất thẳng d_out kênh (3x3x3 x 64 x 512 = 885K params)
     thay vì 128 kênh + Linear 128->512 (65K) — tức bỏ Linear lại làm encoder
     PHÌNH ~3.5 lần. Không có Dropout ở đây vì FeatEmbedding ngay sau đã có.
+
+    GROUNDING (context_dim != None): motion một mình bị "mù" — trường dịch
+    chuyển "khối 30x40px trôi sang phải" không phân biệt được con chó chạy hay
+    camera lia. FiLM (Perez et al. 2018) điều biến từng kênh conv bằng
+    (1+gamma)*x + beta, với gamma/beta sinh từ APPEARANCE TOKEN CÙNG GOP —
+    encoder được biết "cái gì đang chuyển động" ngay từ lúc encode, thay vì đợi
+    đến cross-attention của decoder. (Ngữ cảnh chỉ có 1 token/GOP nên
+    cross-attention thoái hóa thành cộng có trọng số — FiLM là công cụ đúng.)
+    FiLM head khởi tạo 0 -> gamma=beta=0 -> lúc bắt đầu train hành vi Y HỆT
+    bản không grounding, sau đó model tự học mức điều biến cần thiết.
     """
 
     def __init__(self, d_out, in_channels=4, num_bins=8, grid_size=16,
-                 pool_bins=None, width=32):
+                 pool_bins=None, width=32, context_dim=None, film_hidden=128):
         super().__init__()
         self.pool_bins = pool_bins or num_bins
         self.num_bins = num_bins
         self.d_out = d_out
 
         w1, w2, w3 = width, width * 2, width * 4
-        self.conv = nn.Sequential(
-            nn.Conv3d(in_channels, w1, kernel_size=3, padding=1),
-            nn.GroupNorm(4, w1), nn.ReLU(inplace=True),
-            nn.Conv3d(w1, w2, kernel_size=3, stride=2, padding=1),
-            nn.GroupNorm(8, w2), nn.ReLU(inplace=True),
-            nn.Conv3d(w2, w3, kernel_size=3, stride=2, padding=1),
-            nn.GroupNorm(8, w3), nn.ReLU(inplace=True),
-            nn.AdaptiveAvgPool3d(1),
-            nn.Flatten(),
-        )
+        # Tách 3 stage (Conv->GroupNorm) để chèn FiLM sau norm, trước ReLU
+        self.stages = nn.ModuleList([
+            nn.Sequential(nn.Conv3d(in_channels, w1, kernel_size=3, padding=1),
+                          nn.GroupNorm(4, w1)),
+            nn.Sequential(nn.Conv3d(w1, w2, kernel_size=3, stride=2, padding=1),
+                          nn.GroupNorm(8, w2)),
+            nn.Sequential(nn.Conv3d(w2, w3, kernel_size=3, stride=2, padding=1),
+                          nn.GroupNorm(8, w3)),
+        ])
+        self.head = nn.Sequential(nn.AdaptiveAvgPool3d(1), nn.Flatten())
         self.proj = nn.Linear(w3, d_out)
 
-    def forward(self, motion):
+        self.film_trunk = None
+        if context_dim is not None:
+            # Bottleneck chung (context_dim -> film_hidden) + head riêng mỗi stage
+            # (-> gamma||beta), để chi phí không phình theo context_dim lớn (1536)
+            self.film_trunk = nn.Sequential(
+                nn.Linear(context_dim, film_hidden), nn.ReLU(inplace=True))
+            self.film_heads = nn.ModuleList(
+                [nn.Linear(film_hidden, 2 * w) for w in (w1, w2, w3)])
+            for h in self.film_heads:
+                nn.init.zeros_(h.weight)
+                nn.init.zeros_(h.bias)
+
+    def forward(self, motion, context=None):
+        """motion (B,T,K,C,G,G) [+ context (B,T,D_app)] -> (B,T,d_out)"""
         motion = pool_motion_bins(motion, self.pool_bins)
         B, T = motion.shape[:2]
         x = motion.reshape(B * T, *motion.shape[2:])   # (B*T, K, C, G, G)
         x = x.permute(0, 2, 1, 3, 4).contiguous()      # (B*T, C, K, G, G) cho Conv3d
-        return self.proj(self.conv(x)).reshape(B, T, self.d_out)
+
+        film_params = None
+        if self.film_trunk is not None:
+            assert context is not None, "MotionEncoder grounded nhưng không nhận context"
+            h = self.film_trunk(context.reshape(B * T, -1))
+            film_params = [head(h) for head in self.film_heads]
+
+        for s, stage in enumerate(self.stages):
+            x = stage(x)                               # Conv -> GroupNorm
+            if film_params is not None:
+                gamma, beta = film_params[s].chunk(2, dim=1)
+                x = x * (1 + gamma[:, :, None, None, None]) + beta[:, :, None, None, None]
+            x = torch.relu(x)
+
+        return self.proj(self.head(x)).reshape(B, T, self.d_out)
 
 
 # Feature THÔ (chưa qua encoder nào lúc trích) -> cần encoder học được trong model.
@@ -184,20 +221,31 @@ class T5Captioner(nn.Module):
         assert len(feature_names) == len(d_feat), \
             f"feature_names ({len(feature_names)}) phải cùng độ dài d_feat ({len(d_feat)})"
 
+        self.is_raw = [name in raw_feature_cfgs for name in feature_names]
+        # Feature pre-extracted đầu tiên đóng 2 vai: nguồn GOP mask, và ngữ cảnh
+        # (appearance token) cho các raw encoder grounded
+        self.context_ref = next(
+            (i for i, r in enumerate(self.is_raw) if not r), None)
+
         self.encoders = nn.ModuleList()
-        self.is_raw = []
         for i, name in enumerate(feature_names):
-            cfg = raw_feature_cfgs.get(name)
-            if cfg is None:
+            if not self.is_raw[i]:
                 self.encoders.append(nn.Identity())
-                self.is_raw.append(False)
-            else:
-                assert cfg["d_out"] == d_feat[i], (
-                    f"{name}: d_out={cfg['d_out']} không khớp feature_dims[{i}]={d_feat[i]}")
-                self.encoders.append(RAW_ENCODERS[name](**cfg))
-                self.is_raw.append(True)
-                print(f"[T5Captioner] '{name}' là feature THÔ -> "
-                      f"{RAW_ENCODERS[name].__name__}(d_out={cfg['d_out']})")
+                continue
+            cfg = dict(raw_feature_cfgs[name])
+            assert cfg["d_out"] == d_feat[i], (
+                f"{name}: d_out={cfg['d_out']} không khớp feature_dims[{i}]={d_feat[i]}")
+            grounded = cfg.pop("grounded", False)
+            if grounded:
+                assert self.context_ref is not None, \
+                    f"'{name}' grounded cần ít nhất 1 feature pre-extracted làm ngữ cảnh"
+                # context_dim suy tự động từ appearance feature -> đổi appearance
+                # trong feature_spec không phải sửa gì thêm
+                cfg["context_dim"] = d_feat[self.context_ref]
+            self.encoders.append(RAW_ENCODERS[name](**cfg))
+            print(f"[T5Captioner] '{name}' là feature THÔ -> "
+                  f"{RAW_ENCODERS[name].__name__}(d_out={cfg['d_out']}, "
+                  f"grounded={'trên ' + feature_names[self.context_ref] if grounded else False})")
 
         self.feat_embeds = nn.ModuleList([
             FeatEmbedding(d_f, t5_d_model, dropout) for d_f in d_feat
@@ -212,7 +260,11 @@ class T5Captioner(nn.Module):
         batch_size = src[0].size(0)
         feats = []
         for i, feat in enumerate(src):
-            feat = self.encoders[i](feat)  # THÔ -> (B,T,d_i); pre-extracted -> giữ nguyên
+            if self.is_raw[i]:
+                # Feature THÔ -> (B,T,d_i); encoder nhận kèm appearance token cùng
+                # GOP làm ngữ cảnh (tự bỏ qua nếu không grounded)
+                ctx = src[self.context_ref] if self.context_ref is not None else None
+                feat = self.encoders[i](feat, ctx)
             type_id = torch.full(
                 (batch_size, feat.size(1)), i, dtype=torch.long, device=self.device
             )
@@ -241,11 +293,10 @@ class T5Captioner(nn.Module):
             lệ (có I-frame) -> sẽ bị loại nhầm;
           - output encoder với input toàn 0 cũng không phải 0 (conv có bias).
         """
-        ref = next((i for i, is_raw in enumerate(self.is_raw) if not is_raw), None)
-        assert ref is not None, \
+        assert self.context_ref is not None, \
             "Cần ít nhất 1 feature pre-extracted để dựng GOP mask (không thể suy từ feature THÔ)"
 
-        gop_mask = (src[ref].abs().sum(dim=-1) > 0)  # (B, num_gop)
+        gop_mask = (src[self.context_ref].abs().sum(dim=-1) > 0)  # (B, num_gop)
 
         # Mỗi GOP sinh ra len(src) token liên tiếp sau interleave -> nhân bản mask
         # theo đúng thứ tự stack(dim=2).reshape() ở encode()

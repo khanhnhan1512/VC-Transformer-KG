@@ -10,12 +10,13 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
+    feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
@@ -37,6 +38,11 @@ class FeatureConfig:
             num_bins=8,      # K đã lưu trong file HDF5
             grid_size=16,
             pool_bins=8,     # <= num_bins; đặt 4/2/1 để ablate K (pool có trọng số density)
+            # grounded=True: FiLM — appearance token CÙNG GOP (feature pre-extracted
+            # đầu tiên trong feature_spec, context_dim tự suy) điều biến các kênh
+            # conv, để encoder biết "cái gì đang chuyển động" ngay lúc encode.
+            # False = bản "mù" cũ (đã đo: 1.3124, trong nhiễu) — giữ làm ablation.
+            grounded=True,
         ),
     }
 
@@ -61,6 +67,14 @@ class FeatureConfig:
         else: raise ValueError(f"Unknown modality: {modality}")
 
     assert len(feature_dims) == len(feature_names)
+
+    # Nhãn cấu hình của các feature THÔ đang dùng (vào model_id để các run
+    # grounded/blind/pool_bins khác nhau không bị lẫn thư mục checkpoint/log)
+    raw_id: str = " ".join(
+        f"{n}[{'grd' if raw_feature_cfgs[n].get('grounded') else 'blind'}"
+        f"-K{raw_feature_cfgs[n]['pool_bins']}]"
+        for n in feature_names if n in raw_feature_cfgs
+    )
 
 
 class VocabConfig:
@@ -195,7 +209,7 @@ class TrainConfig:
 
     """ ID """
     feat_id = f"FEAT {feat.feature_spec} "\
-              f"gop-{loader.num_gop}"
+              f"gop-{loader.num_gop}" + (f" {feat.raw_id}" if feat.raw_id else "")
 
     transformer_id = f"T5 "\
                      f"{transformer.t5_model_name} " \

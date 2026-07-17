@@ -33,10 +33,13 @@ class LossChecker:
 
 
 def parse_batch(batch):
+    # non_blocking=True: copy H2D được XẾP HÀNG rồi trả về ngay, chồng lấn với
+    # compute của batch trước. An toàn vì nguồn đã pinned (pin_memory=True trong
+    # DataLoader) và mọi thao tác sau đó đều nằm trên CUDA stream nên đúng thứ tự.
     vids, feats_list, caption_ids, caption_mask, raw_captions = batch
-    feats = tuple([f.cuda() for f in feats_list])
-    caption_ids = caption_ids.cuda()
-    caption_mask = caption_mask.cuda()
+    feats = tuple([f.cuda(non_blocking=True) for f in feats_list])
+    caption_ids = caption_ids.cuda(non_blocking=True)
+    caption_mask = caption_mask.cuda(non_blocking=True)
     return vids, feats, caption_ids, caption_mask, raw_captions
 
 

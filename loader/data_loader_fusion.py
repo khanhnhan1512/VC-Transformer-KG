@@ -200,5 +200,12 @@ class Corpus:
             collate_fn=self.feature_collate_fn,
             worker_init_fn=seed_worker,
             generator=g,
+            # pin_memory: batch nằm ở vùng nhớ ghim -> copy H2D chạy ASYNC
+            # (cùng với non_blocking=True trong parse_batch), chồng lấn với
+            # compute thay vì chặn luồng chính. KHÔNG đổi giá trị, chỉ đổi lịch.
+            pin_memory=True,
+            # Giữ worker sống qua các epoch thay vì spawn lại 4 worker mỗi lần
+            # iter (train + val, 20 epoch -> hàng chục lần spawn vô ích).
+            persistent_workers=self.C.loader.num_workers > 0,
         )
         return data_loader

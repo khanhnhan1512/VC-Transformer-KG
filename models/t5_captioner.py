@@ -256,12 +256,20 @@ class T5Captioner(nn.Module):
         encoder_hidden = self.encode(src)
         attention_mask = self._build_encoder_attention_mask(src)
 
+        # Tự dựng decoder_input_ids thay vì truyền `labels=` xuống T5: khi nhận
+        # labels, T5 tính CrossEntropyLoss BÊN TRONG — mà ta luôn vứt đi để tính
+        # lại bằng loss_fct riêng (cần label_smoothing). Bỏ `labels=` cho logits
+        # Y HỆT nhưng tránh một lượt log_softmax thừa trên (B, L, 32k) cùng ~100MB
+        # activation bị giữ lại vô ích. `outputs.loss` giờ là None — không ai dùng.
+        decoder_input_ids = (self.t5.prepare_decoder_input_ids_from_labels(labels)
+                             if labels is not None else None)
+
         encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
         outputs = self.t5(
             encoder_outputs=encoder_outputs,
             attention_mask=attention_mask,
+            decoder_input_ids=decoder_input_ids,
             decoder_attention_mask=decoder_attention_mask,
-            labels=labels,
         )
         return outputs
 

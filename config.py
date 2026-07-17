@@ -165,7 +165,7 @@ class TrainConfig:
     # "adamw" : decoupled weight decay THẬT, nhắm vào overfit đã quan sát được
     #           (train loss giảm đều nhưng val CIDEr đỉnh sớm ở epoch 9-17).
     #           Chỉ decay tham số >= 2D (weight matrix); bias/norm/scalar không decay.
-    optimizer_type = "adam"
+    optimizer_type = "adamw"
     assert optimizer_type in ["adam", "adamw"]
     weight_decay = 5e-6        # dùng cho "adam" (giữ nguyên baseline)
     adamw_weight_decay = 0.01  # dùng cho "adamw"; ablate 0.05 nếu có tín hiệu
@@ -176,7 +176,7 @@ class TrainConfig:
     #            4.91->3.85, không plateau đủ patience) => thực tế là lr HẰNG SỐ.
     # "cosine" : cosine annealing lr -> lr*0.01 qua các epoch — bước nhỏ dần ở
     #            giai đoạn 9-17 nơi best model thường xuất hiện.
-    scheduler_type = "plateau"
+    scheduler_type = "cosine"
     assert scheduler_type in ["plateau", "cosine"]
     lr_decay_gamma = 0.5       # chỉ dùng cho "plateau"
     lr_decay_patience = 3      # chỉ dùng cho "plateau"

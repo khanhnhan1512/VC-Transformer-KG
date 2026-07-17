@@ -299,6 +299,22 @@ def main():
     print("-"*64)
     print(f">> [Train time] Total: {total_train_time:.2f} seconds => Per epoch: {total_train_time / C.epochs:.2f} seconds")
     print(f">> [Val time] Total: {total_val_time:.2f} seconds => Per epoch: {total_val_time / C.epochs:.2f} seconds")
+
+    """ Giai đoạn 2 (tùy chọn): SCST trên best model XE """
+    if C.scst.enabled:
+        # Import trễ: train_scst import ngược build_loaders/build_model từ file
+        # này, import ở đầu file sẽ gây circular import
+        from train_scst import run_scst
+        gc.collect()
+        torch.cuda.empty_cache()
+        # best_model đang mang trọng số best XE (đã load ở bước test phía trên)
+        run_scst(
+            model=best_model,
+            train_iter=train_iter, val_iter=val_iter, test_iter=test_iter,
+            tokenizer=tokenizer,
+            out_dpath=C.ckpt_dpath + "-scst",
+            epochs=C.scst.epochs,
+        )
     return
 
 

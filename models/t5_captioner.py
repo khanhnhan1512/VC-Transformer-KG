@@ -338,3 +338,47 @@ class T5Captioner(nn.Module):
         )
         captions = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         return captions
+
+    # ===== SCST (self-critical sequence training, giai đoạn 2 sau XE) =====
+
+    def encode_with_mask(self, src):
+        """Encoder pass gọi MỘT lần cho cả sampling lẫn scoring.
+
+        generate() chạy trong no_grad nội bộ nên không giữ graph; tensor trả về
+        ở đây vẫn mang grad_fn -> scoring pass (sequence_logprobs) tái dùng đúng
+        graph này để gradient chảy về cả projection/type-embed/motion encoder.
+        """
+        return self.encode(src), self._build_encoder_attention_mask(src)
+
+    def sample_captions(self, encoder_hidden, attention_mask, num_samples, max_len):
+        """Multinomial sampling K caption/video (top_k=0 = sampling thuần, đúng
+        chuẩn SCST). Trả (B*K, L); K dòng của cùng video nằm LIÊN TIẾP
+        (repeat_interleave của HF generate)."""
+        encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
+        return self.t5.generate(
+            encoder_outputs=encoder_outputs,
+            attention_mask=attention_mask,
+            do_sample=True, top_k=0, top_p=1.0, temperature=1.0,
+            num_return_sequences=num_samples,
+            max_length=max_len,
+        )
+
+    def sequence_logprobs(self, encoder_hidden, attention_mask, sequences):
+        """Teacher-forcing CÓ GRAD trên chuỗi đã sample -> (logp, mask) per token.
+
+        sequences: (N, L) như generate trả về — mở đầu bằng decoder_start_token
+        (T5 dùng pad làm start). decoder_input = seq[:, :-1], label = seq[:, 1:]
+        -> logits[t] dự đoán đúng token t+1. Pad sau EOS bị mask (EOS id=1 != pad
+        id=0 nên EOS vẫn được tính — quan trọng: model phải học cả lúc DỪNG).
+        """
+        pad_id = self.t5.config.pad_token_id
+        labels = sequences[:, 1:]
+        encoder_outputs = BaseModelOutput(last_hidden_state=encoder_hidden)
+        logits = self.t5(
+            encoder_outputs=encoder_outputs,
+            attention_mask=attention_mask,
+            decoder_input_ids=sequences[:, :-1],
+        ).logits
+        logp = logits.log_softmax(dim=-1).gather(2, labels.unsqueeze(-1)).squeeze(-1)
+        token_mask = (labels != pad_id).float()
+        return logp, token_mask

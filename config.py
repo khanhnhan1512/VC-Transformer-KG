@@ -10,13 +10,13 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
-    feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
+    # feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
@@ -159,6 +159,22 @@ class TransformerConfig:
     num_decoder_layers = 4
 
 
+class SCSTConfig:
+    """SCST — giai đoạn 2 sau XE (train_scst.py), policy gradient với reward
+    CIDEr-D (df toàn tập train). Biến thể Luo 2020: sample K caption/video,
+    baseline = mean reward của K mẫu CÙNG video (không cần lượt greedy).
+    Đơn vị lặp là VIDEO (1200/epoch) chứ không phải cặp video-caption."""
+    # True: `python train.py` chạy trọn pipeline XE -> SCST trong MỘT lệnh
+    # (SCST bắt đầu từ best-val ckpt của XE). False: chỉ XE như cũ; SCST vẫn
+    # chạy riêng được qua `python train_scst.py --ckpt <path>`.
+    enabled = True
+    epochs = 30
+    batch_size = 16      # số VIDEO mỗi bước (mỗi video sinh num_samples caption)
+    num_samples = 5      # K
+    lr = 5e-6            # RL rất dễ phá model pretrained -> lr nhỏ hơn XE ~20x
+    gradient_clip = 5.0
+
+
 class TrainConfig:
     corpus = "MSVD"
     # corpus = "MSRVTT"
@@ -171,6 +187,7 @@ class TrainConfig:
     feat        = FeatureConfig
     vocab       = VocabConfig
     transformer = TransformerConfig
+    scst        = SCSTConfig
 
     """ Optimization """
     epochs = 20

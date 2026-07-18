@@ -144,9 +144,9 @@ class TransformerConfig:
       xxl    ~11B  | d_model 4096 | 24 layer | 64 head | d_ff 10240 (gated)
     d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
     """;
-    t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
+    # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
     # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
-    # t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
+    t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
     # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
     dropout = 0.1
@@ -156,7 +156,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 0
+    num_decoder_layers = 4
 
 
 class SCSTConfig:
@@ -193,7 +193,7 @@ class TrainConfig:
     epochs = 20
     batch_size = 64
     gradient_clip = 5.0 # None if not used
-    lr = 1e-4
+    lr = 3e-5 #1e-4
 
     # --- Optimizer ---
     # "adam"  : baseline — Adam + L2 coupled, wd=5e-6 (thực chất ~0, không regularize)
@@ -217,7 +217,7 @@ class TrainConfig:
     lr_decay_patience = 3      # chỉ dùng cho "plateau"
     # Fine-tune pretrained Flan-T5 decoder nên không cần warmup (0 = tắt;
     # train from scratch mới cần)
-    warmup_epochs = 0
+    warmup_epochs = 2
     label_smoothing = 0.15
     beam_size = 5
     # Số video gom vào một lần generate() lúc eval. Chỉ ảnh hưởng TỐC ĐỘ, không

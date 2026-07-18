@@ -10,14 +10,14 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
-    feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF"
+    # feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF"
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
@@ -159,6 +159,19 @@ class TransformerConfig:
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
     num_decoder_layers = 4
 
+    # --- Generation / decode ---
+    # CHỈ ảnh hưởng lúc generate (val + test); KHÔNG đổi trọng số. Nhưng val CIDEr
+    # đổi -> có thể đổi epoch best-val được chọn, nên đây là knob thí nghiệm hợp lệ.
+    # Giá trị trung tính (0 / 1.0 / 0) = HỆT hành vi cũ.
+    #   no_repeat_ngram_size: chặn lặp n-gram, diệt caption vỡ kiểu
+    #     "a cat is scratching a cat" / "a girl is putting on a girl" (0 = tắt).
+    #   length_penalty: >1 ưu tiên câu DÀI hơn khi beam search (1.0 = trung tính).
+    #     LƯU Ý CIDEr-D có phạt lệch độ dài -> dài hơn CHƯA CHẮC CIDEr cao hơn.
+    #   min_new_tokens: ép độ dài sinh tối thiểu (0 = tắt).
+    no_repeat_ngram_size = 3
+    length_penalty = 1.0
+    min_new_tokens = 0
+
 
 class SCSTConfig:
     """SCST — giai đoạn 2 sau XE (train_scst.py), policy gradient với reward
@@ -237,7 +250,10 @@ class TrainConfig:
                      f"{transformer.t5_model_name} " \
                      f"mct-{transformer.max_caption_tokens} " \
                      f"dp-{transformer.dropout} " \
-                     f"dl-{transformer.num_decoder_layers}"
+                     f"dl-{transformer.num_decoder_layers} " \
+                     f"nrng-{transformer.no_repeat_ngram_size} " \
+                     f"lp-{transformer.length_penalty} " \
+                     f"mnt-{transformer.min_new_tokens}"
 
     optimizer_id = f"OPTIM {optimizer_type}+{scheduler_type} " \
                    f"lr-{lr} warmup-{warmup_epochs} " \

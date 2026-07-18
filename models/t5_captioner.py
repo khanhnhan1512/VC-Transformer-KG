@@ -191,9 +191,18 @@ class T5Captioner(nn.Module):
                  num_decoder_layers=0,
                  feature_names=None,
                  raw_feature_cfgs=None,
+                 no_repeat_ngram_size=0,
+                 length_penalty=1.0,
+                 min_new_tokens=0,
                  device='cuda'):
         super().__init__()
         self.device = device
+
+        # Tham số decode cho beam search (generate_captions). Trung tính
+        # (0 / 1.0 / 0) = hành vi cũ; chỉ tác động lúc sinh, không đổi trọng số.
+        self.no_repeat_ngram_size = no_repeat_ngram_size
+        self.length_penalty = length_penalty
+        self.min_new_tokens = min_new_tokens
 
         self.t5 = T5ForConditionalGeneration.from_pretrained(t5_model_name)
         t5_d_model = self.t5.config.d_model
@@ -344,6 +353,9 @@ class T5Captioner(nn.Module):
             num_beams=beam_size,
             max_length=max_len,
             early_stopping=True,
+            no_repeat_ngram_size=self.no_repeat_ngram_size,
+            length_penalty=self.length_penalty,
+            min_new_tokens=self.min_new_tokens,
         )
         captions = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
         return captions

@@ -33,6 +33,9 @@ def build_model():
         num_decoder_layers=C.transformer.num_decoder_layers,
         feature_names=C.feat.feature_names,
         raw_feature_cfgs=C.feat.raw_feature_cfgs,
+        no_repeat_ngram_size=C.transformer.no_repeat_ngram_size,
+        length_penalty=C.transformer.length_penalty,
+        min_new_tokens=C.transformer.min_new_tokens,
     )
     model.cuda()
     return model

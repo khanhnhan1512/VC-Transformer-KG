@@ -17,7 +17,7 @@ class FeatureConfig:
     # feature_spec: str = "SigLIP2GiantPooledKF+Blip2QFormerMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+SigLIP2GiantMeanKF"
     # feature_spec: str = "SigLIP2GiantPooledKF+MotionMV"   # grounded=True đã bật sẵn
-    feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF+newMViTv2"
+    feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF"
 
     # --- Old features ---
     # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"

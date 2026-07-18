@@ -57,8 +57,6 @@ class CustomDataset(Dataset):
 
         # Số GOP giữ lại cho mỗi video (pad lên / sample xuống về con số này)
         num_gop: int = self.C.loader.num_gop
-        # NUM_GOP THẬT của mỗi video, lấy từ modality đầu tiên
-        real_num_gops: Dict[str, int] = {}
 
         for i in range(self.num_features):
             fpath = self.C.loader.phase_video_feat_fpath_tpl.format(
@@ -70,22 +68,15 @@ class CustomDataset(Dataset):
                 feature: np.ndarray = fin[vid][()]
                 if feature.size == 0: raise ValueError("[CustomDataset.load_video_feats] Feature size is zero!")
 
-                # Mọi modality PHẢI có cùng NUM_GOP cho cùng 1 video. Nếu lệch,
-                # token appearance và motion của cùng GOP sẽ bị ghép sai cặp —
-                # một lỗi IM LẶNG (không crash, chỉ làm kết quả tệ khó hiểu).
-                # Khi NUM_GOP khớp, np.linspace bên dưới chỉ phụ thuộc NUM_GOP
-                # nên mọi modality tự động được sample ĐỒNG BỘ cùng chỉ số GOP.
-                if i == 0:
-                    real_num_gops[vid] = len(feature)
-                else:
-                    assert vid in real_num_gops, \
-                        f"[load_video_feats] '{vid}' có ở {feature_names[i]} " \
-                        f"nhưng thiếu ở {feature_names[0]}"
-                    assert len(feature) == real_num_gops[vid], \
-                        f"[load_video_feats] NUM_GOP lệch cho '{vid}': " \
-                        f"{feature_names[0]}={real_num_gops[vid]} " \
-                        f"vs {feature_names[i]}={len(feature)}"
-
+                # Mỗi modality được chuẩn hóa ĐỘC LẬP về đúng num_gop token.
+                # KHÔNG còn ràng buộc các modality phải cùng NUM_GOP thô cho cùng
+                # 1 video: các feature ở đây có thể đến từ những pipeline trích
+                # xuất KHÁC nhau (SigLIP2 theo GOP H.264 vs. feature cũ của BiDecT
+                # theo keyframe scheme riêng), nên số frame/GOP thô lệch nhau là
+                # bình thường. Hệ quả: token GOP-t của hai modality KHÔNG còn nhất
+                # thiết trùng khoảnh khắc thời gian, và mask phải dựng ĐỘC LẬP cho
+                # từng modality từ zero-pad của chính nó (xem
+                # T5Captioner._build_encoder_attention_mask).
                 if len(feature) < num_gop:
                     num_padding = num_gop - feature.shape[0]
                     # shape[1:] để pad đúng với MỌI ndim:

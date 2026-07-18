@@ -280,28 +280,37 @@ class T5Captioner(nn.Module):
         return stacked.reshape(B, -1, D)
 
     def _build_encoder_attention_mask(self, src):
-        """Mask ở mức GOP: GOP nào là thật, GOP nào là zero-pad.
+        """Mask ở mức GOP, dựng ĐỘC LẬP cho từng modality.
 
-        Mask là thuộc tính của GOP, KHÔNG phải của modality: loader đã assert mọi
-        feature của cùng 1 video có cùng NUM_GOP và được pad/sample cùng chỉ số.
-        Nên chỉ dựng MỘT mask rồi nhân bản cho mọi modality — hai token của cùng
-        một GOP vì thế luôn cùng số phận (không thể có chuyện appearance bị mask
-        còn motion thì không).
+        Trước đây mọi modality dùng CHUNG một mask (suy từ feature pre-extracted
+        đầu tiên) vì loader đảm bảo chúng cùng NUM_GOP và pad/sample đồng bộ, nên
+        hai token của cùng một GOP luôn cùng số phận. Khi trộn các feature từ
+        những pipeline trích xuất KHÁC nhau (vd. SigLIP2 vs. feature cũ của
+        BiDecT), điều đó không còn đúng: cùng 1 video, GOP thứ t có thể là THẬT ở
+        modality này nhưng là zero-pad ở modality kia. Vì vậy mỗi modality tự
+        dựng mask từ chính zero-pad của nó -> không mask nhầm token thật.
 
-        Dựng từ feature pre-extracted đầu tiên. KHÔNG bao giờ suy từ feature THÔ:
-          - 119/11303 GOP THẬT có 0 P/B-frame -> motion toàn 0 nhưng GOP vẫn hợp
-            lệ (có I-frame) -> sẽ bị loại nhầm;
-          - output encoder với input toàn 0 cũng không phải 0 (conv có bias).
+        Ngoại lệ — feature THÔ (motion vector): KHÔNG suy được pad-mask từ giá
+        trị (GOP có I-frame nhưng 0 P/B-frame -> motion toàn 0 vẫn hợp lệ; conv
+        có bias nên output cũng không 0). Feature thô mượn mask của context_ref
+        (feature pre-extracted đầu tiên) như cũ.
         """
         assert self.context_ref is not None, \
             "Cần ít nhất 1 feature pre-extracted để dựng GOP mask (không thể suy từ feature THÔ)"
 
-        gop_mask = (src[self.context_ref].abs().sum(dim=-1) > 0)  # (B, num_gop)
+        masks = []
+        for i, feat in enumerate(src):
+            if self.is_raw[i]:
+                # Không suy được từ feature thô -> mượn mask của context_ref
+                m = (src[self.context_ref].abs().sum(dim=-1) > 0)  # (B, num_gop)
+            else:
+                m = (feat.abs().sum(dim=-1) > 0)                   # (B, num_gop)
+            masks.append(m)
 
-        # Mỗi GOP sinh ra len(src) token liên tiếp sau interleave -> nhân bản mask
-        # theo đúng thứ tự stack(dim=2).reshape() ở encode()
-        B, T = gop_mask.shape
-        return gop_mask.unsqueeze(2).expand(B, T, len(src)).reshape(B, -1).long()
+        # Interleave y hệt encode(): stack(dim=2).reshape -> token thứ i của GOP
+        # thứ t nhận đúng mask của modality i tại GOP t
+        stacked = torch.stack(masks, dim=2)   # (B, num_gop, num_feat)
+        return stacked.reshape(stacked.size(0), -1).long()
 
     def forward(self, src, labels=None, decoder_attention_mask=None):
         encoder_hidden = self.encode(src)

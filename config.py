@@ -187,8 +187,8 @@ class SCSTConfig:
 
 class TrainConfig:
     # corpus = "MSVD"
-    # corpus = "MSRVTT"
-    corpus = "VATEX"
+    corpus = "MSRVTT"
+    # corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
     elif corpus == "VATEX" : loader = VATEXLoaderConfig

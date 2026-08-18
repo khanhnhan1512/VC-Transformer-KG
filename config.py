@@ -10,7 +10,7 @@ class FeatureConfig:
 
     # --- New features (ưu tiên pooled/[CLS] trước, rồi mean) ---
     # feature_spec: str = "Blip2VitGPooledKF"     # EVA-ViT-g [CLS] token
-    feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
+    # feature_spec: str = "SigLIP2GiantPooledKF"  # SigLIP2-giant pooler_output (MAP head)
     # feature_spec: str = "Blip2VitGMeanKF"       # EVA-ViT-g mean của patch token
     # feature_spec: str = "SigLIP2GiantMeanKF"    # SigLIP2-giant mean của patch token
 
@@ -20,7 +20,7 @@ class FeatureConfig:
     # feature_spec: str = "SigLIP2GiantPooledKF+newImgCapBlip2KF"
 
     # --- Old features ---
-    # feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
+    feature_spec: str = "newBlip2ClsKF+newImgCapBlip2KF+newMViTv2"
     # feature_spec: str = "Blip2QFormerMeanKF"
     # feature_spec: str = "newBlip2ClsKF"
 
@@ -89,8 +89,7 @@ class VocabConfig:
 class MSVDLoaderConfig:
     # Flexible to change the path to data folder when run on Kaggle
     DATA_FOLDER_PATH = "./data"
-    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/msvd-blip2qformer"
-    # if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msvd-dataset"
+    if not os.path.exists(DATA_FOLDER_PATH): DATA_FOLDER_PATH = "/kaggle/input/datasets/vmphat/bidect-msvd-dataset"
 
     # caption_fpath = "./data/MSVD/metadata/<FILENAME>.csv"
     train_caption_fpath = os.path.join(DATA_FOLDER_PATH, "MSVD/metadata/train.csv")
@@ -101,10 +100,7 @@ class MSVDLoaderConfig:
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    # Số GOP giữ lại cho mỗi video (thiếu -> zero-pad, thừa -> uniform-sample).
-    # Đơn vị là GOP, KHÔNG phải frame và cũng KHÔNG phải token: mỗi GOP sinh ra
-    # len(feature_names) token sau khi interleave (vd. 2 token: appearance + motion).
-    num_gop = 9  # P75 của phân bố số GOP/video
+    num_gop = 8  # P75
 
 
 class MSRVTTLoaderConfig(object):
@@ -118,7 +114,7 @@ class MSRVTTLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    num_gop = 13  # P75
+    num_gop = 12  # P75
 
 
 class VATEXLoaderConfig(object):
@@ -132,7 +128,7 @@ class VATEXLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    num_gop = 9  # P75
+    num_gop = 8  # P75
 
 
 class TransformerConfig:
@@ -145,8 +141,8 @@ class TransformerConfig:
       xxl    ~11B  | d_model 4096 | 24 layer | 64 head | d_ff 10240 (gated)
     d_model càng lớn -> projection từ feature (SigLIP2 1536-d) càng ít mất mát.
     """;
-    # t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
-    t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
+    t5_model_name = "google/flan-t5-small"  #  80M params | d_model 512
+    # t5_model_name = "google/flan-t5-base"   # 250M params | d_model 768
     # t5_model_name = "google/flan-t5-large"  # 780M params | d_model 1024
     # t5_model_name = "google/flan-t5-xl"     #   3B params | d_model 2048
 
@@ -157,7 +153,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 4
+    num_decoder_layers = 3
 
     # --- Generation / decode ---
     # CHỈ ảnh hưởng lúc generate (val + test); KHÔNG đổi trọng số. Nhưng val CIDEr
@@ -204,7 +200,7 @@ class TrainConfig:
     scst        = SCSTConfig
 
     """ Optimization """
-    epochs = 20
+    epochs = 16
     batch_size = 64
     gradient_clip = 5.0 # None if not used
     lr = 1e-4
@@ -233,7 +229,7 @@ class TrainConfig:
     # train from scratch mới cần)
     warmup_epochs = 0
     label_smoothing = 0.15
-    beam_size = 5
+    beam_size = 4
     # Số video gom vào một lần generate() lúc eval. Chỉ ảnh hưởng TỐC ĐỘ, không
     # đổi kết quả (mỗi video có mask GOP riêng). Bộ nhớ ~ eval_batch_size x
     # beam_size chuỗi cùng lúc -> giảm nếu OOM với decoder lớn (base/large/xl).

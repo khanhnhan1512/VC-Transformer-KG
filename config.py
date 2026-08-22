@@ -114,7 +114,7 @@ class MSRVTTLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    num_gop = 3  # P75
+    num_gop = 6  # P75
 
 
 class VATEXLoaderConfig(object):

@@ -114,7 +114,7 @@ class MSRVTTLoaderConfig(object):
     phase_video_feat_fpath_tpl = DATA_FOLDER_PATH + "/{}/features/{}_{}.hdf5"
 
     num_workers = 4
-    num_gop = 6  # P75
+    num_gop = 12  # P75
 
 
 class VATEXLoaderConfig(object):
@@ -153,7 +153,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 3
+    num_decoder_layers = 2
 
     # --- Generation / decode ---
     # CHỈ ảnh hưởng lúc generate (val + test); KHÔNG đổi trọng số. Nhưng val CIDEr

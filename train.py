@@ -120,7 +120,7 @@ def get_parameter_number(net):
 def main():
     print(f"MODEL ID: {C.model_id}")
 
-    seed: int = 42
+    seed: int = 1
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)

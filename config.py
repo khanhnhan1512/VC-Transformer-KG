@@ -153,7 +153,7 @@ class TransformerConfig:
     # Chọn N block cách đều (linspace), luôn gồm block 0 (mang relative attention bias):
     #   small/base: 8/12 block  | large/xl/xxl: 24 block
     #   large giữ 6 -> block [0, 5, 9, 14, 18, 23]
-    num_decoder_layers = 3
+    num_decoder_layers = 1
 
     # --- Generation / decode ---
     # CHỈ ảnh hưởng lúc generate (val + test); KHÔNG đổi trọng số. Nhưng val CIDEr

@@ -174,3 +174,9 @@ cache/*
 # Exclude some helper files
 development/*
 *.ckpt
+*_stats.json
+smoke_*.py
+stats_*.py
+*_extractor.py
+profile_*.py
+split_features.py

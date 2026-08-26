@@ -1,6 +1,8 @@
-# [BiDecT]
+# DiBiDec
 
-An Encoder-free Bidirectional Decoder Transformer with GOP-based multimodal representations for video captioning.
+**Video Captioning via Direct Bidirectional Decoding with GOP-Based Multimodal Features**
+
+DiBiDec (Direct Bidirectional Decoder) integrates pre-trained multimodal features (appearance, semantic, and motion) extracted at the Group-of-Pictures (GOP) level directly into a bidirectional Transformer decoder, without an intermediate fusion encoder.
 
 This codebase is developed upon [BTKG](https://github.com/nickchen121/BTKG/tree/main).
 
@@ -13,7 +15,7 @@ root/
 ├── utils.py                        # Training loop, evaluation, metrics
 ├── requirements.txt                # Python dependencies
 ├── models/
-│   ├── abd_transformer.py          # BiDecT model
+│   ├── abd_transformer.py          # DiBiDec model
 │   └── label_smoothing.py          # Label smoothing loss
 ├── loader/
 │   ├── data_loader_fusion.py       # Base dataset, vocabulary, corpus classes
@@ -21,6 +23,10 @@ root/
 │   ├── MSRVTT.py                   # MSR-VTT dataset loader
 │   ├── VATEX.py                    # VATEX dataset loader
 │   └── transform.py                # Caption and feature transformations
+├── test_video_ids/                 # Test-set video IDs used for evaluation
+│   ├── msvd_test_video_ids.txt     # 670 video IDs
+│   ├── msrvtt_test_video_ids.txt   # 2,990 video IDs
+│   └── vatex_test_video_ids.txt    # 5,808 video IDs (accessible subset)
 └── data/                           # Datasets (downloaded separately, see below)
     ├── MSVD/
     ├── MSRVTT/
@@ -59,6 +65,18 @@ data/
     ├── features/       # .hdf5 feature files
     └── metadata/       # .json caption files
 ```
+
+## Test Video IDs
+
+The `test_video_ids/` folder lists the exact video IDs used for testing on each benchmark, one ID per line:
+
+| Dataset | File | # Videos |
+|---------|------|----------|
+| MSVD | `test_video_ids/msvd_test_video_ids.txt` | 670 |
+| MSR-VTT | `test_video_ids/msrvtt_test_video_ids.txt` | 2,990 |
+| VATEX | `test_video_ids/vatex_test_video_ids.txt` | 5,808 |
+
+For VATEX, some videos from the original public test split are no longer publicly available. Evaluation is therefore performed on the accessible subset of 5,808 videos (out of the official 6,000-video test set). These IDs are released so that the reported VATEX results can be reproduced and compared on the same subset.
 
 ## Usage
 

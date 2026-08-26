@@ -84,15 +84,15 @@ class VATEXLoaderConfig(object):
 class TransformerConfig:
     d_model      = 512
     d_ff         = d_model * 4
+    n_heads      = 8
     n_dec_layers = 3
-    n_heads      = 4
     dropout      = 0.1
 
 
 class TrainConfig:
     # corpus = "MSVD"
-    corpus = "MSRVTT"
-    # corpus = "VATEX"
+    # corpus = "MSRVTT"
+    corpus = "VATEX"
     if   corpus == "MSVD"  : loader = MSVDLoaderConfig
     elif corpus == "MSRVTT": loader = MSRVTTLoaderConfig
     elif corpus == "VATEX" : loader = VATEXLoaderConfig
